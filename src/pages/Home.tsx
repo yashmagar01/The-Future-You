@@ -136,12 +136,12 @@ const Home = () => {
               Join thousands of people building confidence through daily practice
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg h-14 px-8" asChild>
-                <Link to="/signup">
+              <Button size="lg" className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all" asChild>
+                <Link to="/register">
                   Get Started Free
                 </Link>
               </Button>
-              <Button size="lg" variant="ghost" className="text-lg h-14 px-8" asChild>
+              <Button size="lg" variant="outline" className="text-lg h-14 px-8 border-2" asChild>
                 <Link to="/login">
                   Sign In
                 </Link>

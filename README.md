@@ -28,7 +28,35 @@ Build confidence through daily video reflections and AI-powered feedback. This a
 - A Supabase account (free tier works)
 - Modern browser with webcam support
 
-## 🛠️ Setup Instructions
+## ⚡ Quick Start (5 minutes)
+
+**See blank screen?** Follow these steps:
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Set up Supabase** - See [SETUP_SUPABASE_PROJECT.md](./SETUP_SUPABASE_PROJECT.md) for detailed guide:
+   - Create project at [supabase.com](https://supabase.com)
+   - Copy credentials to `.env`
+   - Apply database migrations
+
+3. **Start dev server**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Create test user** - See [CREATE_TEST_USER.md](./CREATE_TEST_USER.md):
+   - Email: `test@example.com`
+   - Password: `Test123!`
+
+📖 **Need help?** Check these guides:
+- [SETUP_SUPABASE_PROJECT.md](./SETUP_SUPABASE_PROJECT.md) - Supabase setup walkthrough
+- [QUICK_START.md](./QUICK_START.md) - Fast setup checklist
+- [CREATE_TEST_USER.md](./CREATE_TEST_USER.md) - Create test accounts
+
+## 🛠️ Detailed Setup Instructions
 
 ### 1. Clone the Repository
 

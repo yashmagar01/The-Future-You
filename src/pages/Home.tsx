@@ -5,7 +5,7 @@ import ProblemSolutionOutcome from "@/components/home/ProblemSolutionOutcome";
 import HowItWorks from "@/components/home/HowItWorks";
 import TechCards from "@/components/home/TechCards";
 import TechStackSummary from "@/components/TechStackSummary";
-import FeatureGrid from "@/components/home/FeatureGrid";
+import MVPFeatureGrid from "@/components/MVPFeatureGrid";
 import Roadmap from "@/components/home/Roadmap";
 import TestimonialGrid from "@/components/home/TestimonialGrid";
 import FooterCTA from "@/components/home/FooterCTA";
@@ -49,7 +49,7 @@ const Home = () => {
       <TechStackSummary />
 
       {/* 6. MVP Feature Grid */}
-      <FeatureGrid />
+      <MVPFeatureGrid />
 
       {/* 7. Roadmap / Next Steps */}
       <Roadmap />

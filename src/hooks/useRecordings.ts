@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 // Type aliases for cleaner code
 export type Recording = Tables<'recordings'>;
@@ -41,12 +41,12 @@ export const useUpdateProfile = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: Partial<Profile>) => {
+    mutationFn: async (updates: TablesUpdate<'profiles'>) => {
       if (!user) throw new Error('Not authenticated');
 
-      // @ts-ignore - Type will be correct after running database migrations
       const { data, error } = await supabase
         .from('profiles')
+        // @ts-expect-error - Supabase types will be correct after running migrations
         .update(updates)
         .eq('id', user.id)
         .select()
@@ -159,12 +159,12 @@ export const useUpdateRecording = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Recording> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: TablesUpdate<'recordings'> }) => {
       if (!user) throw new Error('Not authenticated');
 
-      // @ts-ignore - Type will be correct after running database migrations
       const { data, error } = await supabase
         .from('recordings')
+        // @ts-expect-error - Supabase types will be correct after running migrations
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id)

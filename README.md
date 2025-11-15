@@ -2,6 +2,10 @@
 
 A daily reflections and communication coach application built with React, TypeScript, and Supabase. Record video reflections, receive AI-powered feedback, and track your communication skills progress over time.
 
+## 🎥 Watch the Demo
+
+**See how it works:** [NotebookLM Overview Video](https://youtu.be/pVO6QOt-8QE)
+
 ## 🎯 Project Overview
 
 Build confidence through daily video reflections and AI-powered feedback. This application helps users:

@@ -38,6 +38,11 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
     
+    /* Brand Colors */
+    --brand-green: 167 76% 39%;
+    --brand-green-light: 167 76% 89%;
+    --brand-green-dark: 167 76% 29%;
+    
     --success: 160 84% 39%;
     --warning: 38 92% 50%;
     --info: 217 91% 60%;
@@ -114,10 +119,24 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
   }
 }
 
@@ -134,7 +153,73 @@ All colors MUST be HSL.
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
   }
   
+  /* Brand green utility classes */
+  .bg-brand-green {
+    background-color: hsl(var(--brand-green));
+  }
+  
+  .text-brand-green {
+    color: hsl(var(--brand-green));
+  }
+  
+  .border-brand-green {
+    border-color: hsl(var(--brand-green));
+  }
+  
+  /* Animation utilities */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
   .gradient-hero {
     background: var(--gradient-hero);
+  }
+  
+  /* Mobile Touch Optimizations */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+  
+  /* Prevent text selection on buttons and interactive elements */
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  /* Smooth scrolling for mobile */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  
+  /* Container max-width adjustments for mobile */
+  @media (max-width: 320px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+  
+  /* Ensure videos don't cause horizontal scroll */
+  video,
+  iframe {
+    max-width: 100%;
+    height: auto;
   }
 }

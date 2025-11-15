@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { Loader2, Mail, User, Phone, MessageSquare } from "lucide-react";
+import { Loader2, Mail, User, Phone, MessageSquare, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 interface WaitlistFormProps {
@@ -20,6 +21,7 @@ interface WaitlistFormProps {
 }
 
 const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,6 +36,7 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
+  const [emailValid, setEmailValid] = useState<boolean | null>(null);
 
   const roleOptions = [
     { value: "student", label: "Student" },
@@ -56,6 +59,18 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
     return emailRegex.test(email);
   };
 
+  const handleEmailChange = (email: string) => {
+    setFormData({ ...formData, email });
+    setError("");
+    
+    // Real-time email validation feedback
+    if (email.length > 0) {
+      setEmailValid(validateEmail(email));
+    } else {
+      setEmailValid(null);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
@@ -63,27 +78,52 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
     // Check honeypot (should be empty)
     if (formData.honeypot) {
       setError("Invalid submission detected");
+      toast({
+        title: "Error",
+        description: "Invalid submission detected. Please try again.",
+        variant: "destructive",
+      });
       return;
     }
 
-    // Validate required fields
-    if (!formData.email) {
-      setError("Email is required");
+    // Validate required fields with specific error messages
+    if (!formData.email.trim()) {
+      setError("Email address is required");
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to join the waitlist.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!validateEmail(formData.email)) {
-      setError("Please enter a valid email address");
+      setError("Please enter a valid email address (e.g., you@example.com)");
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!formData.roleInterest) {
       setError("Please select your role or interest");
+      toast({
+        title: "Role Required",
+        description: "Please tell us who you are by selecting a role.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!formData.agreeToEmails) {
-      setError("Please agree to receive emails to continue");
+      setError("You must agree to receive emails to join the waitlist");
+      toast({
+        title: "Consent Required",
+        description: "Please check the consent box to receive updates about your waitlist status.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -122,12 +162,44 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
         has_message: !!formData.message,
       });
 
+      // Show success toast
+      toast({
+        title: "🎉 Welcome to the Waitlist!",
+        description: "Check your email for a confirmation link. Don't forget to check your spam folder!",
+        duration: 5000,
+      });
+
       // Success - call parent callback
       onSuccess(formData.email);
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        roleInterest: "",
+        message: "",
+        referrer: "",
+        agreeToEmails: false,
+        honeypot: "",
+      });
+      setEmailValid(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again.";
       setError(errorMessage);
       console.error("Waitlist submission error:", err);
+      
+      // Show error toast with more details
+      toast({
+        title: "Submission Failed",
+        description: errorMessage.includes("rate limit") 
+          ? "Too many attempts. Please try again in a few minutes."
+          : errorMessage.includes("duplicate") || errorMessage.includes("already")
+          ? "This email is already on the waitlist. Check your inbox!"
+          : "Something went wrong. Please try again or contact support.",
+        variant: "destructive",
+        duration: 6000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -166,17 +238,35 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
           <Mail className="h-4 w-4" />
           Email Address <span className="text-destructive">*</span>
         </Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="you@example.com"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          required
-          disabled={isSubmitting}
-          className="text-base"
-          aria-required="true"
-        />
+        <div className="relative">
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => handleEmailChange(e.target.value)}
+            required
+            disabled={isSubmitting}
+            className={`text-base pr-10 ${
+              emailValid === true 
+                ? "border-green-500 focus-visible:ring-green-500" 
+                : emailValid === false 
+                ? "border-destructive focus-visible:ring-destructive" 
+                : ""
+            }`}
+            aria-required="true"
+            aria-invalid={emailValid === false}
+            aria-describedby={emailValid === false ? "email-error" : undefined}
+          />
+          {emailValid === true && (
+            <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+          )}
+        </div>
+        {emailValid === false && formData.email.length > 0 && (
+          <p id="email-error" className="text-xs text-destructive" role="alert">
+            Please enter a valid email address
+          </p>
+        )}
       </div>
 
       {/* Phone - Optional */}
@@ -188,13 +278,17 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
         <Input
           id="phone"
           type="tel"
-          placeholder="+1 (555) 123-4567"
+          placeholder="+1 (555) 123-4567 or +91 98765 43210"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           maxLength={20}
           disabled={isSubmitting}
           className="text-base"
+          aria-label="Phone number with country code"
         />
+        <p className="text-xs text-muted-foreground">
+          Include country code (e.g., +1 for US, +91 for India)
+        </p>
       </div>
 
       {/* Role Interest - Required */}
@@ -204,11 +298,17 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
         </Label>
         <Select
           value={formData.roleInterest}
-          onValueChange={(value) => setFormData({ ...formData, roleInterest: value })}
+          onValueChange={(value) => {
+            setFormData({ ...formData, roleInterest: value });
+            setError(""); // Clear error when user selects
+          }}
           disabled={isSubmitting}
-          required
         >
-          <SelectTrigger id="role" aria-required="true" className="text-base">
+          <SelectTrigger 
+            id="role" 
+            aria-required="true" 
+            className={`text-base ${!formData.roleInterest && error ? "border-destructive" : ""}`}
+          >
             <SelectValue placeholder="Select your role or interest" />
           </SelectTrigger>
           <SelectContent>
@@ -237,7 +337,13 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
           className="text-base min-h-[100px]"
           rows={4}
         />
-        <p className="text-xs text-muted-foreground text-right">
+        <p className={`text-xs text-right ${
+          formData.message.length >= 180 
+            ? "text-orange-500 font-medium" 
+            : formData.message.length >= 150
+            ? "text-yellow-600"
+            : "text-muted-foreground"
+        }`}>
           {formData.message.length}/200
         </p>
       </div>
@@ -279,31 +385,45 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
       </div>
 
       {/* Agreement Checkbox - Required */}
-      <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg">
+      <div className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-colors ${
+        !formData.agreeToEmails && error 
+          ? "bg-destructive/5 border-destructive" 
+          : "bg-muted/30 border-transparent"
+      }`}>
         <Checkbox
           id="agree"
           checked={formData.agreeToEmails}
-          onCheckedChange={(checked) => 
-            setFormData({ ...formData, agreeToEmails: checked as boolean })
-          }
+          onCheckedChange={(checked) => {
+            setFormData({ ...formData, agreeToEmails: checked as boolean });
+            setError(""); // Clear error when user checks the box
+          }}
           disabled={isSubmitting}
-          required
           aria-required="true"
+          aria-invalid={!formData.agreeToEmails && !!error}
         />
-        <Label
-          htmlFor="agree"
-          className="text-sm leading-relaxed cursor-pointer"
-        >
-          I agree to receive emails from Yash about early access, product updates, and invitations.{" "}
-          <a
-            href="/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
+        <div className="flex-1">
+          <Label
+            htmlFor="agree"
+            className="text-sm leading-relaxed cursor-pointer"
           >
-            Privacy Policy
-          </a>
-        </Label>
+            I agree to receive emails from Yash about early access, product updates, and invitations.{" "}
+            <span className="text-destructive">*</span>
+            {" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Privacy Policy
+            </a>
+          </Label>
+          {!formData.agreeToEmails && error && error.includes("agree") && (
+            <p className="text-xs text-destructive mt-1" role="alert">
+              You must agree to receive emails to join the waitlist
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Submit Button */}

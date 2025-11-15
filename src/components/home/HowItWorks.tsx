@@ -111,8 +111,8 @@ const HowItWorks = () => {
                   {/* Arrow between steps (Mobile) */}
                   {index < steps.length - 1 && (
                     <div className="flex lg:hidden justify-center my-4">
-                      <div className={`h-12 w-12 rounded-full bg-gradient-to-r ${step.color} flex items-center justify-center shadow-lg rotate-90`}>
-                        <ArrowRight className="h-6 w-6 text-white" />
+                      <div className={`h-12 w-12 rounded-full bg-gradient-to-r ${step.color} flex items-center justify-center shadow-lg`}>
+                        <ArrowRight className="h-6 w-6 text-white rotate-90" />
                       </div>
                     </div>
                   )}

@@ -32,8 +32,8 @@ const TechCards = () => {
       title: "LLM Summarization",
       description: "GPT-4 powered analysis generates personalized feedback, actionable tips, and tracks improvement patterns over time.",
       tech: "OpenAI GPT-4, RAG Pipeline",
-      color: "from-brand-green to-green-600",
-      bgColor: "bg-brand-green/10"
+      color: "from-emerald-500 to-emerald-600",
+      bgColor: "bg-emerald-500/10"
     }
   ];
 

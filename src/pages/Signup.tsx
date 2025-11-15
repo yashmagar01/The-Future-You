@@ -101,47 +101,8 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
-        <div>
-          <Link to="/" className="inline-flex items-center gap-2 text-white group">
-            <Video className="h-8 w-8 group-hover:scale-110 transition-transform" />
-            <span className="text-2xl font-bold">The Future You</span>
-          </Link>
-        </div>
-        
-        <div className="space-y-6 text-white">
-          <h1 className="text-4xl font-bold leading-tight">
-            Your Journey to Confident Communication Starts Here
-          </h1>
-          <p className="text-lg text-white/90">
-            Join thousands of users building confidence through daily video reflections. 
-            Get personalized AI feedback and track your progress over time.
-          </p>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-              <span>Record daily video reflections</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-              <span>AI-powered feedback & insights</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-              <span>Track your communication progress</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-white/80 text-sm">
-          <Sparkles className="h-4 w-4 inline mr-2" />
-          Trusted by communication professionals worldwide
-        </div>
-      </div>
-
-      {/* Right Side - Register Form */}
-      <div className="flex items-center justify-center p-8 bg-gray-50">
+      {/* Left Side - Register Form */}
+      <div className="flex items-center justify-center p-8 bg-gray-50 lg:order-1">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -310,6 +271,45 @@ const Signup = () => {
             </div>
           </div>
         </motion.div>
+      </div>
+
+      {/* Right Side - Branding */}
+      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 lg:order-2">
+        <div>
+          <Link to="/" className="inline-flex items-center gap-2 text-white group">
+            <Video className="h-8 w-8 group-hover:scale-110 transition-transform" />
+            <span className="text-2xl font-bold">The Future You</span>
+          </Link>
+        </div>
+        
+        <div className="space-y-6 text-white">
+          <h1 className="text-4xl font-bold leading-tight">
+            Your Journey to Confident Communication Starts Here
+          </h1>
+          <p className="text-lg text-white/90">
+            Join thousands of users building confidence through daily video reflections. 
+            Get personalized AI feedback and track your progress over time.
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+              <span>Record daily video reflections</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+              <span>AI-powered feedback & insights</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+              <span>Track your communication progress</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-white/80 text-sm">
+          <Sparkles className="h-4 w-4 inline mr-2" />
+          Trusted by communication professionals worldwide
+        </div>
       </div>
     </div>
   );

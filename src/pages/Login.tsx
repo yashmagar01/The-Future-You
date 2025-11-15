@@ -96,36 +96,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400">
-        <div>
-          <Link to="/" className="inline-flex items-center gap-2 text-white group">
-            <Video className="h-8 w-8 group-hover:scale-110 transition-transform" />
-            <span className="text-2xl font-bold">The Future You</span>
-          </Link>
-        </div>
-        
-        <div className="space-y-6 text-white">
-          <h1 className="text-4xl font-bold leading-tight">
-            Build Confidence Through Daily Reflections
-          </h1>
-          <p className="text-lg text-white/90">
-            Transform your communication skills with AI-powered video feedback. 
-            Practice daily, track progress, and become the confident speaker you aspire to be.
-          </p>
-          <div className="flex items-center gap-2 pt-4">
-            <Sparkles className="h-5 w-5" />
-            <span className="font-medium">Secure • Private • Always Available</span>
-          </div>
-        </div>
-
-        <div className="text-white/80 text-sm">
-          Join thousands building confidence through practice 🚀
-        </div>
-      </div>
-
-      {/* Right Side - Login Form */}
-      <div className="flex items-center justify-center p-8 bg-gray-50">
+      {/* Left Side - Login Form */}
+      <div className="flex items-center justify-center p-8 bg-gray-50 lg:order-1">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -262,6 +234,34 @@ const Login = () => {
             </div>
           </div>
         </motion.div>
+      </div>
+
+      {/* Right Side - Branding */}
+      <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 lg:order-2">
+        <div>
+          <Link to="/" className="inline-flex items-center gap-2 text-white group">
+            <Video className="h-8 w-8 group-hover:scale-110 transition-transform" />
+            <span className="text-2xl font-bold">The Future You</span>
+          </Link>
+        </div>
+        
+        <div className="space-y-6 text-white">
+          <h1 className="text-4xl font-bold leading-tight">
+            Build Confidence Through Daily Reflections
+          </h1>
+          <p className="text-lg text-white/90">
+            Transform your communication skills with AI-powered video feedback. 
+            Practice daily, track progress, and become the confident speaker you aspire to be.
+          </p>
+          <div className="flex items-center gap-2 pt-4">
+            <Sparkles className="h-5 w-5" />
+            <span className="font-medium">Secure • Private • Always Available</span>
+          </div>
+        </div>
+
+        <div className="text-white/80 text-sm">
+          Join thousands building confidence through practice 🚀
+        </div>
       </div>
     </div>
   );

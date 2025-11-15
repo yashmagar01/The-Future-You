@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 interface WaitlistFormProps {
@@ -130,12 +131,15 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      // Generate a simple confirmation token (for email confirmation)
+      const confirmToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // Insert directly into Supabase (bypassing Edge Function for now)
+      const { data, error } = await supabase
+        .from('waitlist_entries')
+        .insert({
           name: formData.name || null,
           email: formData.email,
           phone: formData.phone || null,
@@ -143,14 +147,18 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
           message: formData.message || null,
           referrer: formData.referrer || null,
           source: source,
-          captcha_token: captchaToken,
-        }),
-      });
+          status: 'pending',
+          confirm_token: confirmToken,
+        })
+        .select()
+        .single();
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to join waitlist");
+      if (error) {
+        // Handle duplicate email
+        if (error.code === '23505') {
+          throw new Error("This email is already on the waitlist!");
+        }
+        throw new Error(error.message || "Failed to join waitlist");
       }
 
       // Log analytics event

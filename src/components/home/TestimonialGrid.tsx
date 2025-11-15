@@ -1,13 +1,12 @@
 import { Star, Quote } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const TestimonialGrid = () => {
   const testimonials = [
     {
       name: "Sarah Johnson",
       role: "Marketing Manager",
-      avatar: "/assets/avatars/avatar-1.jpg",
       initials: "SJ",
       rating: 5,
       quote: "This platform transformed my presentation skills. I went from dreading public speaking to confidently leading team meetings. The AI feedback is incredibly detailed!",
@@ -16,7 +15,6 @@ const TestimonialGrid = () => {
     {
       name: "Michael Chen",
       role: "Software Engineer",
-      avatar: "/assets/avatars/avatar-2.jpg",
       initials: "MC",
       rating: 5,
       quote: "As an introvert, practicing in a judgment-free environment was game-changing. I can now articulate my ideas clearly in meetings and code reviews.",
@@ -25,7 +23,6 @@ const TestimonialGrid = () => {
     {
       name: "Emily Rodriguez",
       role: "Entrepreneur",
-      avatar: "/assets/avatars/avatar-3.jpg",
       initials: "ER",
       rating: 5,
       quote: "Preparing for investor pitches became so much easier. The detailed analytics helped me identify and fix my filler words and pacing issues.",
@@ -34,7 +31,6 @@ const TestimonialGrid = () => {
     {
       name: "David Park",
       role: "College Student",
-      avatar: "/assets/avatars/avatar-4.jpg",
       initials: "DP",
       rating: 5,
       quote: "This is like having a personal speech coach available 24/7. My grades improved because I can now present with confidence in class.",
@@ -43,7 +39,6 @@ const TestimonialGrid = () => {
     {
       name: "Lisa Thompson",
       role: "HR Director",
-      avatar: "/assets/avatars/avatar-5.jpg",
       initials: "LT",
       rating: 5,
       quote: "I use this before every important interview and performance review. Being able to review my body language and tone has been invaluable.",
@@ -52,7 +47,6 @@ const TestimonialGrid = () => {
     {
       name: "James Wilson",
       role: "Sales Executive",
-      avatar: "/assets/avatars/avatar-6.jpg",
       initials: "JW",
       rating: 5,
       quote: "My close rate improved by 30% after just 2 months of daily practice. Understanding my communication patterns was a real eye-opener.",
@@ -106,7 +100,6 @@ const TestimonialGrid = () => {
               {/* Author Info */}
               <div className="flex items-center gap-3 pt-4 border-t border-border">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
                   <AvatarFallback className="bg-gradient-to-br from-brand-green to-accent text-white font-semibold">
                     {testimonial.initials}
                   </AvatarFallback>

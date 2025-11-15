@@ -1,6 +1,7 @@
 import { Video, MessageSquare, Heart, Eye, TrendingUp, Target, Users, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 const MVPFeatureGrid = () => {
   const features = [
@@ -72,6 +73,15 @@ const MVPFeatureGrid = () => {
     return priority === "MVP" ? "MVP" : "Next Version";
   };
 
+  const handleFeatureClick = (feature: typeof features[0]) => {
+    logEvent(ANALYTICS_EVENTS.FEATURE_CARD_CLICK, {
+      feature_title: feature.title,
+      feature_priority: feature.priority,
+      feature_test_id: feature.testId,
+      location: 'homepage'
+    });
+  };
+
   return (
     <section className="py-20 px-4" aria-labelledby="features-heading">
       <div className="container mx-auto max-w-7xl">
@@ -94,11 +104,19 @@ const MVPFeatureGrid = () => {
             return (
               <Card 
                 key={index}
-                className="p-6 hover-lift cursor-default border-2 hover:border-border/80 transition-all group relative"
+                className="p-6 hover-lift cursor-pointer border-2 hover:border-border/80 transition-all group relative"
                 style={{ animationDelay: `${index * 50}ms` }}
                 data-testid={feature.testId}
                 role="article"
                 aria-label={`${feature.title} - ${getPriorityLabel(feature.priority)}`}
+                onClick={() => handleFeatureClick(feature)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleFeatureClick(feature);
+                  }
+                }}
               >
                 {/* Priority Badge */}
                 <div className="absolute -top-3 -right-3">

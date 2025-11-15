@@ -1,12 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Video, TrendingUp, Sparkles } from "lucide-react";
-
-// Analytics event logger (placeholder for actual analytics integration)
-const logEvent = (eventName: string, params: Record<string, any>) => {
-  console.log(`Analytics Event: ${eventName}`, params);
-  // TODO: Replace with actual analytics service (Google Analytics, Mixpanel, etc.)
-};
+import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 // Get CTA variant from environment or localStorage (defaults to 'A')
 const getCTAVariant = (): 'A' | 'B' => {
@@ -35,11 +30,23 @@ const Hero = () => {
   const ctaIcon = ctaVariant === 'A' ? Video : Sparkles;
   const CtaIcon = ctaIcon;
 
-  const handleCTAClick = () => {
-    logEvent('cta_click', {
+  const handlePrimaryCTAClick = () => {
+    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, {
       variant: ctaVariant,
       location: 'hero',
-      cta_text: ctaText
+      cta_text: ctaText,
+      cta_type: 'primary',
+      destination: '/record'
+    });
+  };
+
+  const handleSecondaryCTAClick = () => {
+    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, {
+      variant: 'secondary',
+      location: 'hero',
+      cta_text: 'View Dashboard',
+      cta_type: 'secondary',
+      destination: '/dashboard'
     });
   };
 
@@ -76,7 +83,7 @@ const Hero = () => {
               <Button 
                 size="lg" 
                 className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl transition-all hover-lift bg-brand-green hover:bg-brand-green/90 touch-manipulation min-h-[44px]"
-                onClick={handleCTAClick}
+                onClick={handlePrimaryCTAClick}
                 data-cta-variant={ctaVariant}
                 aria-label={`${ctaText} - No credit card required`}
                 asChild
@@ -91,7 +98,7 @@ const Hero = () => {
                 size="lg" 
                 variant="outline"
                 className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 border-2 hover-lift touch-manipulation min-h-[44px]"
-                onClick={() => logEvent('cta_click', { variant: 'secondary', location: 'hero', cta_text: 'View Dashboard' })}
+                onClick={handleSecondaryCTAClick}
                 aria-label="View your progress dashboard"
                 asChild
               >

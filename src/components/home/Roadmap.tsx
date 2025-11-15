@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 const Roadmap = () => {
   const milestones = [
@@ -99,6 +100,17 @@ const Roadmap = () => {
       }
     }
   ];
+
+  const handleMilestoneOpen = (milestone: typeof milestones[0]) => {
+    logEvent(ANALYTICS_EVENTS.ROADMAP_MILESTONE_OPEN, {
+      milestone_id: milestone.id,
+      milestone_label: milestone.label,
+      milestone_quarter: milestone.quarter,
+      milestone_status: milestone.status,
+      milestone_eta: milestone.eta,
+      location: 'homepage'
+    });
+  };
 
   return (
     <section className="py-20 px-4">
@@ -193,6 +205,7 @@ const Roadmap = () => {
                 <AccordionTrigger 
                   className="px-6 py-4 hover:no-underline hover:bg-muted/50 transition-colors [&[data-state=open]]:bg-muted/50"
                   aria-label={`${milestone.label} milestone details`}
+                  onClick={() => handleMilestoneOpen(milestone)}
                 >
                   <div className="flex items-center gap-4 flex-1 text-left">
                     {/* Icon */}

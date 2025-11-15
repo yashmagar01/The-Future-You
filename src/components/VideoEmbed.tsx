@@ -1,5 +1,6 @@
 import { useState, KeyboardEvent } from "react";
 import { Play } from "lucide-react";
+import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 interface VideoEmbedProps {
   /** Video URL - supports YouTube links or direct MP4 URLs */
@@ -46,6 +47,15 @@ const VideoEmbed = ({ src, poster, title, caption, className = "" }: VideoEmbedP
    */
   const handlePlay = () => {
     setIsPlaying(true);
+    
+    // Log analytics event
+    logEvent(ANALYTICS_EVENTS.VIDEO_PLAYED, {
+      video_title: title,
+      video_src: src,
+      video_type: isMP4 ? 'mp4' : isYouTube ? 'youtube' : 'embed',
+      has_poster: !!poster,
+      location: 'homepage'
+    });
   };
 
   /**

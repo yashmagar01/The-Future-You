@@ -2,12 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, ArrowRight, Video } from "lucide-react";
-
-// Analytics event logger (placeholder for actual analytics integration)
-const logEvent = (eventName: string, params: Record<string, any>) => {
-  console.log(`Analytics Event: ${eventName}`, params);
-  // TODO: Replace with actual analytics service (Google Analytics, Mixpanel, etc.)
-};
+import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 // Get CTA variant from environment or localStorage (defaults to 'A')
 const getCTAVariant = (): 'A' | 'B' => {
@@ -37,10 +32,12 @@ const FooterCTA = () => {
   const CtaIcon = ctaIcon;
 
   const handleCTAClick = () => {
-    logEvent('cta_click', {
+    logEvent(ANALYTICS_EVENTS.FOOTER_CTA_CLICK, {
       variant: ctaVariant,
       location: 'footer',
-      cta_text: ctaText
+      cta_text: ctaText,
+      cta_type: 'primary',
+      destination: '/register'
     });
   };
 

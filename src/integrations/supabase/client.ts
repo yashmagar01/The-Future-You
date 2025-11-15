@@ -7,17 +7,50 @@ const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || (projectId ? `https://${projectId}.supabase.co` : '');
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-if (!SUPABASE_URL) {
-  console.error('[Auth] Missing VITE_SUPABASE_URL and VITE_SUPABASE_PROJECT_ID. Please enable the backend or set env vars.');
+// Validate environment variables
+const isPlaceholder = (value: string | undefined) => 
+  !value || 
+  value.includes('your_') || 
+  value.includes('_here') || 
+  value === 'undefined';
+
+if (!SUPABASE_URL || isPlaceholder(SUPABASE_URL)) {
+  console.error(
+    '\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '⚠️  SUPABASE NOT CONFIGURED\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '\n' +
+    '❌ Missing or invalid Supabase credentials in .env file\n' +
+    '\n' +
+    '📝 QUICK FIX:\n' +
+    '   1. Create a Supabase project: https://supabase.com\n' +
+    '   2. Copy your Project URL and API Key\n' +
+    '   3. Update .env file with real values\n' +
+    '   4. Restart the dev server\n' +
+    '\n' +
+    '📖 DETAILED GUIDE:\n' +
+    '   See SETUP_SUPABASE_PROJECT.md for step-by-step instructions\n' +
+    '\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+  );
+}
+
+if (isPlaceholder(SUPABASE_PUBLISHABLE_KEY)) {
+  console.error('❌ Invalid VITE_SUPABASE_PUBLISHABLE_KEY in .env - update with your real API key');
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+export const supabase = createClient<Database>(
+  SUPABASE_URL || 'https://placeholder.supabase.co', 
+  SUPABASE_PUBLISHABLE_KEY || 'placeholder-key', 
+  {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
   }
-});
+);

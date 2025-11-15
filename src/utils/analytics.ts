@@ -25,7 +25,7 @@ export interface AnalyticsEvent {
   /** Event name (use snake_case convention) */
   name: string;
   /** Event properties/payload */
-  properties?: Record<string, any>;
+  properties?: Record<string, string | number | boolean | null | undefined>;
   /** Timestamp when event occurred */
   timestamp: string;
   /** User session info (can be added later) */
@@ -47,7 +47,7 @@ export interface AnalyticsEvent {
  * });
  * ```
  */
-export const logEvent = (eventName: string, properties?: Record<string, any>): void => {
+export const logEvent = (eventName: string, properties?: Record<string, string | number | boolean | null | undefined>): void => {
   const event: AnalyticsEvent = {
     name: eventName,
     properties: properties || {},
@@ -106,7 +106,7 @@ export const logEvent = (eventName: string, properties?: Record<string, any>): v
  * logPageView('/home', { referrer: document.referrer });
  * ```
  */
-export const logPageView = (pageName: string, properties?: Record<string, any>): void => {
+export const logPageView = (pageName: string, properties?: Record<string, string | number | boolean | null | undefined>): void => {
   logEvent('page_view', {
     page: pageName,
     ...properties,
@@ -128,7 +128,7 @@ export const logPageView = (pageName: string, properties?: Record<string, any>):
 export const logInteraction = (
   elementType: string,
   elementName: string,
-  properties?: Record<string, any>
+  properties?: Record<string, string | number | boolean | null | undefined>
 ): void => {
   logEvent('interaction', {
     element_type: elementType,

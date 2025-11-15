@@ -83,7 +83,7 @@ export const useRecordings = () => {
       if (error) throw error;
       
       // Transform to flat structure
-      const recordings = (data || []) as any[];
+      const recordings = (data || []) as (Recording & { feedback: Feedback[] })[];
       return recordings.map((recording): RecordingWithFeedback => ({
         ...recording,
         feedback: Array.isArray(recording.feedback) && recording.feedback.length > 0 
@@ -115,7 +115,7 @@ export const useRecording = (id: string) => {
 
       if (error) throw error;
       
-      const recording = data as any;
+      const recording = data as Recording & { feedback: Feedback[] };
       return {
         ...recording,
         feedback: Array.isArray(recording.feedback) && recording.feedback.length > 0 
@@ -140,7 +140,7 @@ export const useCreateRecording = () => {
         .insert({
           ...recording,
           user_id: user.id,
-        } as any)
+        } as TablesInsert<'recordings'>)
         .select()
         .single();
 
@@ -228,7 +228,7 @@ export const useStats = () => {
 
       // Calculate average score
       const scores: number[] = [];
-      (recordingsWithFeedback || []).forEach((rec: any) => {
+      (recordingsWithFeedback || []).forEach((rec: RecordingWithFeedback) => {
         if (Array.isArray(rec.feedback) && rec.feedback.length > 0 && rec.feedback[0].overall_score) {
           scores.push(rec.feedback[0].overall_score);
         }
@@ -243,7 +243,7 @@ export const useStats = () => {
         .select('duration_seconds')
         .eq('user_id', user.id);
 
-      const totalSeconds = (recordings || []).reduce((sum: number, r: any) => 
+      const totalSeconds = (recordings || []).reduce((sum: number, r: Recording) => 
         sum + (r.duration_seconds || 0), 0
       );
       const totalHours = Math.round(totalSeconds / 3600);
@@ -293,12 +293,12 @@ export const useWeeklyActivity = () => {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() - (6 - index));
         
-        const dayRecordings = (data || []).filter((r: any) => {
+        const dayRecordings = (data || []).filter((r: Recording) => {
           const recordingDate = new Date(r.created_at);
           return recordingDate.toDateString() === targetDate.toDateString();
         });
 
-        const totalMinutes = dayRecordings.reduce((sum: number, r: any) => 
+        const totalMinutes = dayRecordings.reduce((sum: number, r: Recording) => 
           sum + ((r.duration_seconds || 0) / 60), 0
         );
 
@@ -339,7 +339,7 @@ export const usePerformanceTrend = () => {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const monthlyData: { [key: string]: number[] } = {};
 
-      (data || []).forEach((recording: any) => {
+      (data || []).forEach((recording: Recording) => {
         const date = new Date(recording.created_at);
         const monthKey = `${months[date.getMonth()]}`;
         

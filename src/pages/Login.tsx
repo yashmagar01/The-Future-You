@@ -29,7 +29,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      const from = (location.state as any)?.from?.pathname || "/";
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || "/";
       navigate(from, { replace: true });
     }
   }, [user, navigate, location]);
@@ -63,7 +63,7 @@ const Login = () => {
         description: "Successfully signed in to your account",
       });
       
-      const from = (location.state as any)?.from?.pathname || "/";
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || "/";
       navigate(from, { replace: true });
     } catch (err) {
       if (err instanceof z.ZodError) {

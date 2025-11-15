@@ -6,23 +6,41 @@ const HowItWorks = () => {
     {
       icon: Upload,
       step: "01",
-      title: "Upload Your Reflection",
-      description: "Record a 5-10 minute video reflection on your day, goals, or practice presentation. Our platform supports webcam recording or file upload.",
-      color: "from-brand-green to-brand-green/70"
+      title: "Upload your 5–10 min video",
+      ariaLabel: "Step 1: Upload your 5 to 10 minute video reflection",
+      bullets: [
+        "Record via webcam or upload file",
+        "Practice presentations or daily reflections",
+        "Secure, private storage"
+      ],
+      color: "from-brand-green to-brand-green/70",
+      bgColor: "bg-brand-green/10"
     },
     {
       icon: Brain,
       step: "02",
-      title: "AI Analysis",
-      description: "Our advanced AI analyzes your speech patterns, body language, emotion, pacing, and clarity. Get insights on filler words, tone, and confidence markers.",
-      color: "from-accent to-accent/70"
+      title: "AI analyzes voice & posture",
+      ariaLabel: "Step 2: AI analyzes your voice and posture",
+      bullets: [
+        "Speech patterns & filler words",
+        "Body language & facial expressions",
+        "Tone, pacing, and confidence markers"
+      ],
+      color: "from-accent to-accent/70",
+      bgColor: "bg-accent/10"
     },
     {
       icon: TrendingUp,
       step: "03",
-      title: "Improve & Track",
-      description: "Receive personalized feedback and actionable tips. Track your progress over time with detailed metrics and see your confidence grow with every session.",
-      color: "from-primary to-primary/70"
+      title: "Get actionable tips & goals",
+      ariaLabel: "Step 3: Get actionable tips and personalized goals",
+      bullets: [
+        "Personalized improvement suggestions",
+        "Track progress with detailed metrics",
+        "Set and achieve communication goals"
+      ],
+      color: "from-primary to-primary/70",
+      bgColor: "bg-primary/10"
     }
   ];
 
@@ -44,8 +62,17 @@ const HowItWorks = () => {
             {steps.map((step, index) => {
               const Icon = step.icon;
               return (
-                <div key={index} className="relative">
-                  <Card className="p-8 h-full hover-lift cursor-default bg-card border-2 hover:border-border/80 transition-all">
+                <div 
+                  key={index} 
+                  className="relative animate-fade-in"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                >
+                  <Card 
+                    className="p-8 h-full hover-lift cursor-default bg-card border-2 hover:border-border/80 transition-all focus-within:ring-2 focus-within:ring-brand-green/50"
+                    tabIndex={0}
+                    role="article"
+                    aria-label={step.ariaLabel}
+                  >
                     {/* Step Number Badge */}
                     <div className={`absolute -top-4 left-8 px-4 py-2 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-sm shadow-lg`}>
                       Step {step.step}
@@ -53,14 +80,23 @@ const HowItWorks = () => {
 
                     {/* Icon */}
                     <div className={`h-16 w-16 rounded-xl bg-gradient-to-r ${step.color} flex items-center justify-center mb-6 mt-4`}>
-                      <Icon className="h-8 w-8 text-white" />
+                      <Icon className="h-8 w-8 text-white" aria-hidden="true" />
                     </div>
 
-                    {/* Content */}
-                    <h3 className="text-2xl font-bold mb-4">{step.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
+                    {/* Title */}
+                    <h3 className="text-xl font-bold mb-4 leading-tight">{step.title}</h3>
+                    
+                    {/* Bullet Points */}
+                    <ul className="space-y-3" role="list">
+                      {step.bullets.map((bullet, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <div className={`mt-1.5 h-1.5 w-1.5 rounded-full ${step.bgColor} flex-shrink-0`} aria-hidden="true" />
+                          <span className="text-muted-foreground text-sm leading-relaxed">
+                            {bullet}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </Card>
 
                   {/* Arrow between steps (Desktop) */}

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   TrendingUp, 
   Users, 
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStats, useWeeklyActivity, usePerformanceTrend, useRecordings } from "@/hooks/useRecordings";
 import {
   ChartContainer,
   ChartTooltip,
@@ -23,74 +25,62 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "rec
 
 const Dashboard = () => {
   const { user } = useAuth();
-  
-  const stats = [
+  const { data: stats, isLoading: statsLoading } = useStats();
+  const { data: weeklyData, isLoading: weeklyLoading } = useWeeklyActivity();
+  const { data: performanceData, isLoading: performanceLoading } = usePerformanceTrend();
+  const { data: recordings } = useRecordings();
+
+  const statsCards = [
     {
-      title: "Total Progress",
-      value: "87%",
-      change: "+12%",
-      trend: "up",
-      icon: TrendingUp,
+      title: "Total Recordings",
+      value: stats?.totalRecordings?.toString() || "0",
+      change: `+${stats?.thisWeekRecordings || 0} this week`,
+      trend: "up" as const,
+      icon: Activity,
       color: "text-primary"
     },
     {
-      title: "Active Sessions",
-      value: "24",
-      change: "+8",
-      trend: "up",
-      icon: Activity,
+      title: "Average Score",
+      value: stats?.averageScore?.toString() || "0",
+      change: "Overall performance",
+      trend: "up" as const,
+      icon: TrendingUp,
       color: "text-accent"
     },
     {
-      title: "Achievements",
-      value: "15",
-      change: "+3",
-      trend: "up",
-      icon: Award,
-      color: "text-warning"
-    },
-    {
       title: "Time Invested",
-      value: "142h",
-      change: "+18h",
-      trend: "up",
+      value: `${stats?.totalHours || 0}h`,
+      change: "Total practice time",
+      trend: "up" as const,
       icon: Clock,
       color: "text-success"
+    },
+    {
+      title: "This Week",
+      value: stats?.thisWeekRecordings?.toString() || "0",
+      change: "New recordings",
+      trend: "up" as const,
+      icon: Award,
+      color: "text-warning"
     }
   ];
 
   const progressData = [
-    { name: "Focus Time", value: 85, target: 100 },
-    { name: "Learning Goals", value: 72, target: 100 },
-    { name: "Skill Development", value: 90, target: 100 },
-    { name: "Weekly Targets", value: 65, target: 100 }
+    { name: "Communication Skills", value: stats?.averageScore || 0, target: 100 },
+    { name: "Weekly Practice", value: Math.min(((stats?.thisWeekRecordings || 0) / 5) * 100, 100), target: 100 },
+    { name: "Consistency", value: Math.min(((stats?.totalRecordings || 0) / 30) * 100, 100), target: 100 },
+    { name: "Total Progress", value: Math.min((stats?.totalHours || 0), 100), target: 100 }
   ];
 
-  const weeklyData = [
-    { day: "Mon", value: 35 },
-    { day: "Tue", value: 42 },
-    { day: "Wed", value: 38 },
-    { day: "Thu", value: 50 },
-    { day: "Fri", value: 45 },
-    { day: "Sat", value: 30 },
-    { day: "Sun", value: 28 }
-  ];
-
-  const performanceData = [
-    { month: "Jan", score: 65 },
-    { month: "Feb", score: 72 },
-    { month: "Mar", score: 68 },
-    { month: "Apr", score: 78 },
-    { month: "May", score: 85 },
-    { month: "Jun", score: 87 }
-  ];
-
-  const recentActivity = [
-    { title: "Completed Advanced Module", time: "2 hours ago", icon: CheckCircle2, color: "text-success" },
-    { title: "New Milestone Reached", time: "5 hours ago", icon: Award, color: "text-warning" },
-    { title: "Practice Session", time: "Yesterday", icon: Target, color: "text-accent" },
-    { title: "Skill Assessment Passed", time: "2 days ago", icon: Zap, color: "text-primary" }
-  ];
+  const recentActivity = (recordings || []).slice(0, 4).map(recording => ({
+    title: recording.title || 'New Recording',
+    time: new Date(recording.created_at).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    }),
+    icon: recording.feedback ? CheckCircle2 : Target,
+    color: recording.feedback ? "text-success" : "text-accent"
+  }));
 
   return (
     <Layout>
@@ -107,37 +97,50 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card 
-                key={stat.title} 
-                className="hover-lift animate-scale-in border-border/50"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className={`h-5 w-5 ${stat.color}`} />
+          {statsLoading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} className="border-border/50">
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-24" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                  <div className="flex items-center text-sm">
-                    {stat.trend === "up" ? (
-                      <ArrowUpRight className="h-4 w-4 text-success mr-1" />
-                    ) : (
-                      <ArrowDownRight className="h-4 w-4 text-destructive mr-1" />
-                    )}
-                    <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
-                      {stat.change}
-                    </span>
-                    <span className="text-muted-foreground ml-1">from last month</span>
-                  </div>
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-4 w-32" />
                 </CardContent>
               </Card>
-            );
-          })}
+            ))
+          ) : (
+            statsCards.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card 
+                  key={stat.title} 
+                  className="hover-lift animate-scale-in border-border/50"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      {stat.title}
+                    </CardTitle>
+                    <Icon className={`h-5 w-5 ${stat.color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                    <div className="flex items-center text-sm">
+                      {stat.trend === "up" ? (
+                        <ArrowUpRight className="h-4 w-4 text-success mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-4 w-4 text-destructive mr-1" />
+                      )}
+                      <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
+                        {stat.change}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2 mb-8">

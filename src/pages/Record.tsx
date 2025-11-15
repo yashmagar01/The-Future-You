@@ -1,12 +1,135 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Video, Circle, Square, Upload, AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { VideoRecorder } from "@/components/VideoRecorder";
+import { useCreateRecording } from "@/hooks/useRecordings";
+import { uploadRecording } from "@/hooks/useRecordings";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 const Record = () => {
-  const [isRecording, setIsRecording] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const createRecording = useCreateRecording();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleRecordingComplete = async (blob: Blob, duration: number) => {
+    if (!user) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      toast({
+        title: "Uploading...",
+        description: "Please wait while we upload your video.",
+      });
+
+      // Convert blob to file
+      const file = new File([blob], `recording-${Date.now()}.webm`, {
+        type: 'video/webm',
+      });
+
+      // Upload to Supabase Storage
+      const videoUrl = await uploadRecording(file, user.id, (progress) => {
+        setUploadProgress(progress);
+      });
+
+      // Create recording record in database
+      await createRecording.mutateAsync({
+        video_url: videoUrl,
+        duration_seconds: duration,
+        file_size_bytes: blob.size,
+        status: 'processing',
+        title: `Recording ${new Date().toLocaleDateString()}`,
+      });
+
+      toast({
+        title: "Success!",
+        description: "Your recording has been saved successfully.",
+      });
+
+      // Navigate to gallery
+      setTimeout(() => {
+        navigate('/gallery');
+      }, 1500);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading your video. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!user) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      toast({
+        title: "Uploading...",
+        description: "Please wait while we upload your video.",
+      });
+
+      // Get video duration
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      const duration = await new Promise<number>((resolve) => {
+        video.onloadedmetadata = () => {
+          resolve(Math.floor(video.duration));
+        };
+        video.src = URL.createObjectURL(file);
+      });
+
+      // Upload to Supabase Storage
+      const videoUrl = await uploadRecording(file, user.id, (progress) => {
+        setUploadProgress(progress);
+      });
+
+      // Create recording record in database
+      await createRecording.mutateAsync({
+        video_url: videoUrl,
+        duration_seconds: duration,
+        file_size_bytes: file.size,
+        status: 'processing',
+        title: `Uploaded ${new Date().toLocaleDateString()}`,
+      });
+
+      toast({
+        title: "Success!",
+        description: "Your video has been uploaded successfully.",
+      });
+
+      // Navigate to gallery
+      setTimeout(() => {
+        navigate('/gallery');
+      }, 1500);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading your video. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
 
   return (
     <Layout>
@@ -26,51 +149,24 @@ const Record = () => {
           </AlertDescription>
         </Alert>
 
-        <Card className="p-8 mb-6 shadow-medium animate-scale-in">
-          <div className="aspect-video bg-muted rounded-lg mb-6 flex items-center justify-center relative overflow-hidden">
-            <Video className="h-16 w-16 text-muted-foreground" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5" />
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="px-8"
-                onClick={() => setIsRecording(!isRecording)}
-              >
-                {isRecording ? (
-                  <>
-                    <Square className="mr-2 h-5 w-5 fill-current" />
-                    Stop Recording
-                  </>
-                ) : (
-                  <>
-                    <Circle className="mr-2 h-5 w-5" />
-                    Start Recording
-                  </>
-                )}
-              </Button>
-              
-              <Button size="lg" variant="outline" className="px-8">
-                <Upload className="mr-2 h-5 w-5" />
-                Upload Video
-              </Button>
+        {isUploading ? (
+          <Card className="p-8 mb-6 shadow-medium">
+            <div className="text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+              <h3 className="text-lg font-semibold">Uploading your video...</h3>
+              <Progress value={uploadProgress} className="w-full" />
+              <p className="text-sm text-muted-foreground">
+                Please don't close this page. This may take a few moments.
+              </p>
             </div>
-
-            {isRecording && (
-              <div className="text-center animate-fade-in">
-                <div className="flex items-center justify-center gap-2 text-destructive">
-                  <div className="h-3 w-3 rounded-full bg-destructive animate-pulse" />
-                  <span className="font-medium">Recording in progress...</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Recording time: 0:00 / 10:00
-                </p>
-              </div>
-            )}
-          </div>
-        </Card>
+          </Card>
+        ) : (
+          <VideoRecorder
+            onRecordingComplete={handleRecordingComplete}
+            onUploadFile={handleFileUpload}
+            maxDuration={600}
+          />
+        )}
 
         <Card className="p-6 animate-slide-up">
           <h2 className="text-lg font-semibold mb-4">What to Talk About</h2>

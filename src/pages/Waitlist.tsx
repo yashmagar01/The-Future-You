@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { Sparkles, Users, Zap, Shield, TrendingUp } from "lucide-react";
 import WaitlistForm from "@/components/WaitlistForm";
 import WaitlistSuccessModal from "@/components/WaitlistSuccessModal";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
 const Waitlist = () => {
@@ -147,38 +153,70 @@ const Waitlist = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto max-w-3xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">When will I get access?</h3>
-              <p className="text-muted-foreground">
-                We're inviting users in small batches starting in early 2025, with the public MVP launch on April 19, 2025.
-                Earlier signups get priority.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Is it free?</h3>
-              <p className="text-muted-foreground">
-                Early access testers get free access during the beta period. We'll share pricing details before the public launch.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Can I share my invite?</h3>
-              <p className="text-muted-foreground">
-                Invites are personal and tied to your email. However, you can refer friends to join the waitlist!
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">What if I change my mind?</h3>
-              <p className="text-muted-foreground">
-                No problem! You can opt out at any time by clicking the unsubscribe link in our emails.
-              </p>
-            </div>
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-muted-foreground">
+              Everything you need to know about joining the waitlist
+            </p>
           </div>
+          
+          <Accordion type="single" collapsible className="space-y-4">
+            <AccordionItem 
+              value="item-1" 
+              className="border border-border/40 rounded-lg px-6 bg-card hover:shadow-md hover:border-primary/20 transition-all duration-200"
+            >
+              <AccordionTrigger className="text-left text-base md:text-lg font-semibold hover:text-primary hover:no-underline">
+                When will I get access?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                We're inviting users in small batches starting in early 2025, with the public MVP launch on April 19, 2025.
+                Earlier signups get priority, so joining now gives you the best chance of getting early access!
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem 
+              value="item-2" 
+              className="border border-border/40 rounded-lg px-6 bg-card hover:shadow-md hover:border-primary/20 transition-all duration-200"
+            >
+              <AccordionTrigger className="text-left text-base md:text-lg font-semibold hover:text-primary hover:no-underline">
+                Is it free?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                Early access testers get free access during the beta period. We'll share pricing details before the public launch.
+                As an early supporter, you'll also receive special perks and discounts!
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem 
+              value="item-3" 
+              className="border border-border/40 rounded-lg px-6 bg-card hover:shadow-md hover:border-primary/20 transition-all duration-200"
+            >
+              <AccordionTrigger className="text-left text-base md:text-lg font-semibold hover:text-primary hover:no-underline">
+                Can I share my invite?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                Invites are personal and tied to your email address for security reasons. However, you can absolutely refer friends to join the waitlist!
+                They'll go through the same process and get their own invite when it's their turn.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem 
+              value="item-4" 
+              className="border border-border/40 rounded-lg px-6 bg-card hover:shadow-md hover:border-primary/20 transition-all duration-200"
+            >
+              <AccordionTrigger className="text-left text-base md:text-lg font-semibold hover:text-primary hover:no-underline">
+                What if I change my mind?
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                No problem! You can opt out at any time by clicking the unsubscribe link in our emails.
+                Your privacy and preferences are important to us, and we respect your decision.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
 

@@ -44,8 +44,8 @@ const Hero = () => {
   };
 
   return (
-    <header className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-24 px-4" role="banner" aria-label="Hero section - Your Personal Communication Coach">
-      {/* Background decorative elements */>
+    <header className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-12 sm:py-20 lg:py-24 px-4" role="banner" aria-label="Hero section - Your Personal Communication Coach">
+      {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="absolute top-20 left-10 w-72 h-72 bg-brand-green/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
@@ -60,14 +60,14 @@ const Hero = () => {
               Your Personal Communication Coach
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-6 leading-tight px-2 lg:px-0">
               Build Confidence Through{" "}
               <span className="bg-gradient-to-r from-brand-green to-accent bg-clip-text text-transparent">
                 Daily Reflections
               </span>
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0 px-2 lg:px-0">
               Transform your communication skills with AI-powered video feedback. 
               Practice daily, track progress, and become the confident speaker you aspire to be.
             </p>
@@ -75,7 +75,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button 
                 size="lg" 
-                className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all hover-lift bg-brand-green hover:bg-brand-green/90"
+                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl transition-all hover-lift bg-brand-green hover:bg-brand-green/90 touch-manipulation min-h-[44px]"
                 onClick={handleCTAClick}
                 data-cta-variant={ctaVariant}
                 aria-label={`${ctaText} - No credit card required`}
@@ -90,7 +90,7 @@ const Hero = () => {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-lg h-14 px-8 border-2 hover-lift"
+                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 border-2 hover-lift touch-manipulation min-h-[44px]"
                 onClick={() => logEvent('cta_click', { variant: 'secondary', location: 'hero', cta_text: 'View Dashboard' })}
                 aria-label="View your progress dashboard"
                 asChild

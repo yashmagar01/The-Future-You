@@ -47,7 +47,7 @@ const FooterCTA = () => {
   return (
     <section className="py-20 px-4">
       <div className="container mx-auto max-w-4xl">
-        <Card className="relative overflow-hidden p-12 bg-gradient-to-br from-brand-green/5 via-accent/5 to-primary/5 border-2">
+        <Card className="relative overflow-hidden p-6 sm:p-10 lg:p-12 bg-gradient-to-br from-brand-green/5 via-accent/5 to-primary/5 border-2">
           {/* Background decoration */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-green/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
@@ -73,7 +73,7 @@ const FooterCTA = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Button 
                 size="lg" 
-                className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all bg-brand-green hover:bg-brand-green/90 group"
+                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl transition-all bg-brand-green hover:bg-brand-green/90 group touch-manipulation min-h-[44px]"
                 asChild
                 data-cta-variant={ctaVariant}
                 onClick={handleCTAClick}
@@ -88,7 +88,7 @@ const FooterCTA = () => {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-lg h-14 px-8 border-2"
+                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 border-2 touch-manipulation min-h-[44px]"
                 asChild
               >
                 <Link to="/login">

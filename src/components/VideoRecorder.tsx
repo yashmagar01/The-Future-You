@@ -210,21 +210,29 @@ export const VideoRecorder = ({
         </Alert>
       )}
 
-      <Card className="p-8 shadow-medium animate-scale-in">
-        <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden relative">
+      <Card className="p-4 sm:p-8 shadow-medium animate-scale-in">
+        <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden relative touch-pan-y">
           {isPreviewing ? (
             <video
               ref={videoRef}
               autoPlay
               muted
               playsInline
+              webkit-playsinline="true"
+              x-webkit-airplay="allow"
               className="w-full h-full object-cover"
+              aria-label="Video preview"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center p-4">
               <div className="text-center">
-                <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <Button onClick={requestCameraAccess}>
+                <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                <Button 
+                  onClick={requestCameraAccess}
+                  size="lg"
+                  className="min-h-[44px] touch-manipulation"
+                  aria-label="Enable camera access"
+                >
                   Enable Camera
                 </Button>
               </div>
@@ -240,12 +248,13 @@ export const VideoRecorder = ({
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              className="px-8"
+              className="px-8 min-h-[44px] touch-manipulation w-full sm:w-auto"
               onClick={isRecording ? stopRecording : startRecording}
               disabled={!isPreviewing}
+              aria-label={isRecording ? 'Stop recording video' : 'Start recording video'}
             >
               {isRecording ? (
                 <>
@@ -263,18 +272,20 @@ export const VideoRecorder = ({
             <Button 
               size="lg" 
               variant="outline" 
-              className="px-8"
+              className="px-8 min-h-[44px] touch-manipulation"
               disabled={isRecording}
               asChild
             >
-              <label>
-                <Upload className="mr-2 h-5 w-5" />
+              <label className="cursor-pointer">
+                <Upload className="mr-2 h-5 w-5" aria-hidden="true" />
                 Upload Video
                 <input
                   type="file"
                   accept="video/*"
+                  capture="user"
                   onChange={handleFileUpload}
                   className="hidden"
+                  aria-label="Upload or capture video"
                 />
               </label>
             </Button>

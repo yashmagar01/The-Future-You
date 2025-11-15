@@ -133,26 +133,26 @@ const Record = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold mb-3">Record Your Reflection</h1>
-          <p className="text-muted-foreground text-lg">
+      <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
+        <div className="text-center mb-6 sm:mb-8 animate-fade-in">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 px-2">Record Your Reflection</h1>
+          <p className="text-muted-foreground text-base sm:text-lg px-2">
             Take 5-10 minutes to practice your communication skills
           </p>
         </div>
 
-        <Alert className="mb-8 animate-slide-up">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
+        <Alert className="mb-6 sm:mb-8 animate-slide-up">
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription className="text-sm">
             <strong>Pro Tips:</strong> Find a quiet space, maintain good posture, look at the camera, 
             and speak clearly. Try to fill the full 5 minutes to get comprehensive feedback.
           </AlertDescription>
         </Alert>
 
         {isUploading ? (
-          <Card className="p-8 mb-6 shadow-medium">
+          <Card className="p-6 sm:p-8 mb-6 shadow-medium">
             <div className="text-center space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" aria-hidden="true" />
               <h3 className="text-lg font-semibold">Uploading your video...</h3>
               <Progress value={uploadProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">
@@ -168,8 +168,8 @@ const Record = () => {
           />
         )}
 
-        <Card className="p-6 animate-slide-up">
-          <h2 className="text-lg font-semibold mb-4">What to Talk About</h2>
+        <Card className="p-4 sm:p-6 animate-slide-up">
+          <h2 className="text-base sm:text-lg font-semibold mb-4">What to Talk About</h2>
           <ul className="space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary mt-0.5">•</span>

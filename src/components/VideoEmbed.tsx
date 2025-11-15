@@ -87,10 +87,10 @@ const VideoEmbed = ({ src, poster, title, caption, className = "" }: VideoEmbedP
                 tabIndex={0}
                 onClick={handlePlay}
                 onKeyDown={handleKeyDown}
-                className="absolute inset-0 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-4 focus:ring-brand-green/50"
+                className="absolute inset-0 flex items-center justify-center cursor-pointer focus:outline-none focus:ring-4 focus:ring-brand-green/50 touch-manipulation"
                 aria-label={`Play video: ${title}`}
               >
-                <div className="w-20 h-20 rounded-full bg-brand-green/90 hover:bg-brand-green flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 shadow-xl focus:scale-110">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-brand-green/90 hover:bg-brand-green active:bg-brand-green flex items-center justify-center transform transition-all duration-300 group-hover:scale-110 shadow-xl focus:scale-110 active:scale-105">
                   <Play className="w-10 h-10 text-white ml-1" fill="currentColor" aria-hidden="true" />
                 </div>
               </div>
@@ -110,11 +110,17 @@ const VideoEmbed = ({ src, poster, title, caption, className = "" }: VideoEmbedP
                 <video
                   controls
                   autoPlay
+                  playsInline
+                  webkit-playsinline="true"
+                  x-webkit-airplay="allow"
+                  x5-video-player-type="h5"
+                  x5-video-player-fullscreen="true"
                   preload="metadata"
                   poster={poster}
                   className="absolute inset-0 w-full h-full"
                   aria-label={title}
                   onLoadedData={() => setIsLoaded(true)}
+                  style={{ objectFit: 'contain' }}
                 >
                   <source src={src} type="video/mp4" />
                   <p>Your browser does not support the video tag.</p>

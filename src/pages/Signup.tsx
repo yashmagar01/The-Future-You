@@ -45,8 +45,8 @@ const Signup = () => {
       // Validate input
       const validatedData = signupSchema.parse({ name, email, password });
 
-      // Attempt sign up
-      const { error: signUpError } = await signUp(validatedData.email, validatedData.password);
+      // Attempt sign up with user metadata (name will be stored in profile via trigger)
+      const { error: signUpError } = await signUp(validatedData.email, validatedData.password, validatedData.name);
 
       if (signUpError) {
         if (signUpError.message.includes("already registered")) {

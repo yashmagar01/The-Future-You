@@ -65,7 +65,7 @@ const MVPFeatureGrid = () => {
 
   const getPriorityColor = (priority: string) => {
     return priority === "MVP" 
-      ? "bg-brand-green/10 text-brand-green border-brand-green/20" 
+      ? "bg-green-500/10 text-green-600 border-green-500/20" 
       : "bg-amber-500/10 text-amber-600 border-amber-500/20";
   };
 
@@ -86,7 +86,7 @@ const MVPFeatureGrid = () => {
     <section className="py-20 px-4" aria-labelledby="features-heading">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-green/10 text-brand-green text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-sm font-medium mb-4">
             <Trophy className="h-4 w-4" />
             Feature Roadmap
           </div>
@@ -129,8 +129,8 @@ const MVPFeatureGrid = () => {
                 </div>
 
                 {/* Icon */}
-                <div className={`h-12 w-12 rounded-lg ${isMVP ? 'bg-brand-green/10' : 'bg-amber-500/10'} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className={`h-6 w-6 ${isMVP ? 'text-brand-green' : 'text-amber-600'}`} aria-hidden="true" />
+                <div className={`h-12 w-12 rounded-lg ${isMVP ? 'bg-green-500/10' : 'bg-amber-500/10'} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <Icon className={`h-6 w-6 ${isMVP ? 'text-green-600' : 'text-amber-600'}`} aria-hidden="true" />
                 </div>
 
                 {/* Title */}

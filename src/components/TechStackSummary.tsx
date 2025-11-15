@@ -85,8 +85,8 @@ const TechStackSummary = () => {
       icon: Sparkles,
       title: "Analysis & Summaries (LLM)",
       rationale: "GPT-4 with RAG pipeline generates personalized, actionable feedback by analyzing transcripts, emotions, and posture data.",
-      color: "from-brand-green to-green-600",
-      bgColor: "bg-brand-green/10",
+      color: "from-emerald-500 to-emerald-600",
+      bgColor: "bg-emerald-500/10",
       details: {
         apis: ["OpenAI GPT-4o", "Claude 3.5 Sonnet (alternative)"],
         whyChosen: [

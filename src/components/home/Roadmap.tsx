@@ -18,8 +18,8 @@ const Roadmap = () => {
       label: "MVP Launch",
       status: "completed",
       icon: Video,
-      color: "bg-brand-green",
-      textColor: "text-brand-green",
+      color: "bg-green-500",
+      textColor: "text-green-600",
       eta: "Launched Nov 2024",
       summary: "Video analysis & comprehensive dashboard",
       details: {
@@ -40,8 +40,8 @@ const Roadmap = () => {
       label: "NVP Release",
       status: "current",
       icon: Users,
-      color: "bg-accent",
-      textColor: "text-accent",
+      color: "bg-blue-500",
+      textColor: "text-blue-600",
       eta: "Expected Feb 2025",
       summary: "Live mentor sessions & gamification features",
       details: {

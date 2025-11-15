@@ -146,8 +146,8 @@ const MVPFeatureGrid = () => {
                 {/* Status Indicator */}
                 <div className="mt-4 pt-4 border-t border-border">
                   <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${isMVP ? 'bg-brand-green' : 'bg-amber-500'} animate-pulse`} aria-hidden="true" />
-                    <span className={`text-xs font-medium ${isMVP ? 'text-brand-green' : 'text-amber-600'}`}>
+                    <div className={`h-2 w-2 rounded-full ${isMVP ? 'bg-green-500' : 'bg-amber-500'} animate-pulse`} aria-hidden="true" />
+                    <span className={`text-xs font-medium ${isMVP ? 'text-green-600' : 'text-amber-600'}`}>
                       {isMVP ? 'Available Now' : 'Coming Soon'}
                     </span>
                   </div>
@@ -160,15 +160,15 @@ const MVPFeatureGrid = () => {
         {/* Legend */}
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-brand-green" aria-hidden="true" />
+            <div className="h-3 w-3 rounded-full bg-green-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-brand-green">MVP</span> - Minimum Viable Product (Available Now)
+              <span className="font-semibold text-green-600">MVP</span> - Minimum Viable Product (Launched 19 April 2025)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-amber-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-amber-600">NVP</span> - Next Version Product (Coming Q2 2025)
+              <span className="font-semibold text-amber-600">NVP</span> - Next Version Product (Launch 20 July 2025)
             </span>
           </div>
         </div>

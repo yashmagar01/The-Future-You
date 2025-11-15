@@ -6,6 +6,7 @@ import HowItWorks from "@/components/home/HowItWorks";
 import TechCards from "@/components/home/TechCards";
 import TechStackSummary from "@/components/TechStackSummary";
 import MVPFeatureGrid from "@/components/MVPFeatureGrid";
+import ProductRoadmap from "@/components/home/ProductRoadmap";
 import Roadmap from "@/components/home/Roadmap";
 import TestimonialGrid from "@/components/home/TestimonialGrid";
 import FooterCTA from "@/components/home/FooterCTA";
@@ -51,7 +52,10 @@ const Home = () => {
       {/* 6. MVP Feature Grid */}
       <MVPFeatureGrid />
 
-      {/* 7. Roadmap / Next Steps */}
+      {/* 6b. Product Roadmap Timeline */}
+      <ProductRoadmap userRole="user" />
+
+      {/* 7. Detailed Roadmap (Original) */}
       <Roadmap />
 
       {/* 8. Testimonials / Social Proof */}

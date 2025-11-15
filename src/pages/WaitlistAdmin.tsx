@@ -46,6 +46,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 interface WaitlistEntry {
   id: string;
@@ -102,7 +103,7 @@ const WaitlistAdmin = () => {
         .from("profiles")
         .select("role")
         .eq("id", user.id)
-        .single();
+        .single() as { data: { role: string | null } | null };
 
       if (!profile || profile.role !== "admin") {
         toast({
@@ -216,7 +217,7 @@ const WaitlistAdmin = () => {
 
       const { error } = await supabase
         .from("waitlist_entries")
-        .update({ status: "removed" })
+        .update({ status: "removed" } as Database['public']['Tables']['waitlist_entries']['Update'])
         .eq("id", entry.id);
 
       if (error) throw error;

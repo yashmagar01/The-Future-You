@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
+import type { Database } from "@/integrations/supabase/types";
 
 interface WaitlistFormProps {
   onSuccess: (email: string) => void;
@@ -147,9 +148,9 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
           message: formData.message || null,
           referrer: formData.referrer || null,
           source: source,
-          status: 'pending',
+          status: 'pending' as const,
           confirm_token: confirmToken,
-        })
+        } as Database['public']['Tables']['waitlist_entries']['Insert'])
         .select()
         .single();
 
@@ -172,8 +173,8 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
 
       // Show success toast
       toast({
-        title: "🎉 Welcome to the Waitlist!",
-        description: "Check your email for a confirmation link. Don't forget to check your spam folder!",
+        title: "Thanks — you're on the list!",
+        description: "Check your email to confirm. We'll invite testers in batches.",
         duration: 5000,
       });
 

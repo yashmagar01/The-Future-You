@@ -27,18 +27,15 @@ function generateConfirmationEmailHTML(confirmUrl: string, name?: string): strin
       </style>
     </head>
     <body>
-      <div class="header"><h1>✨ Confirm Your Spot</h1></div>
+      <div class="header"><h1>Confirm Your Spot</h1></div>
       <div class="content">
-        ${name ? `<p>Hi ${name},</p>` : '<p>Hi there,</p>'}
-        <p>Thanks for joining the <strong>Yash: The Future You</strong> waitlist!</p>
-        <p><strong>Please confirm your email address:</strong></p>
-        <div style="text-align: center;"><a href="${confirmUrl}" class="button">Confirm My Email</a></div>
-        <p>We're launching in April 2025. We'll email you when it's your turn for early access.</p>
-        <p>Best regards,<br><strong>The Yash Team</strong></p>
+        ${name ? `<p>Hey ${name},</p>` : '<p>Hey there,</p>'}
+        <p>Click below to confirm your waitlist spot for Yash — The Future You. After you confirm, you'll be eligible for early access and testing invites.</p>
+        <div style="text-align: center;"><a href="${confirmUrl}" class="button">Confirm My Spot</a></div>
+        <p>— Yash</p>
       </div>
       <div class="footer">
-        <p>This link expires in 7 days.</p>
-        <p style="word-break: break-all; color: #667eea;">${confirmUrl}</p>
+        <p style="color: #9ca3af; font-size: 12px;">This link expires in 7 days</p>
       </div>
     </body>
     </html>
@@ -60,16 +57,15 @@ function generatePromotionEmailHTML(inviteUrl: string, name?: string): string {
       </style>
     </head>
     <body>
-      <div class="header"><h1>🎉 You're In!</h1><p style="font-size: 18px;">Welcome to Yash Early Access</p></div>
+      <div class="header"><h1>You're Invited</h1></div>
       <div class="content">
-        ${name ? `<p>Hi ${name},</p>` : '<p>Hi there,</p>'}
-        <p><strong>Great news!</strong> You've been selected for Yash early access.</p>
-        <div style="text-align: center;"><a href="${inviteUrl}" class="button">Get Started Now →</a></div>
-        <p>As an early tester, you get free access during beta, priority support, and special perks!</p>
-        <p>Cheers,<br><strong>The Yash Team</strong></p>
+        ${name ? `<p>Congrats ${name},</p>` : '<p>Congrats,</p>'}
+        <p>You've been selected for early access to Yash. Click here to get started:</p>
+        <div style="text-align: center;"><a href="${inviteUrl}" class="button">Login</a></div>
+        <p>Thanks for helping us build this.</p>
       </div>
       <div class="footer">
-        <p><strong>Need help?</strong> Email us at support@yash.com</p>
+        <p style="color: #9ca3af; font-size: 12px;">Questions? Reply to this email</p>
       </div>
     </body>
     </html>
@@ -100,11 +96,11 @@ serve(async (req) => {
 
     if (type === "confirmation") {
       const confirmUrl = `${APP_BASE_URL}/waitlist/confirm?token=${confirmToken}`;
-      subject = "Confirm your spot on the Yash waitlist";
+      subject = "Confirm your waitlist spot for Yash — The Future You";
       html = generateConfirmationEmailHTML(confirmUrl, name);
     } else if (type === "promotion") {
       const inviteUrl = `${APP_BASE_URL}/signup?invite=true`;
-      subject = "🎉 You're in! Welcome to Yash Early Access";
+      subject = "You're invited: Early Tester Access to Yash";
       html = generatePromotionEmailHTML(inviteUrl, name);
     } else {
       throw new Error("Invalid email type");
@@ -118,7 +114,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to }], subject }],
-        from: { email: FROM_EMAIL, name: "Yash - The Future You" },
+        from: { email: FROM_EMAIL, name: "Yash" },
         content: [{ type: "text/html", value: html }],
       }),
     });

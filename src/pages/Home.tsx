@@ -32,7 +32,6 @@ const Home = () => {
             src="https://www.youtube.com/watch?v=pVO6QOt-8QE"
             title="NotebookLM Overview - See How The Future You Works"
             caption="Watch this AI-generated overview powered by NotebookLM to understand our approach"
-            poster="/assets/video-poster.svg"
           />
         </div>
       </section>

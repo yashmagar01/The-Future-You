@@ -35,12 +35,30 @@ const VideoEmbed = ({ src, poster, title, caption, className = "" }: VideoEmbedP
   const isYouTube = src.includes('youtube.com') || src.includes('youtu.be');
 
   /**
+   * Extract YouTube video ID from URL
+   */
+  const getYouTubeVideoId = (url: string): string | null => {
+    return url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&\n?#]+)/)?.[1] || null;
+  };
+
+  /**
+   * Get YouTube thumbnail URL (uses maxresdefault for best quality)
+   */
+  const getYouTubeThumbnail = (url: string): string | null => {
+    const videoId = getYouTubeVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+  };
+
+  /**
    * Extract YouTube video ID and return embed URL with autoplay
    */
   const getYouTubeEmbedUrl = (url: string): string => {
-    const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&\n?#]+)/)?.[1];
+    const videoId = getYouTubeVideoId(url);
     return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0` : url;
   };
+
+  // Use YouTube thumbnail if available, otherwise use provided poster
+  const thumbnailSrc = isYouTube ? getYouTubeThumbnail(src) : poster;
 
   /**
    * Handle play button click - starts video playback
@@ -74,10 +92,10 @@ const VideoEmbed = ({ src, poster, title, caption, className = "" }: VideoEmbedP
         <div className="aspect-video relative">
           {!isPlaying && (
             <>
-              {/* Poster Image */}
-              {poster && (
+              {/* Poster Image - YouTube thumbnail or custom poster */}
+              {thumbnailSrc && (
                 <img
-                  src={poster}
+                  src={thumbnailSrc}
                   alt={`${title} - Video thumbnail`}
                   className="w-full h-full object-cover"
                   loading="lazy"

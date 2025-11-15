@@ -1,66 +1,210 @@
-# Yash Reflections MVP
+# Yash Reflections MVP - The Future You
 
-A daily reflections and communication coach application built with React, TypeScript, and Supabase.
+A daily reflections and communication coach application built with React, TypeScript, and Supabase. Record video reflections, receive AI-powered feedback, and track your communication skills progress over time.
 
-## Project Overview
+## 🎯 Project Overview
 
-Build confidence through daily video reflections and AI-powered feedback. This application helps users transform their communication skills by practicing daily, tracking progress, and becoming confident speakers.
+Build confidence through daily video reflections and AI-powered feedback. This application helps users:
+- Record video reflections with webcam support
+- Upload pre-recorded videos
+- Track progress with detailed analytics
+- View performance trends over time
+- Store recordings securely in the cloud
 
-## How to edit this code
+## 🚀 Tech Stack
 
-**Use your preferred IDE**
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **State Management**: React Query (TanStack Query)
+- **Video Recording**: MediaRecorder API
+- **Charts**: Recharts
+- **Animations**: Framer Motion
 
-Clone this repo and push changes as needed.
+## 📋 Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js 18+ and npm (or use [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+- A Supabase account (free tier works)
+- Modern browser with webcam support
 
-Follow these steps:
+## 🛠️ Setup Instructions
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 1. Clone the Repository
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+git clone https://github.com/yashmagar01/The-Future-You.git
+cd yash-reflections-mvp
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Install Dependencies
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
+```
+
+### 3. Set Up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to Project Settings → API to get your keys
+3. Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+4. Update `.env` with your Supabase credentials:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
+VITE_SUPABASE_PROJECT_ID=your-project-id
+```
+
+### 4. Run Database Migrations
+
+In your Supabase SQL Editor, run the migrations in order:
+
+1. `supabase/migrations/001_initial_schema.sql` - Creates tables, RLS policies, and triggers
+2. `supabase/migrations/002_storage_setup.sql` - Sets up storage buckets and policies
+
+### 5. Start Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:8080](http://localhost:8080) in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── Layout.tsx      # Main layout with navigation
+│   ├── VideoRecorder.tsx # Webcam recording component
+│   └── ProtectedRoute.tsx # Auth guard
+├── contexts/           # React contexts
+│   └── AuthContext.tsx # Authentication state
+├── hooks/              # Custom React hooks
+│   ├── useRecordings.ts # Data fetching hooks
+│   └── use-toast.ts    # Toast notifications
+├── integrations/       # External service integrations
+│   └── supabase/       # Supabase client and types
+├── pages/              # Route pages
+│   ├── Home.tsx        # Landing page
+│   ├── Login.tsx       # Authentication
+│   ├── Signup.tsx      # Registration
+│   ├── Record.tsx      # Video recording
+│   ├── Gallery.tsx     # Past recordings
+│   └── Dashboard.tsx   # Analytics
+└── lib/                # Utilities
+    └── utils.ts        # Helper functions
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🗄️ Database Schema
 
-## What technologies are used for this project?
+- **profiles**: User profile information
+- **recordings**: Video recording metadata
+- **feedback**: AI-generated feedback (placeholder for future)
+- **progress**: User progress metrics
+- **Storage buckets**: `recordings` (private), `thumbnails` (public)
 
-This project is built with:
+## ✨ Features
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Implemented
+- ✅ User authentication (signup/login/logout)
+- ✅ Webcam video recording with MediaRecorder API
+- ✅ Video file upload
+- ✅ Secure cloud storage (Supabase Storage)
+- ✅ Recording gallery with metadata
+- ✅ Real-time dashboard analytics
+- ✅ Performance trend charts
+- ✅ Weekly activity tracking
+- ✅ Responsive design
+- ✅ Protected routes
+- ✅ Form validation with Zod
+- ✅ Toast notifications
+- ✅ Loading states and error handling
 
-## How can I deploy this project?
+### To Be Implemented (Backend Required)
+- ⏳ AI video analysis and feedback
+- ⏳ Speech-to-text transcription
+- ⏳ Filler word detection
+- ⏳ Tone and pace analysis
+- ⏳ Automated thumbnail generation
+- ⏳ Video processing pipeline
 
-You can deploy this project to any static hosting platform that supports Vite applications:
+## 🚀 Deployment
 
-- **Vercel**: Connect your GitHub repository and deploy with zero configuration
-- **Netlify**: Push to your repository and deploy automatically
-- **GitHub Pages**: Use GitHub Actions to build and deploy
-- **Any other hosting service** that supports static sites
+### Environment Variables
 
-Make sure to set up your environment variables (Supabase URL and anon key) in your hosting platform's settings.
+Make sure to set these in your hosting platform:
+
+```env
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+VITE_SUPABASE_PROJECT_ID=your-project-id
+```
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### Deploy to Vercel
+
+```bash
+npm i -g vercel
+vercel
+```
+
+### Deploy to Netlify
+
+```bash
+npm run build
+# Drag and drop the `dist` folder to Netlify
+```
+
+### Deploy to GitHub Pages
+
+```bash
+npm run build
+# Use the `dist` folder with GitHub Pages
+```
+
+## 🧪 Development Scripts
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
+
+## 🔒 Security
+
+- Row Level Security (RLS) enabled on all tables
+- Users can only access their own data
+- Storage policies restrict access to user's own files
+- Environment variables for sensitive keys
+- HTTPS required in production
+
+## 📝 License
+
+MIT
+
+## 👤 Author
+
+**Yash Magar**
+- GitHub: [@yashmagar01](https://github.com/yashmagar01)
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+## ⭐ Show Your Support
+
+Give a ⭐️ if this project helped you!

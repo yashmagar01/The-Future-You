@@ -44,9 +44,9 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-24 px-4">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <header className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-24 px-4" role="banner" aria-label="Hero section - Your Personal Communication Coach">
+      {/* Background decorative elements */>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="absolute top-20 left-10 w-72 h-72 bg-brand-green/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
       </div>
@@ -134,7 +134,7 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </section>
+    </header>
   );
 };
 

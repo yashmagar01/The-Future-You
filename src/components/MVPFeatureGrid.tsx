@@ -73,14 +73,14 @@ const MVPFeatureGrid = () => {
   };
 
   return (
-    <section className="py-20 px-4">
+    <section className="py-20 px-4" aria-labelledby="features-heading">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-green/10 text-brand-green text-sm font-medium mb-4">
             <Trophy className="h-4 w-4" />
             Feature Roadmap
           </div>
-          <h2 className="text-4xl font-bold mb-4">MVP & Next Version Features</h2>
+          <h2 id="features-heading" className="text-4xl font-bold mb-4">MVP & Next Version Features</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Core features available now (MVP) and exciting additions coming in the next version (NVP)
           </p>

@@ -14,14 +14,15 @@ import Footer from "@/components/home/Footer";
 const Home = () => {
   return (
     <Layout>
-      {/* 1. Hero Section */}
-      <Hero />
+      <main role="main" aria-label="Homepage content">
+        {/* 1. Hero Section */}
+        <Hero />
 
-      {/* 2. NotebookLM Video Block */}
-      <section className="py-20 px-4 bg-muted/30">
+        {/* 2. NotebookLM Video Block */}
+        <section className="py-20 px-4 bg-muted/30" aria-labelledby="video-section-heading">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-3">See How It Works</h2>
+            <h2 id="video-section-heading" className="text-3xl font-bold mb-3">See How It Works</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Watch this quick overview powered by NotebookLM to understand our approach
             </p>
@@ -62,6 +63,7 @@ const Home = () => {
 
       {/* 10. Footer with Copyright & Links */}
       <Footer />
+      </main>
     </Layout>
   );
 };

@@ -37,7 +37,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="border-t border-border bg-muted/30">
+    <footer className="border-t border-border bg-muted/30" role="contentinfo" aria-label="Site footer">
       <div className="container mx-auto max-w-7xl px-4 py-12">
         {/* Top Section */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">

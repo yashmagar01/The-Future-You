@@ -38,6 +38,11 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
     
+    /* Brand Colors */
+    --brand-green: 167 76% 39%;
+    --brand-green-light: 167 76% 89%;
+    --brand-green-dark: 167 76% 29%;
+    
     --success: 160 84% 39%;
     --warning: 38 92% 50%;
     --info: 217 91% 60%;
@@ -132,6 +137,33 @@ All colors MUST be HSL.
   
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  /* Brand green utility classes */
+  .bg-brand-green {
+    background-color: hsl(var(--brand-green));
+  }
+  
+  .text-brand-green {
+    color: hsl(var(--brand-green));
+  }
+  
+  .border-brand-green {
+    border-color: hsl(var(--brand-green));
+  }
+  
+  /* Animation utilities */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
   
   .gradient-hero {

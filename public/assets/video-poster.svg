@@ -1,0 +1,32 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Gradient -->
+  <defs>
+    <linearGradient id="videoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#12b886;stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:#4c6ef5;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#be4bdb;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1280" height="720" fill="url(#videoGradient)"/>
+  
+  <!-- Play Button Circle -->
+  <circle cx="640" cy="360" r="80" fill="#12b886" opacity="0.9"/>
+  
+  <!-- Play Icon Triangle -->
+  <path d="M600 320 L600 400 L680 360 Z" fill="white"/>
+  
+  <!-- Text -->
+  <text x="640" y="520" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#1a202c" text-anchor="middle">
+    The Future You
+  </text>
+  <text x="640" y="560" font-family="Arial, sans-serif" font-size="20" fill="#718096" text-anchor="middle">
+    Click to watch the overview video
+  </text>
+  
+  <!-- Decorative Elements -->
+  <circle cx="200" cy="150" r="40" fill="#12b886" opacity="0.15"/>
+  <circle cx="1080" cy="570" r="60" fill="#4c6ef5" opacity="0.15"/>
+  <circle cx="150" cy="600" r="30" fill="#be4bdb" opacity="0.15"/>
+  <circle cx="1130" cy="120" r="50" fill="#12b886" opacity="0.15"/>
+</svg>

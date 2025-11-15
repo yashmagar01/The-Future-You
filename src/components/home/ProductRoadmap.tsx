@@ -210,19 +210,25 @@ const ProductRoadmap = ({ userRole = 'user' }: ProductRoadmapProps) => {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-green-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-green-600">Completed</span> - Live & Available
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-orange-500" aria-hidden="true" />
-            <span className="text-muted-foreground">
-              <span className="font-semibold text-orange-600">Scheduled</span> - In Development
+              <span className="font-semibold text-green-600">Coming Soon</span> - Q2 2025
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-blue-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-blue-600">Future</span> - Planned
+              <span className="font-semibold text-blue-600">Planned</span> - Q3 2025 & Beyond
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-purple-500" aria-hidden="true" />
+            <span className="text-muted-foreground">
+              <span className="font-semibold text-purple-600">Dream</span> - 2026
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-orange-500" aria-hidden="true" />
+            <span className="text-muted-foreground">
+              <span className="font-semibold text-orange-600">Future</span> - 2030
             </span>
           </div>
         </div>

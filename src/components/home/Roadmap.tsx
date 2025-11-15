@@ -13,85 +13,89 @@ const Roadmap = () => {
   const milestones = [
     {
       id: "mvp",
-      quarter: "Q1 2025",
+      quarter: "Q2 2025",
       year: "2025",
       label: "MVP Launch",
-      status: "completed",
+      status: "upcoming",
       icon: Video,
       color: "bg-green-500",
       textColor: "text-green-600",
-      eta: "Launched Nov 2024",
-      summary: "Video analysis & comprehensive dashboard",
+      eta: "19 April 2025",
+      summary: "Core video analysis, scoring, posture detection, and dashboard",
       details: {
         description: "Complete MVP with core features for daily video reflection practice and AI-powered feedback.",
         features: [
           "Video recording & upload with webcam support",
-          "Speech-to-text transcription (Whisper API)",
-          "Basic emotion detection from voice & face",
+          "Speech clarity scoring & analysis",
+          "Emotional tone detection from voice & face",
+          "Posture & gesture insights",
           "Progress dashboard with charts & metrics",
-          "User authentication & private storage"
+          "User authentication & private storage",
+          "Personalized improvement tips"
         ]
       }
     },
     {
       id: "nvp",
-      quarter: "Q2 2025",
+      quarter: "Q3 2025",
       year: "2025",
       label: "NVP Release",
-      status: "current",
+      status: "upcoming",
       icon: Users,
       color: "bg-blue-500",
       textColor: "text-blue-600",
-      eta: "Expected Feb 2025",
-      summary: "Live mentor sessions & gamification features",
+      eta: "20 July 2025",
+      summary: "Live roleplay sessions, gamification, enhanced emotional intelligence",
       details: {
-        description: "Next Version Product introducing social features, peer learning, and motivation systems.",
+        description: "Next Version Product introducing live practice sessions, gamification systems, and enhanced emotional intelligence tracking.",
         features: [
           "Live roleplay sessions with AI mentors",
-          "Peer-to-peer practice matching",
           "Gamification with badges & achievements",
-          "Weekly challenges & leaderboards",
-          "Community feedback & social sharing"
+          "Enhanced emotional intelligence tracking",
+          "Weekly challenges & progress milestones",
+          "Community feedback & peer learning"
         ]
       }
     },
     {
       id: "dream",
-      quarter: "Q3 2025",
-      year: "2025",
-      label: "Dream Features",
+      quarter: "Q4 2026",
+      year: "2026",
+      label: "Dream Project",
       status: "upcoming",
       icon: Sparkles,
       color: "bg-purple-500",
       textColor: "text-purple-500",
-      eta: "Target Jul 2025",
-      summary: "AI avatar mentor & VR practice environments",
+      eta: "End of 2026",
+      summary: "AI avatar mentor, long-term emotional intelligence tracking, and VR practice environments",
       details: {
-        description: "Revolutionary features including personalized AI avatars and immersive VR practice scenarios.",
+        description: "Revolutionary features including personalized AI avatar mentors and immersive VR practice scenarios.",
         features: [
-          "Custom AI avatar mentors trained on your style",
-          "VR practice environments for presentations",
+          "Custom AI avatar mentor",
+          "Long-term emotional intelligence tracking",
+          "VR practice hall environments",
           "Advanced pose analysis with full body tracking",
-          "Industry-specific scenario libraries",
-          "Mobile app for iOS & Android"
+          "Industry-specific scenario libraries"
         ]
       }
     },
     {
       id: "enterprise",
-      quarter: "Q4 2025",
-      year: "2025",
-      label: "Enterprise",
+      quarter: "Q1 2030",
+      year: "2030",
+      label: "Enterprise Version",
       status: "upcoming",
       icon: Rocket,
       color: "bg-orange-500",
       textColor: "text-orange-500",
-      eta: "Expected Dec 2025",
-      summary: "Team analytics & organization features",
+      eta: "2030",
+      summary: "Team analytics, organization-level insights, and enterprise coaching suite",
       details: {
         description: "Enterprise-grade features for teams, organizations, and training programs.",
         features: [
-          "Team dashboards & analytics",
+          "Team analytics dashboard",
+          "Organization-level insights",
+          "Enterprise coaching suite",
           "Custom branding & white-label options",
           "SSO & advanced security",
           "Admin controls & user management",
@@ -134,23 +138,23 @@ const Roadmap = () => {
             
             {/* Progress Line - Desktop Horizontal */}
             <div 
-              className="hidden md:block absolute top-6 left-0 h-1 bg-gradient-to-r from-brand-green via-accent to-accent rounded-full transition-all duration-1000"
-              style={{ width: '37.5%' }} // 1.5 out of 4 milestones (MVP complete + half of NVP)
+              className="hidden md:block absolute top-6 left-0 h-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-1000"
+              style={{ width: '0%' }} // No milestones completed yet - all coming soon
             />
 
             {/* Mobile Vertical Timeline */}
             <div className="md:hidden absolute left-6 top-0 bottom-0 w-1 bg-border rounded-full" />
             <div 
-              className="md:hidden absolute left-6 top-0 w-1 bg-gradient-to-b from-brand-green via-accent to-accent rounded-full transition-all duration-1000"
-              style={{ height: '37.5%' }}
+              className="md:hidden absolute left-6 top-0 w-1 bg-gradient-to-b from-green-500 to-blue-500 rounded-full transition-all duration-1000"
+              style={{ height: '0%' }}
             />
 
             {/* Milestones Grid */}
-            <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-4">
               {milestones.map((milestone, index) => {
                 const Icon = milestone.icon;
-                const isCompleted = milestone.status === 'completed';
-                const isCurrent = milestone.status === 'current';
+                const isCompleted = false; // No milestones completed yet
+                const isCurrent = false; // All are upcoming
                 
                 return (
                   <div key={index} className="relative md:text-center">
@@ -193,8 +197,8 @@ const Roadmap = () => {
         <Accordion type="single" collapsible className="space-y-4">
           {milestones.map((milestone, index) => {
             const Icon = milestone.icon;
-            const isCompleted = milestone.status === 'completed';
-            const isCurrent = milestone.status === 'current';
+            const isCompleted = false; // No milestones completed yet
+            const isCurrent = false; // All are upcoming/planned
 
             return (
               <AccordionItem 
@@ -220,11 +224,11 @@ const Roadmap = () => {
                       <div className="flex items-center gap-3 flex-wrap mb-1">
                         <h3 className="text-xl font-bold">{milestone.label}</h3>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          isCompleted ? 'bg-brand-green/10 text-brand-green' :
-                          isCurrent ? 'bg-accent/10 text-accent' :
-                          'bg-muted text-muted-foreground'
+                          milestone.id === 'mvp' ? 'bg-green-500/10 text-green-600' :
+                          milestone.id === 'enterprise' ? 'bg-orange-500/10 text-orange-600' :
+                          'bg-blue-500/10 text-blue-600'
                         }`}>
-                          {isCompleted ? 'Completed' : isCurrent ? 'In Progress' : 'Upcoming'}
+                          {milestone.id === 'mvp' ? 'Coming Soon' : milestone.id === 'enterprise' ? 'Future Plan' : 'Planned'}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground mb-1">

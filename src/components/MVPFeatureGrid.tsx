@@ -162,13 +162,13 @@ const MVPFeatureGrid = () => {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-green-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-green-600">MVP</span> - Minimum Viable Product (Launched 19 April 2025)
+              <span className="font-semibold text-green-600">MVP</span> - Minimum Viable Product (Launching 19 April 2025)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-amber-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-amber-600">NVP</span> - Next Version Product (Launch 20 July 2025)
+              <span className="font-semibold text-amber-600">NVP</span> - Next Version Product (Releasing 20 July 2025)
             </span>
           </div>
         </div>

@@ -11,7 +11,11 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test:e2e": "start-server-and-test dev http://localhost:5173 cypress:run",
+    "test:e2e:open": "start-server-and-test dev http://localhost:5173 cypress:open"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -74,6 +78,8 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "cypress": "^13.6.2",
+    "start-server-and-test": "^2.0.3",
     "@types/node": "^22.16.5",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

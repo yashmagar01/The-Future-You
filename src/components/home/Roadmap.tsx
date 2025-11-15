@@ -1,45 +1,103 @@
-import { CheckCircle2, Clock, Rocket } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Clock, Rocket, ChevronDown, Video, Users, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const Roadmap = () => {
-  const phases = [
+  const milestones = [
     {
-      phase: "MVP",
-      status: "current",
-      icon: CheckCircle2,
-      color: "from-brand-green to-green-600",
-      bgColor: "bg-brand-green/10",
+      id: "mvp",
+      quarter: "Q1 2025",
+      year: "2025",
+      label: "MVP Launch",
+      status: "completed",
+      icon: Video,
+      color: "bg-brand-green",
       textColor: "text-brand-green",
-      items: [
-        "Video recording & upload",
-        "Speech-to-text transcription",
-        "Basic emotion detection",
-        "Progress dashboard",
-        "User authentication"
-      ]
+      eta: "Launched Nov 2024",
+      summary: "Video analysis & comprehensive dashboard",
+      details: {
+        description: "Complete MVP with core features for daily video reflection practice and AI-powered feedback.",
+        features: [
+          "Video recording & upload with webcam support",
+          "Speech-to-text transcription (Whisper API)",
+          "Basic emotion detection from voice & face",
+          "Progress dashboard with charts & metrics",
+          "User authentication & private storage"
+        ]
+      }
     },
     {
-      phase: "Dream",
+      id: "nvp",
+      quarter: "Q2 2025",
+      year: "2025",
+      label: "NVP Release",
+      status: "current",
+      icon: Users,
+      color: "bg-accent",
+      textColor: "text-accent",
+      eta: "Expected Feb 2025",
+      summary: "Live mentor sessions & gamification features",
+      details: {
+        description: "Next Version Product introducing social features, peer learning, and motivation systems.",
+        features: [
+          "Live roleplay sessions with AI mentors",
+          "Peer-to-peer practice matching",
+          "Gamification with badges & achievements",
+          "Weekly challenges & leaderboards",
+          "Community feedback & social sharing"
+        ]
+      }
+    },
+    {
+      id: "dream",
+      quarter: "Q3 2025",
+      year: "2025",
+      label: "Dream Features",
+      status: "upcoming",
+      icon: Sparkles,
+      color: "bg-purple-500",
+      textColor: "text-purple-500",
+      eta: "Target Jul 2025",
+      summary: "AI avatar mentor & VR practice environments",
+      details: {
+        description: "Revolutionary features including personalized AI avatars and immersive VR practice scenarios.",
+        features: [
+          "Custom AI avatar mentors trained on your style",
+          "VR practice environments for presentations",
+          "Advanced pose analysis with full body tracking",
+          "Industry-specific scenario libraries",
+          "Mobile app for iOS & Android"
+        ]
+      }
+    },
+    {
+      id: "enterprise",
+      quarter: "Q4 2025",
+      year: "2025",
+      label: "Enterprise",
       status: "upcoming",
       icon: Rocket,
-      color: "from-accent to-blue-600",
-      bgColor: "bg-accent/10",
-      textColor: "text-accent",
-      items: [
-        "Advanced pose analysis",
-        "Peer comparison features",
-        "Live coaching sessions",
-        "Mobile app launch",
-        "Enterprise solutions"
-      ]
+      color: "bg-orange-500",
+      textColor: "text-orange-500",
+      eta: "Expected Dec 2025",
+      summary: "Team analytics & organization features",
+      details: {
+        description: "Enterprise-grade features for teams, organizations, and training programs.",
+        features: [
+          "Team dashboards & analytics",
+          "Custom branding & white-label options",
+          "SSO & advanced security",
+          "Admin controls & user management",
+          "API access & integrations"
+        ]
+      }
     }
-  ];
-
-  const milestones = [
-    { quarter: "Q1 2025", label: "MVP Launch", status: "completed" },
-    { quarter: "Q2 2025", label: "Beta Testing", status: "current" },
-    { quarter: "Q3 2025", label: "Mobile App", status: "upcoming" },
-    { quarter: "Q4 2025", label: "Enterprise", status: "upcoming" }
   ];
 
   return (
@@ -56,74 +114,141 @@ const Roadmap = () => {
           </p>
         </div>
 
-        {/* Timeline Bar */}
-        <div className="mb-16">
+        {/* Timeline Progress Indicator */}
+        <div className="mb-12">
           <div className="relative">
-            {/* Progress Line */}
-            <div className="absolute top-6 left-0 w-full h-1 bg-border" />
-            <div className="absolute top-6 left-0 w-1/2 h-1 bg-gradient-to-r from-brand-green to-accent" />
+            {/* Background Line - Desktop Horizontal */}
+            <div className="hidden md:block absolute top-6 left-0 w-full h-1 bg-border rounded-full" />
+            
+            {/* Progress Line - Desktop Horizontal */}
+            <div 
+              className="hidden md:block absolute top-6 left-0 h-1 bg-gradient-to-r from-brand-green via-accent to-accent rounded-full transition-all duration-1000"
+              style={{ width: '37.5%' }} // 1.5 out of 4 milestones (MVP complete + half of NVP)
+            />
 
-            {/* Milestones */}
-            <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4">
-              {milestones.map((milestone, index) => (
-                <div key={index} className="text-center">
-                  <div className={`inline-flex h-12 w-12 rounded-full items-center justify-center mb-3 ${
-                    milestone.status === 'completed' 
-                      ? 'bg-brand-green text-white' 
-                      : milestone.status === 'current'
-                      ? 'bg-accent text-white'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {milestone.status === 'completed' ? (
-                      <CheckCircle2 className="h-6 w-6" />
-                    ) : (
-                      <Clock className="h-6 w-6" />
-                    )}
+            {/* Mobile Vertical Timeline */}
+            <div className="md:hidden absolute left-6 top-0 bottom-0 w-1 bg-border rounded-full" />
+            <div 
+              className="md:hidden absolute left-6 top-0 w-1 bg-gradient-to-b from-brand-green via-accent to-accent rounded-full transition-all duration-1000"
+              style={{ height: '37.5%' }}
+            />
+
+            {/* Milestones Grid */}
+            <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-4">
+              {milestones.map((milestone, index) => {
+                const Icon = milestone.icon;
+                const isCompleted = milestone.status === 'completed';
+                const isCurrent = milestone.status === 'current';
+                
+                return (
+                  <div key={index} className="relative md:text-center">
+                    {/* Mobile: Side layout, Desktop: Top layout */}
+                    <div className="flex md:flex-col items-start md:items-center gap-4 md:gap-0">
+                      {/* Icon */}
+                      <div className={`relative z-10 flex-shrink-0 h-12 w-12 rounded-full flex items-center justify-center mb-0 md:mb-3 ${milestone.color} ${
+                        isCompleted ? 'text-white shadow-lg' : isCurrent ? 'text-white shadow-lg animate-pulse' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
+                        ) : isCurrent ? (
+                          <Icon className="h-6 w-6" aria-hidden="true" />
+                        ) : (
+                          <Clock className="h-6 w-6" aria-hidden="true" />
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 md:flex-none text-left md:text-center">
+                        <p className={`font-semibold text-sm mb-1 ${milestone.textColor}`}>
+                          {milestone.quarter} {milestone.year}
+                        </p>
+                        <p className="text-xs font-medium text-foreground mb-1">
+                          {milestone.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground hidden md:block">
+                          {milestone.summary}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="font-semibold text-sm mb-1">{milestone.quarter}</p>
-                  <p className="text-xs text-muted-foreground">{milestone.label}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Phase Cards */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {phases.map((phase, index) => {
-            const Icon = phase.icon;
-            return (
-              <Card 
-                key={index}
-                className="p-8 hover-lift cursor-default border-2 hover:border-border/80 transition-all"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Header */}
-                <div className="flex items-center gap-4 mb-6">
-                  <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${phase.color} flex items-center justify-center shadow-lg`}>
-                    <Icon className="h-7 w-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold">{phase.phase} Phase</h3>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full ${phase.bgColor} ${phase.textColor} text-xs font-medium mt-1`}>
-                      {phase.status === 'current' ? 'In Progress' : 'Coming Soon'}
-                    </span>
-                  </div>
-                </div>
+        {/* Milestone Details Accordion */}
+        <Accordion type="single" collapsible className="space-y-4">
+          {milestones.map((milestone, index) => {
+            const Icon = milestone.icon;
+            const isCompleted = milestone.status === 'completed';
+            const isCurrent = milestone.status === 'current';
 
-                {/* Feature List */}
-                <ul className="space-y-3">
-                  {phase.items.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <CheckCircle2 className={`h-5 w-5 ${phase.textColor} flex-shrink-0 mt-0.5`} />
-                      <span className="text-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
+            return (
+              <AccordionItem 
+                key={milestone.id} 
+                value={milestone.id}
+                className="border-2 rounded-lg overflow-hidden hover:border-border/80 transition-all"
+              >
+                <AccordionTrigger 
+                  className="px-6 py-4 hover:no-underline hover:bg-muted/50 transition-colors [&[data-state=open]]:bg-muted/50"
+                  aria-label={`${milestone.label} milestone details`}
+                >
+                  <div className="flex items-center gap-4 flex-1 text-left">
+                    {/* Icon */}
+                    <div className={`h-12 w-12 rounded-xl ${milestone.color} flex items-center justify-center shadow-lg flex-shrink-0 ${
+                      isCurrent ? 'animate-pulse' : ''
+                    }`}>
+                      <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap mb-1">
+                        <h3 className="text-xl font-bold">{milestone.label}</h3>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          isCompleted ? 'bg-brand-green/10 text-brand-green' :
+                          isCurrent ? 'bg-accent/10 text-accent' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {isCompleted ? 'Completed' : isCurrent ? 'In Progress' : 'Upcoming'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {milestone.summary}
+                      </p>
+                      <p className={`text-xs font-medium ${milestone.textColor}`}>
+                        {milestone.eta}
+                      </p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+
+                <AccordionContent className="px-6 pb-6 pt-2">
+                  <div className="pl-16 space-y-4">
+                    {/* Description */}
+                    <p className="text-muted-foreground leading-relaxed">
+                      {milestone.details.description}
+                    </p>
+
+                    {/* Features List */}
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3">Key Features:</h4>
+                      <ul className="space-y-2">
+                        {milestone.details.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <CheckCircle2 className={`h-4 w-4 ${milestone.textColor} flex-shrink-0 mt-0.5`} aria-hidden="true" />
+                            <span className="text-sm text-foreground">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             );
           })}
-        </div>
+        </Accordion>
 
         {/* Bottom CTA */}
         <div className="mt-12 text-center">

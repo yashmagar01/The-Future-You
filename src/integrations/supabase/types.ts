@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      recordings: {
+        Row: {
+          id: string
+          user_id: string
+          title: string | null
+          description: string | null
+          video_url: string
+          thumbnail_url: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          status: 'processing' | 'completed' | 'failed'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string | null
+          description?: string | null
+          video_url: string
+          thumbnail_url?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          status?: 'processing' | 'completed' | 'failed'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          description?: string | null
+          video_url?: string
+          thumbnail_url?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          status?: 'processing' | 'completed' | 'failed'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      feedback: {
+        Row: {
+          id: string
+          recording_id: string
+          overall_score: number | null
+          clarity_score: number | null
+          pace_score: number | null
+          tone_score: number | null
+          confidence_score: number | null
+          filler_words_count: number
+          key_insights: Json
+          improvements: string[]
+          strengths: string[]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          recording_id: string
+          overall_score?: number | null
+          clarity_score?: number | null
+          pace_score?: number | null
+          tone_score?: number | null
+          confidence_score?: number | null
+          filler_words_count?: number
+          key_insights?: Json
+          improvements?: string[]
+          strengths?: string[]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          recording_id?: string
+          overall_score?: number | null
+          clarity_score?: number | null
+          pace_score?: number | null
+          tone_score?: number | null
+          confidence_score?: number | null
+          filler_words_count?: number
+          key_insights?: Json
+          improvements?: string[]
+          strengths?: string[]
+          created_at?: string
+        }
+      }
+      progress: {
+        Row: {
+          id: string
+          user_id: string
+          metric_name: string
+          metric_value: number
+          recorded_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          metric_name: string
+          metric_value: number
+          recorded_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          metric_name?: string
+          metric_value?: number
+          recorded_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

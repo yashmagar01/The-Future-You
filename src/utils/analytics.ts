@@ -168,6 +168,14 @@ export const ANALYTICS_EVENTS = {
   DASHBOARD_VIEWED: 'dashboard_viewed',
   VIDEO_VIEWED: 'video_viewed',
   FEEDBACK_VIEWED: 'feedback_viewed',
+  
+  // Waitlist events
+  WAITLIST_SIGNUP: 'waitlist_signup',
+  WAITLIST_CONFIRMED: 'waitlist_confirmed',
+  WAITLIST_SHARE: 'waitlist_share',
+  
+  // Page views
+  PAGE_VIEW: 'page_view',
 } as const;
 
 /**

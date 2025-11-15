@@ -13,6 +13,9 @@ import Gallery from "./pages/Gallery";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Waitlist from "./pages/Waitlist";
+import WaitlistConfirm from "./pages/WaitlistConfirm";
+import WaitlistAdmin from "./pages/WaitlistAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +57,17 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+              {/* Waitlist Routes */}
+              <Route path="/waitlist" element={<Waitlist />} />
+              <Route path="/waitlist/confirm" element={<WaitlistConfirm />} />
+              <Route 
+                path="/admin/waitlist" 
+                element={
+                  <ProtectedRoute>
+                    <WaitlistAdmin />
+                  </ProtectedRoute>
+                } 
+              />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

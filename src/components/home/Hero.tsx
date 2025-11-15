@@ -2,7 +2,47 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Video, TrendingUp, Sparkles } from "lucide-react";
 
+// Analytics event logger (placeholder for actual analytics integration)
+const logEvent = (eventName: string, params: Record<string, any>) => {
+  console.log(`Analytics Event: ${eventName}`, params);
+  // TODO: Replace with actual analytics service (Google Analytics, Mixpanel, etc.)
+};
+
+// Get CTA variant from environment or localStorage (defaults to 'A')
+const getCTAVariant = (): 'A' | 'B' => {
+  // Check localStorage first
+  const storedVariant = localStorage.getItem('ctaVariant');
+  if (storedVariant === 'A' || storedVariant === 'B') {
+    return storedVariant;
+  }
+  
+  // Check environment variable
+  const envVariant = import.meta.env.VITE_CTA_VARIANT;
+  if (envVariant === 'B') {
+    return 'B';
+  }
+  
+  // Default to variant A
+  return 'A';
+};
+
 const Hero = () => {
+  const ctaVariant = getCTAVariant();
+  
+  // Variant A: "Start Recording — Free"
+  // Variant B: "Get Started Free"
+  const ctaText = ctaVariant === 'A' ? 'Start Recording — Free' : 'Get Started Free';
+  const ctaIcon = ctaVariant === 'A' ? Video : Sparkles;
+  const CtaIcon = ctaIcon;
+
+  const handleCTAClick = () => {
+    logEvent('cta_click', {
+      variant: ctaVariant,
+      location: 'hero',
+      cta_text: ctaText
+    });
+  };
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-24 px-4">
       {/* Background decorative elements */}
@@ -36,11 +76,14 @@ const Hero = () => {
               <Button 
                 size="lg" 
                 className="text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all hover-lift bg-brand-green hover:bg-brand-green/90"
+                onClick={handleCTAClick}
+                data-cta-variant={ctaVariant}
+                aria-label={`${ctaText} - No credit card required`}
                 asChild
               >
                 <Link to="/record">
-                  <Video className="mr-2 h-5 w-5" />
-                  Start Recording
+                  <CtaIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                  {ctaText}
                 </Link>
               </Button>
               
@@ -48,17 +91,19 @@ const Hero = () => {
                 size="lg" 
                 variant="outline"
                 className="text-lg h-14 px-8 border-2 hover-lift"
+                onClick={() => logEvent('cta_click', { variant: 'secondary', location: 'hero', cta_text: 'View Dashboard' })}
+                aria-label="View your progress dashboard"
                 asChild
               >
                 <Link to="/dashboard">
-                  <TrendingUp className="mr-2 h-5 w-5" />
+                  <TrendingUp className="mr-2 h-5 w-5" aria-hidden="true" />
                   View Dashboard
                 </Link>
               </Button>
             </div>
             
-            <p className="text-sm text-muted-foreground mt-6">
-              No credit card required • Free to start • Build confidence daily
+            <p className="text-sm text-muted-foreground mt-6" role="contentinfo">
+              No credit card required • Desktop only
             </p>
           </div>
 

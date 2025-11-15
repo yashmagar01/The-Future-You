@@ -13,8 +13,8 @@ const HowItWorks = () => {
         "Practice presentations or daily reflections",
         "Secure, private storage"
       ],
-      color: "from-brand-green to-brand-green/70",
-      bgColor: "bg-brand-green/10"
+      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-500/10"
     },
     {
       icon: Brain,
@@ -26,8 +26,8 @@ const HowItWorks = () => {
         "Body language & facial expressions",
         "Tone, pacing, and confidence markers"
       ],
-      color: "from-accent to-accent/70",
-      bgColor: "bg-accent/10"
+      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-500/10"
     },
     {
       icon: TrendingUp,
@@ -39,8 +39,8 @@ const HowItWorks = () => {
         "Track progress with detailed metrics",
         "Set and achieve communication goals"
       ],
-      color: "from-primary to-primary/70",
-      bgColor: "bg-primary/10"
+      color: "from-emerald-500 to-emerald-600",
+      bgColor: "bg-emerald-500/10"
     }
   ];
 
@@ -56,7 +56,7 @@ const HowItWorks = () => {
 
         <div className="relative">
           {/* Connection Lines (Desktop) */}
-          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-brand-green via-accent to-primary -translate-y-1/2 -z-10" />
+          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-blue-500 to-emerald-500 -translate-y-1/2 -z-10" />
           
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
             {steps.map((step, index) => {
@@ -68,13 +68,13 @@ const HowItWorks = () => {
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
                   <Card 
-                    className="p-8 h-full hover-lift cursor-default bg-card border-2 hover:border-border/80 transition-all focus-within:ring-2 focus-within:ring-brand-green/50"
+                    className="p-8 h-full hover-lift cursor-default bg-card border-2 hover:border-border/80 transition-all focus-within:ring-2 focus-within:ring-brand-green/50 overflow-visible"
                     tabIndex={0}
                     role="article"
                     aria-label={step.ariaLabel}
                   >
                     {/* Step Number Badge */}
-                    <div className={`absolute -top-4 left-8 px-4 py-2 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-sm shadow-lg`}>
+                    <div className={`absolute -top-3 left-6 px-4 py-2 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-sm shadow-lg z-10`}>
                       Step {step.step}
                     </div>
 

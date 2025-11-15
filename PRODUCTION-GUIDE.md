@@ -42,9 +42,9 @@ Status: Pre-Production → Production Ready
 ```tsx
 // File: src/pages/Home.tsx (line 32)
 <VideoEmbed 
-  src="https://www.youtube.com/watch?v=dQw4w9WgXcQ"  // ❌ DEMO LINK
+  src="https://www.youtube.com/watch?v=pVO6QOt-8QE"  // ✅ ACTUAL VIDEO
   title="NotebookLM Overview - See How The Future You Works"
-  caption="Watch this AI-generated overview powered by NotebookLM"
+  caption="Watch this AI-generated overview powered by NotebookLM to understand our approach"
   poster="/assets/video-poster.svg"
 />
 ```
@@ -132,9 +132,9 @@ If you upload to YouTube instead:
 
 ```tsx
 <VideoEmbed 
-  src="https://www.youtube.com/watch?v=YOUR_ACTUAL_VIDEO_ID"
+  src="https://www.youtube.com/watch?v=pVO6QOt-8QE"  // ✅ Your actual YouTube video
   title="NotebookLM Overview - See How The Future You Works"
-  caption="Watch this AI-generated overview powered by NotebookLM"
+  caption="Watch this AI-generated overview powered by NotebookLM to understand our approach"
   poster="/assets/video-poster.png"
 />
 ```
@@ -944,8 +944,8 @@ export const logEvent = (eventName: string, properties?: Record<string, any>): v
 Copy this checklist and check off each item:
 
 #### 🎥 Video & Media
-- [ ] NotebookLM MP4 uploaded to Supabase/Cloudflare
-- [ ] Video URL updated in `src/pages/Home.tsx`
+- [x] NotebookLM video uploaded to YouTube (https://youtu.be/pVO6QOt-8QE)
+- [x] Video URL updated in `src/pages/Home.tsx`
 - [ ] Video poster image created (1280x720px)
 - [ ] Video poster uploaded and URL updated
 - [ ] Test video plays on mobile and desktop

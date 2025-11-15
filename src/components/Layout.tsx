@@ -69,17 +69,15 @@ const Layout = ({ children }: LayoutProps) => {
                 </Link>
               ))}
               
-              {/* Join Waitlist CTA - Show only if not logged in */}
-              {!user && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="hidden md:inline-flex"
-                >
-                  <Link to="/waitlist">Join Waitlist</Link>
-                </Button>
-              )}
+              {/* Join Waitlist CTA - Always visible */}
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="hidden md:inline-flex"
+              >
+                <Link to="/waitlist">Join Waitlist</Link>
+              </Button>
               
               {user ? (
                 <Button

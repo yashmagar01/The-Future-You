@@ -46,7 +46,6 @@ export const useUpdateProfile = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        // @ts-expect-error - Supabase types will be correct after running migrations
         .update(updates)
         .eq('id', user.id)
         .select()
@@ -137,10 +136,10 @@ export const useCreateRecording = () => {
 
       const { data, error } = await supabase
         .from('recordings')
-        .insert({
+        .insert([{
           ...recording,
           user_id: user.id,
-        } as TablesInsert<'recordings'>)
+        }] as TablesInsert<'recordings'>[])
         .select()
         .single();
 
@@ -164,7 +163,6 @@ export const useUpdateRecording = () => {
 
       const { data, error } = await supabase
         .from('recordings')
-        // @ts-expect-error - Supabase types will be correct after running migrations
         .update(updates)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -228,7 +226,7 @@ export const useStats = () => {
 
       // Calculate average score
       const scores: number[] = [];
-      (recordingsWithFeedback || []).forEach((rec: RecordingWithFeedback) => {
+      (recordingsWithFeedback || []).forEach((rec: any) => {
         if (Array.isArray(rec.feedback) && rec.feedback.length > 0 && rec.feedback[0].overall_score) {
           scores.push(rec.feedback[0].overall_score);
         }
@@ -339,7 +337,7 @@ export const usePerformanceTrend = () => {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const monthlyData: { [key: string]: number[] } = {};
 
-      (data || []).forEach((recording: Recording) => {
+      (data || []).forEach((recording: any) => {
         const date = new Date(recording.created_at);
         const monthKey = `${months[date.getMonth()]}`;
         

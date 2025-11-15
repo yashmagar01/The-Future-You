@@ -4,6 +4,7 @@ import VideoEmbed from "@/components/VideoEmbed";
 import ProblemSolutionOutcome from "@/components/home/ProblemSolutionOutcome";
 import HowItWorks from "@/components/home/HowItWorks";
 import TechCards from "@/components/home/TechCards";
+import TechStackSummary from "@/components/TechStackSummary";
 import FeatureGrid from "@/components/home/FeatureGrid";
 import Roadmap from "@/components/home/Roadmap";
 import TestimonialGrid from "@/components/home/TestimonialGrid";
@@ -43,6 +44,9 @@ const Home = () => {
 
       {/* 5. Tech & Implementation */}
       <TechCards />
+
+      {/* 5b. Tech Stack Deep Dive */}
+      <TechStackSummary />
 
       {/* 6. MVP Feature Grid */}
       <FeatureGrid />

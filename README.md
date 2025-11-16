@@ -1,6 +1,6 @@
 # Yash Reflections MVP - The Future You
 
-A daily reflections and communication coach application built with React, TypeScript, and Supabase. Record video reflections, receive AI-powered feedback, and track your communication skills progress over time.
+A daily reflections and communication coach application with **zero-cost AI processing**. Record video reflections, receive AI-powered feedback using offline models (Vosk, MediaPipe, Transformers.js), and track your communication skills progress.
 
 ## 🎥 Watch the Demo
 
@@ -11,54 +11,150 @@ A daily reflections and communication coach application built with React, TypeSc
 Build confidence through daily video reflections and AI-powered feedback. This application helps users:
 - Record video reflections with webcam support
 - Upload pre-recorded videos
+- Get AI feedback on vocal clarity, body language, and content
 - Track progress with detailed analytics
 - View performance trends over time
 - Store recordings securely in the cloud
 
+**Cost**: **₹0/month** - 100% local AI processing, no external APIs!
+
+## 🏗️ Project Structure
+
+```
+yash-reflections-mvp/
+├── frontend/              # React + TypeScript frontend
+│   ├── src/              # React components, pages, hooks
+│   ├── public/           # Static assets
+│   └── package.json      # Frontend dependencies
+├── backend/              # Local AI processing server
+│   ├── local-processor/  # Node.js + Express server
+│   │   ├── server.js     # Main processing logic
+│   │   └── models/       # Downloaded AI models (Vosk)
+│   └── README.md         # Backend setup guide
+├── supabase-organized/   # Supabase configuration
+│   ├── functions/        # Edge Functions (Deno)
+│   ├── migrations/       # Database migrations
+│   ├── docs/            # Documentation
+│   └── README.md        # Supabase setup guide
+└── README.md            # This file
+```
+
 ## 🚀 Tech Stack
 
-- **Frontend**: React 18 + TypeScript
+### Frontend
+- **Framework**: React 18 + TypeScript
 - **Build Tool**: Vite
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **State Management**: React Query (TanStack Query)
-- **Video Recording**: MediaRecorder API
-- **Charts**: Recharts
-- **Animations**: Framer Motion
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Router**: React Router v6
+- **State**: TanStack Query
+- **Deployment**: Vercel
+
+### Backend (Zero-Cost AI)
+- **Server**: Node.js + Express
+- **Speech-to-Text**: Vosk (offline)
+- **NLP**: Hugging Face Transformers.js
+- **Body Language**: MediaPipe
+- **Video Processing**: FFmpeg
+- **Cost**: ₹0/month
+
+### Database & Services
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth
+- **Storage**: Supabase Storage
+- **Edge Functions**: Deno
+- **Cron Jobs**: pg_cron
 
 ## 📋 Prerequisites
 
-- Node.js 18+ and npm (or use [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
-- A Supabase account (free tier works)
+- **Node.js** 18+ and npm
+- **Python** 3.8+ (for Vosk transcription)
+- **FFmpeg** (for video processing)
+- **Supabase** account (free tier)
 - Modern browser with webcam support
 
-## ⚡ Quick Start (5 minutes)
+## ⚡ Quick Start
 
-**See blank screen?** Follow these steps:
+### 1. Frontend Setup (5 minutes)
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+```bash
+# Install frontend dependencies
+cd frontend
+npm install
 
-2. **Set up Supabase** - See [SETUP_SUPABASE_PROJECT.md](./SETUP_SUPABASE_PROJECT.md) for detailed guide:
-   - Create project at [supabase.com](https://supabase.com)
-   - Copy credentials to `.env`
-   - Apply database migrations
+# Set up environment variables
+cp ../.env.example ../.env
+# Update .env with your Supabase credentials
 
-3. **Start dev server**:
-   ```bash
-   npm run dev
-   ```
+# Start frontend dev server
+npm run dev
+```
 
-4. **Create test user** - See [CREATE_TEST_USER.md](./CREATE_TEST_USER.md):
-   - Email: `test@example.com`
-   - Password: `Test123!`
+Frontend runs on http://localhost:5173
 
-📖 **Need help?** Check these guides:
-- [SETUP_SUPABASE_PROJECT.md](./SETUP_SUPABASE_PROJECT.md) - Supabase setup walkthrough
-- [QUICK_START.md](./QUICK_START.md) - Fast setup checklist
-- [CREATE_TEST_USER.md](./CREATE_TEST_USER.md) - Create test accounts
+### 2. Backend Setup (15 minutes)
+
+```bash
+# Install backend dependencies
+cd backend/local-processor
+npm install
+
+# Install Python dependencies
+pip install vosk mediapipe opencv-python
+
+# Download Vosk model (500MB)
+cd models
+wget https://alphacephei.com/vosk/models/vosk-model-en-in-0.5.zip
+unzip vosk-model-en-in-0.5.zip
+
+# Start backend processor
+npm start
+```
+
+Backend runs on http://localhost:3001
+
+**Full backend setup guide**: [backend/JUGAAD_SETUP.md](./backend/JUGAAD_SETUP.md)
+
+### 3. Supabase Setup (10 minutes)
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link to your project
+supabase link --project-ref your-project-ref
+
+# Apply migrations
+supabase db push
+
+# Deploy Edge Functions
+supabase functions deploy process-recordings
+
+# Set secrets
+supabase secrets set LOCAL_PROCESSING_ENDPOINT=http://localhost:3001/analyze
+supabase secrets set CRON_SECRET=$(openssl rand -base64 32)
+```
+
+**Full Supabase setup guide**: [supabase-organized/README.md](./supabase-organized/README.md)
+
+## 📖 Documentation
+
+### Setup Guides
+- **Frontend**: [frontend/README.md](./frontend/README.md)
+- **Backend AI Processor**: [backend/JUGAAD_SETUP.md](./backend/JUGAAD_SETUP.md)
+- **Supabase**: [supabase-organized/README.md](./supabase-organized/README.md)
+
+### Feature Documentation
+- **User Roles & Priority**: [supabase-organized/USER_MANAGEMENT_GUIDE.md](./supabase-organized/USER_MANAGEMENT_GUIDE.md)
+- **Background Worker**: [supabase-organized/PROCESSING_WORKER_SETUP.md](./supabase-organized/PROCESSING_WORKER_SETUP.md)
+- **Waitlist System**: [supabase-organized/WAITLIST_SETUP.md](./supabase-organized/WAITLIST_SETUP.md)
+- **Database Setup**: [supabase-organized/DATABASE_SETUP_GUIDE.md](./supabase-organized/DATABASE_SETUP_GUIDE.md)
+
+### Architecture
+- **AI Stack Refactoring**: [backend/REFACTORING_SUMMARY.md](./backend/REFACTORING_SUMMARY.md)
+- **Cost Analysis**: Saves ₹84,000/year vs cloud alternatives!
 
 ## 🛠️ Detailed Setup Instructions
 

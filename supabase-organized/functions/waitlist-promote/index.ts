@@ -137,7 +137,7 @@ serve(async (req) => {
 
     // Check if user already has an account
     const { data: existingUser } = await supabaseClient.auth.admin.listUsers();
-    const userExists = existingUser?.users?.some(u => u.email === entry.email);
+    const userExists = existingUser?.users?.some((u: any) => u.email === entry.email);
 
     if (userExists) {
       // Update existing user's profile

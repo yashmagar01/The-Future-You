@@ -74,10 +74,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
+    // Dynamic redirect: works on both localhost and production
+    const currentOrigin = window.location.origin;
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${currentOrigin}/dashboard`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',

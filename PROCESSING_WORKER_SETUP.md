@@ -48,8 +48,12 @@ cd yash-reflections-mvp
 supabase functions deploy process-recordings
 
 # Set environment variables
-supabase secrets set OPENAI_API_KEY=your_openai_key_here
+supabase secrets set LOCAL_PROCESSING_ENDPOINT=http://localhost:3001/analyze
 supabase secrets set CRON_SECRET=your_secure_random_string
+
+# Note: LOCAL_PROCESSING_ENDPOINT should point to your local jugaad processor
+# For same network: http://192.168.1.X:3001/analyze
+# For ngrok tunnel: https://abc123.ngrok.io/analyze
 ```
 
 ### 2. Configure Cron Job in Supabase
@@ -155,20 +159,20 @@ Expected response:
 |----------|----------|-------------|
 | `SUPABASE_URL` | Yes | Auto-provided by Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Auto-provided by Supabase |
-| `OPENAI_API_KEY` | Yes | Your OpenAI API key for AI analysis |
+| `LOCAL_PROCESSING_ENDPOINT` | Yes | URL to local jugaad processor (default: http://localhost:3001/analyze) |
 | `CRON_SECRET` | Recommended | Secret key to secure cron endpoint |
 
 ### Worker Configuration (in code)
 
 ```typescript
-const MAX_CONCURRENT_JOBS = 3;      // Process up to 3 videos per run
+const MAX_CONCURRENT_JOBS = 2;      // Process up to 2 videos per run (optimized for CPU)
 const PROCESSING_TIMEOUT_MINUTES = 30; // Reset stuck jobs after 30 min
 ```
 
 Adjust these based on:
 - Video processing time
-- Server capacity
-- API rate limits
+- Laptop/server CPU capacity
+- Local processor performance (Vosk transcription is CPU-bound)
 
 ## Processing Logic
 
@@ -245,58 +249,103 @@ LIMIT 20;
 2. Navigate to **Edge Functions** → **process-recordings**
 3. View **Logs** tab for execution details
 
-## AI Analysis Integration
+## Local Jugaad AI Processing Integration
 
-### Current Implementation (Mock)
+### Architecture: Edge Function → Local Processor
 
-The function currently returns mock analysis data. Replace the `analyzeVideo()` function with your actual AI pipeline:
-
-### Option 1: OpenAI GPT-4 Vision
+The Edge Function sends videos to your **local jugaad processing server** running on `localhost:3001`:
 
 ```typescript
-async function analyzeVideo(videoBlob: Blob): Promise<AnalysisResult> {
-  // Upload video to temporary storage or stream
+async function analyzeVideo(videoBlob: Blob, recordingId: string): Promise<AnalysisResult> {
+  const LOCAL_PROCESSING_ENDPOINT = 
+    Deno.env.get("LOCAL_PROCESSING_ENDPOINT") ?? "http://localhost:3001/analyze";
+  
   const formData = new FormData();
-  formData.append('file', videoBlob);
+  formData.append('video', videoBlob, `${recordingId}.mp4`);
+  formData.append('recordingId', recordingId);
   
-  // Call OpenAI API
-  const response = await fetch('https://api.openai.com/v1/video/analyze', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: formData
-  });
-  
-  const data = await response.json();
-  return parseOpenAIResponse(data);
+  try {
+    const response = await fetch(LOCAL_PROCESSING_ENDPOINT, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Local processor error: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Failed to reach local processor:', error);
+    
+    // Fallback: Basic analysis without AI
+    return {
+      overall_score: 50,
+      vocal_clarity: { score: 50, details: "Processing unavailable" },
+      // ... fallback data
+    };
+  }
 }
 ```
 
-### Option 2: Azure Video Indexer
+### Setup Local Processor
 
-```typescript
-async function analyzeVideo(videoBlob: Blob): Promise<AnalysisResult> {
-  // Upload to Azure
-  // Get video index
-  // Extract insights
-  // Return formatted results
-}
-```
+See **JUGAAD_SETUP.md** for complete installation guide:
 
-### Option 3: Custom ML Model
+1. Install dependencies:
+   ```bash
+   cd local-processor
+   npm install
+   ```
 
-```typescript
-async function analyzeVideo(videoBlob: Blob): Promise<AnalysisResult> {
-  // Call your custom ML endpoint
-  const response = await fetch('https://your-ml-api.com/analyze', {
-    method: 'POST',
-    body: videoBlob
-  });
-  
-  return await response.json();
-}
-```
+2. Download Vosk model:
+   ```bash
+   cd models
+   wget https://alphacephei.com/vosk/models/vosk-model-en-in-0.5.zip
+   unzip vosk-model-en-in-0.5.zip
+   ```
+
+3. Start server:
+   ```bash
+   npm start
+   ```
+
+4. Configure Edge Function:
+   ```bash
+   supabase secrets set LOCAL_PROCESSING_ENDPOINT=http://localhost:3001/analyze
+   
+   # For production (same network):
+   supabase secrets set LOCAL_PROCESSING_ENDPOINT=http://192.168.1.100:3001/analyze
+   
+   # Or with ngrok tunnel:
+   ngrok http 3001
+   supabase secrets set LOCAL_PROCESSING_ENDPOINT=https://abc123.ngrok.io/analyze
+   ```
+
+### What Happens During Processing
+
+1. **Edge Function** downloads video from Supabase Storage
+2. **Edge Function** sends video via HTTP POST to local processor
+3. **Local Processor** (server.js):
+   - Extracts audio with FFmpeg → WAV 16kHz mono
+   - Transcribes with Vosk (offline speech-to-text)
+   - Analyzes transcript (filler words, sentiment, clarity)
+   - Extracts frames with FFmpeg (1 per 5 seconds)
+   - Analyzes body language with MediaPipe (posture, gestures)
+   - Calculates comprehensive scores
+4. **Local Processor** returns JSON result
+5. **Edge Function** saves to database
+
+### Zero-Cost Stack (₹0/month)
+
+- **Vosk** - Offline speech-to-text (no API costs)
+- **Transformers.js** - Sentiment analysis (runs in Node.js)
+- **MediaPipe** - Body language detection (offline)
+- **FFmpeg** - Video/audio processing (free tool)
+- **Node.js + Express** - Local API server (free)
+
+No external API calls, no cloud costs!
 
 ## Troubleshooting
 

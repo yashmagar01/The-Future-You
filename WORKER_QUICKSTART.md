@@ -1,5 +1,15 @@
 # Quick Start: Processing Worker Deployment
 
+## ⚠️ Prerequisites
+
+**IMPORTANT**: Before deploying the worker, you MUST set up the local jugaad AI processor:
+
+1. Follow **JUGAAD_SETUP.md** to install Vosk, FFmpeg, and dependencies
+2. Start local processor: `cd local-processor && npm start`
+3. Verify it's running: `curl http://localhost:3001/health`
+
+Without the local processor running, videos will not be analyzed (only basic fallback data).
+
 ## 🚀 One-Time Setup (5 minutes)
 
 ### 1. Deploy Edge Function
@@ -15,7 +25,12 @@ CRON_SECRET=$(openssl rand -base64 32)
 
 # Set in Supabase
 supabase secrets set CRON_SECRET="$CRON_SECRET"
-supabase secrets set OPENAI_API_KEY="your_openai_api_key_here"
+supabase secrets set LOCAL_PROCESSING_ENDPOINT="http://localhost:3001/analyze"
+
+# Note: Adjust LOCAL_PROCESSING_ENDPOINT based on your setup:
+# - Local laptop: http://localhost:3001/analyze
+# - Same network: http://192.168.1.X:3001/analyze
+# - ngrok tunnel: https://abc123.ngrok.io/analyze
 ```
 
 ### 3. Apply Database Migration
@@ -178,9 +193,10 @@ AND updated_at < NOW() - INTERVAL '30 minutes';
 
 ### High Failure Rate
 1. Check Edge Function logs
-2. Verify OPENAI_API_KEY is set
-3. Test video download manually
-4. Check storage permissions
+2. Verify LOCAL_PROCESSING_ENDPOINT is correct
+3. Ensure local processor server is running: `curl http://localhost:3001/health`
+4. Test video download manually
+5. Check storage permissions
 
 ### Slow Processing
 1. Increase concurrent jobs in `process-recordings/index.ts`:

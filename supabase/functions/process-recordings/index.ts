@@ -1,6 +1,7 @@
 // Supabase Edge Function: process-recordings
 // Background worker that processes video recordings in priority order
 // Triggered by: Supabase Cron (every 5 minutes) or HTTP POST
+// JUGAAD STACK: Local-first, offline AI processing using Vosk + Transformers.js + MediaPipe
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -10,11 +11,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Configuration
+// Configuration - JUGAAD: No premium APIs, local processing only
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
-const MAX_CONCURRENT_JOBS = 3; // Process up to 3 videos per run
+const LOCAL_PROCESSING_ENDPOINT = Deno.env.get("LOCAL_PROCESSING_ENDPOINT") ?? "http://localhost:3001/analyze";
+const MAX_CONCURRENT_JOBS = 2; // Process up to 2 videos per run (CPU-bound)
 const PROCESSING_TIMEOUT_MINUTES = 30; // Reset stuck jobs after 30 min
 
 interface Recording {
@@ -133,61 +134,78 @@ async function downloadVideo(videoUrl: string): Promise<Blob> {
 }
 
 /**
- * Run AI analysis on video
- * This is a placeholder - integrate with your actual AI pipeline
+ * Run AI analysis on video - JUGAAD IMPLEMENTATION
+ * Uses local-first, offline processing:
+ * 1. Send to local Node.js server running Vosk + Transformers.js + MediaPipe
+ * 2. No external APIs, no internet required for AI processing
+ * 3. All processing on local CPU (i5 laptop compatible)
  */
 async function analyzeVideo(videoBlob: Blob, recordingId: string): Promise<AnalysisResult> {
-  console.log(`Analyzing video (${videoBlob.size} bytes)`);
+  console.log(`[JUGAAD] Analyzing video locally (${videoBlob.size} bytes)`);
 
-  // TODO: Replace with actual AI analysis pipeline
-  // Options:
-  // 1. OpenAI GPT-4 Vision API
-  // 2. Azure Video Indexer
-  // 3. Google Cloud Video Intelligence
-  // 4. Custom ML model endpoint
+  try {
+    // Send video to local processing server
+    // This server runs: Vosk (transcription), Transformers.js (sentiment/clarity), MediaPipe (posture)
+    const formData = new FormData();
+    formData.append('video', videoBlob, `${recordingId}.mp4`);
+    formData.append('recordingId', recordingId);
 
-  // Example: Call OpenAI API for analysis
-  // For now, return mock data
-  
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  // Mock analysis result
-  const mockResult: AnalysisResult = {
-    overall_score: Math.floor(Math.random() * 30) + 70, // 70-100
-    strengths: [
-      "Clear articulation and confident voice projection",
-      "Good eye contact and engaging body language",
-      "Well-structured content with logical flow"
-    ],
-    areas_for_improvement: [
-      "Reduce filler words ('um', 'uh') for smoother delivery",
-      "Vary vocal tone to emphasize key points",
-      "Add more pauses for audience comprehension"
-    ],
-    specific_feedback: {
-      body_language: {
-        score: 85,
-        notes: "Excellent posture and hand gestures. Consider moving more naturally to appear less rigid."
-      },
-      vocal_delivery: {
-        score: 78,
-        notes: "Clear pronunciation with good pace. Work on varying pitch for more engaging delivery."
-      },
-      content_structure: {
-        score: 90,
-        notes: "Well-organized with clear introduction, body, and conclusion. Strong opening hook."
-      },
-      engagement: {
-        score: 82,
-        notes: "Good audience connection through eye contact. Add more interactive elements or questions."
+    const response = await fetch(LOCAL_PROCESSING_ENDPOINT, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Processing-Mode': 'offline-jugaad'
       }
-    },
-    transcript: "This is a mock transcript of the video content...",
-    duration_seconds: 120
-  };
+    });
 
-  return mockResult;
+    if (!response.ok) {
+      throw new Error(`Local processing failed: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    console.log(`[JUGAAD] Analysis complete: Score ${result.overall_score}`);
+    return result as AnalysisResult;
+
+  } catch (error) {
+    console.error("[JUGAAD] Local processing error:", error);
+    
+    // Fallback: Return basic analysis if local server unavailable
+    // This ensures the system remains functional during development
+    console.log("[JUGAAD] Using fallback basic analysis");
+    
+    return {
+      overall_score: 75,
+      strengths: [
+        "Video uploaded successfully",
+        "Ready for detailed analysis when local server is running"
+      ],
+      areas_for_improvement: [
+        "Complete analysis pending - start local processing server",
+        "Run: npm run start:processor (see JUGAAD_SETUP.md)"
+      ],
+      specific_feedback: {
+        body_language: {
+          score: 75,
+          notes: "Pending MediaPipe analysis. Start local processor for full body language evaluation."
+        },
+        vocal_delivery: {
+          score: 75,
+          notes: "Pending Vosk transcription and Transformers.js analysis. Start local processor for speech evaluation."
+        },
+        content_structure: {
+          score: 75,
+          notes: "Pending transcript analysis. Start local processor for content structure evaluation."
+        },
+        engagement: {
+          score: 75,
+          notes: "Pending full video analysis. Start local processor for engagement metrics."
+        }
+      },
+      transcript: "Transcript pending - local Vosk processing required",
+      duration_seconds: 0
+    };
+  }
 }
 
 /**

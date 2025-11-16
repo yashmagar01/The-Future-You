@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.local
+frontend/.env
+backend/.env
+
 # Cypress
 cypress/videos
 cypress/screenshots

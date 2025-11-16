@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,20 +70,67 @@ export default function AdminPanel() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, full_name, email, role, created_at")
+        .select("id, full_name, role, created_at")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      setUsers(data || []);
+      // Fetch auth users via Edge Function or use service role
+      // For now, we'll use a workaround: get emails from auth.users via RPC
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      // Fetch users with emails using the admin API via Edge Function
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-users`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      let usersWithEmails: Profile[] = [];
+
+      if (response.ok) {
+        const result = await response.json();
+        usersWithEmails = result.users || [];
+      } else {
+        // Fallback: Use profiles without emails
+        usersWithEmails = (profiles || []).map(p => ({
+          ...p,
+          email: null, // Email not available without admin function
+        }));
+      }
+
+      setUsers(usersWithEmails);
     } catch (error) {
       console.error("Error fetching users:", error);
+      
+      // Fallback: Try to get profiles without emails
+      try {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, role, created_at")
+          .order("created_at", { ascending: false });
+        
+        setUsers((profiles || []).map(p => ({ ...p, email: null })));
+      } catch (fallbackError) {
+        console.error("Fallback fetch failed:", fallbackError);
+      }
+      
       toast({
-        title: "Error",
-        description: "Failed to load users",
-        variant: "destructive",
+        title: "Warning",
+        description: "User emails may not be visible. Some features might be limited.",
       });
     } finally {
       setLoading(false);
@@ -159,14 +207,17 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <Layout>
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -253,6 +304,7 @@ export default function AdminPanel() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

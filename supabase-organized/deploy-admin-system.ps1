@@ -12,14 +12,23 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Deploy the list-users function
+Write-Host "`n📦 Deploying list-users function..." -ForegroundColor Yellow
+npx supabase functions deploy list-users
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Failed to deploy list-users function" -ForegroundColor Red
+    exit 1
+}
+
 # Deploy the promote-user function
 Write-Host "`n📦 Deploying promote-user function..." -ForegroundColor Yellow
 npx supabase functions deploy promote-user
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ promote-user function deployed successfully!" -ForegroundColor Green
+    Write-Host "✅ Both functions deployed successfully!" -ForegroundColor Green
 } else {
-    Write-Host "❌ Failed to deploy function" -ForegroundColor Red
+    Write-Host "❌ Failed to deploy promote-user function" -ForegroundColor Red
     exit 1
 }
 

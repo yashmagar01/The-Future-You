@@ -120,7 +120,7 @@ serve(async (req) => {
       .from("profiles")
       .update({ role })
       .eq("id", userId)
-      .select("id, role, full_name, email")
+      .select("id, role, full_name")
       .single();
 
     if (updateError) {
@@ -130,6 +130,10 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Get user email from auth.users
+    const { data: authUser } = await supabaseClient.auth.admin.getUserById(userId);
+    const userEmail = authUser?.user?.email || null;
 
     // Update priority for existing recordings if promoting to/from tester
     if (role === "tester" || targetProfile.role === "tester") {
@@ -154,7 +158,7 @@ serve(async (req) => {
         user: {
           id: updatedProfile.id,
           name: updatedProfile.full_name,
-          email: updatedProfile.email,
+          email: userEmail,
           previousRole: targetProfile.role,
           newRole: updatedProfile.role,
         },

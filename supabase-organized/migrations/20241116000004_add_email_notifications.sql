@@ -3,6 +3,21 @@
 -- Automatically sends email when recording status changes to 'completed'
 
 -- =====================================================
+-- 0. Ensure notified column exists (safety check)
+-- =====================================================
+
+-- Add notified column if it doesn't exist
+-- This should already exist from migration 20241116000002, but we add it here as a safety measure
+ALTER TABLE public.recordings
+ADD COLUMN IF NOT EXISTS notified BOOLEAN NOT NULL DEFAULT false;
+
+-- Add index for efficient queries on unnotified recordings
+CREATE INDEX IF NOT EXISTS idx_recordings_notified ON public.recordings(notified) WHERE notified = false;
+
+-- Add comment
+COMMENT ON COLUMN public.recordings.notified IS 'Whether user has been notified about video completion';
+
+-- =====================================================
 -- 1. Create function to send completion email
 -- =====================================================
 

@@ -16,6 +16,7 @@ import Signup from "./pages/Signup";
 import Waitlist from "./pages/Waitlist";
 import WaitlistConfirm from "./pages/WaitlistConfirm";
 import WaitlistAdmin from "./pages/WaitlistAdmin";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,15 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <WaitlistAdmin />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Admin Routes */}
+              <Route 
+                path="/admin/users" 
+                element={
+                  <ProtectedRoute>
+                    <AdminPanel />
                   </ProtectedRoute>
                 } 
               />

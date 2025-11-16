@@ -13,7 +13,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const APP_BASE_URL = Deno.env.get("APP_BASE_URL") ?? "https://yash.com";
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") ?? "https://the-future-you.vercel.app/";
 const MAX_NOTIFICATIONS_PER_RUN = 20;
 
 interface Recording {

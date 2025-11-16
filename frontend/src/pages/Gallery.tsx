@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Video, Play, TrendingUp, Calendar, AlertCircle } from "lucide-react";
+import { Video, Play, TrendingUp, Calendar, AlertCircle, Loader2, CheckCircle2, Eye } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useRecordings } from "@/hooks/useRecordings";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -54,7 +54,9 @@ const Gallery = () => {
             {recordings.map((recording, index) => (
               <Card 
                 key={recording.id} 
-                className="overflow-hidden hover-lift group cursor-pointer"
+                className={`overflow-hidden hover-lift group ${
+                  recording.status === 'completed' ? 'cursor-pointer' : ''
+                }`}
                 style={{ animationDelay: `${index * 75}ms` }}
               >
                 <div className="aspect-video bg-muted relative flex items-center justify-center">
@@ -66,27 +68,52 @@ const Gallery = () => {
                     />
                   ) : (
                     <>
-                      <Video className="h-12 w-12 text-muted-foreground" />
-                      <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5" />
+                      {recording.status === 'pending' || recording.status === 'processing' ? (
+                        <>
+                          <div className="relative">
+                            <Video className="h-12 w-12 text-muted-foreground" />
+                            <Loader2 className="h-6 w-6 text-primary animate-spin absolute -bottom-1 -right-1" />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5" />
+                        </>
+                      ) : (
+                        <>
+                          <Video className="h-12 w-12 text-muted-foreground" />
+                          <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5" />
+                        </>
+                      )}
                     </>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <Button 
-                      size="icon" 
-                      className="opacity-0 group-hover:opacity-100 transition-opacity scale-90 group-hover:scale-100"
-                      asChild
-                    >
-                      <a href={recording.video_url} target="_blank" rel="noopener noreferrer">
-                        <Play className="h-5 w-5" />
-                      </a>
-                    </Button>
-                  </div>
+                  
+                  {recording.status === 'completed' && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <Button 
+                        size="icon" 
+                        className="opacity-0 group-hover:opacity-100 transition-opacity scale-90 group-hover:scale-100"
+                        asChild
+                      >
+                        <a href={recording.video_url} target="_blank" rel="noopener noreferrer">
+                          <Play className="h-5 w-5" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                  
                   <Badge className="absolute top-2 right-2 bg-background/90">
                     {formatDuration(recording.duration_seconds)}
                   </Badge>
-                  {recording.status === 'processing' && (
-                    <Badge className="absolute top-2 left-2 bg-warning/90">
-                      Processing
+                  
+                  {(recording.status === 'pending' || recording.status === 'processing') && (
+                    <Badge className="absolute top-2 left-2 bg-accent/90 text-accent-foreground flex items-center gap-1.5">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      {recording.status === 'pending' ? 'Pending' : 'Processing'}
+                    </Badge>
+                  )}
+                  
+                  {recording.status === 'completed' && (
+                    <Badge className="absolute top-2 left-2 bg-success/90 text-success-foreground flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Ready
                     </Badge>
                   )}
                 </div>
@@ -116,8 +143,8 @@ const Gallery = () => {
                     </h3>
                   )}
 
-                  {recording.feedback && recording.feedback.improvements && recording.feedback.improvements.length > 0 && (
-                    <div className="space-y-1">
+                  {recording.status === 'completed' && recording.feedback && recording.feedback.improvements && recording.feedback.improvements.length > 0 && (
+                    <div className="space-y-1 mb-3">
                       {recording.feedback.improvements.slice(0, 2).map((improvement, i) => (
                         <div 
                           key={i} 
@@ -130,10 +157,25 @@ const Gallery = () => {
                     </div>
                   )}
 
-                  {recording.status === 'processing' && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      AI feedback will be available soon
-                    </p>
+                  {(recording.status === 'pending' || recording.status === 'processing') && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 p-2 rounded-md bg-muted/50">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Analysis in progress... You'll receive an email when ready.</span>
+                    </div>
+                  )}
+
+                  {recording.status === 'completed' && recording.feedback && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full mt-2"
+                      asChild
+                    >
+                      <Link to={`/results/${recording.id}`}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Full Analysis
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </Card>

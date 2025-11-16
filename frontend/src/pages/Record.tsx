@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Clock, Zap } from "lucide-react";
 import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
@@ -10,14 +10,47 @@ import { uploadRecording } from "@/hooks/useRecordings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 
 const Record = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [userRole, setUserRole] = useState<'tester' | 'user' | 'admin'>('user');
+  const [loadingRole, setLoadingRole] = useState(true);
   const createRecording = useCreateRecording();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Fetch user role from profiles table
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) {
+        setLoadingRole(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching user role:', error);
+        } else if (data) {
+          setUserRole(data.role as 'tester' | 'user' | 'admin');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoadingRole(false);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
 
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
     if (!user) return;
@@ -140,6 +173,35 @@ const Record = () => {
             Take 5-10 minutes to practice your communication skills
           </p>
         </div>
+
+        {/* Role-based banner */}
+        {!loadingRole && (
+          <Alert 
+            className={`mb-6 sm:mb-8 animate-slide-up ${
+              userRole === 'tester' || userRole === 'admin' 
+                ? 'border-primary bg-primary/5' 
+                : 'border-accent bg-accent/5'
+            }`}
+          >
+            {userRole === 'tester' || userRole === 'admin' ? (
+              <>
+                <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
+                <AlertDescription className="text-sm">
+                  <strong className="text-primary">Tester Priority:</strong> Your analysis will be ready soon. 
+                  You'll receive an email notification when it's complete.
+                </AlertDescription>
+              </>
+            ) : (
+              <>
+                <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
+                <AlertDescription className="text-sm">
+                  <strong className="text-accent">Standard Processing:</strong> Your analysis will be ready in 2–3 days. 
+                  You'll receive an email when it's done.
+                </AlertDescription>
+              </>
+            )}
+          </Alert>
+        )}
 
         <Alert className="mb-6 sm:mb-8 animate-slide-up">
           <AlertCircle className="h-4 w-4" aria-hidden="true" />

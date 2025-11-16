@@ -11,7 +11,8 @@ import {
   Target,
   Zap,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,15 +73,22 @@ const Dashboard = () => {
     { name: "Total Progress", value: Math.min((stats?.totalHours || 0), 100), target: 100 }
   ];
 
-  const recentActivity = (recordings || []).slice(0, 4).map(recording => ({
-    title: recording.title || 'New Recording',
-    time: new Date(recording.created_at).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
-    }),
-    icon: recording.feedback ? CheckCircle2 : Target,
-    color: recording.feedback ? "text-success" : "text-accent"
-  }));
+  const recentActivity = (recordings || []).slice(0, 4).map(recording => {
+    const isPending = recording.status === 'pending' || recording.status === 'processing';
+    const isCompleted = recording.status === 'completed';
+    
+    return {
+      title: recording.title || 'New Recording',
+      time: new Date(recording.created_at).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      }),
+      status: recording.status,
+      icon: isPending ? Loader2 : isCompleted ? CheckCircle2 : Target,
+      color: isPending ? "text-accent" : isCompleted ? "text-success" : "text-muted-foreground",
+      animated: isPending
+    };
+  });
 
   return (
     <Layout>
@@ -256,27 +264,50 @@ const Dashboard = () => {
               <CardDescription>Your latest achievements</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentActivity.map((activity, index) => {
-                const Icon = activity.icon;
-                return (
-                  <div 
-                    key={index} 
-                    className="flex items-start gap-3 pb-4 border-b border-border/50 last:border-0 last:pb-0"
-                  >
-                    <div className={`p-2 rounded-lg bg-muted ${activity.color}`}>
-                      <Icon className="h-4 w-4" />
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => {
+                  const Icon = activity.icon;
+                  return (
+                    <div 
+                      key={index} 
+                      className="flex items-start gap-3 pb-4 border-b border-border/50 last:border-0 last:pb-0"
+                    >
+                      <div className={`p-2 rounded-lg bg-muted ${activity.color}`}>
+                        <Icon className={`h-4 w-4 ${activity.animated ? 'animate-spin' : ''}`} />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium leading-none">
+                            {activity.title}
+                          </p>
+                          {activity.status === 'pending' && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-accent/20 text-accent">
+                              Pending
+                            </span>
+                          )}
+                          {activity.status === 'processing' && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-accent/20 text-accent">
+                              Processing
+                            </span>
+                          )}
+                          {activity.status === 'completed' && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-success/20 text-success">
+                              Ready
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {activity.time}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {activity.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No recent activity yet
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

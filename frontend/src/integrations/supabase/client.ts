@@ -10,9 +10,11 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY a
 // Validate environment variables
 const isPlaceholder = (value: string | undefined) => 
   !value || 
-  value.includes('your_') || 
-  value.includes('_here') || 
-  value === 'undefined';
+  value === '' ||
+  value === 'undefined' ||
+  value === 'null' ||
+  value.startsWith('your_') || 
+  value.endsWith('_here');
 
 if (!SUPABASE_URL || isPlaceholder(SUPABASE_URL)) {
   console.error(

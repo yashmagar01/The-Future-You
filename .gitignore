@@ -18,6 +18,10 @@ dist-ssr
 frontend/.env
 backend/.env
 
+# AI Models (large files)
+backend/models/
+backend/local-processor/models/
+
 # Cypress
 cypress/videos
 cypress/screenshots

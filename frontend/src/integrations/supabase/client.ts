@@ -38,7 +38,8 @@ if (!SUPABASE_URL || isPlaceholder(SUPABASE_URL)) {
   );
 }
 
-if (isPlaceholder(SUPABASE_PUBLISHABLE_KEY)) {
+// Only warn if truly invalid (empty or undefined), not for valid JWT tokens
+if (!SUPABASE_PUBLISHABLE_KEY || SUPABASE_PUBLISHABLE_KEY === 'undefined' || SUPABASE_PUBLISHABLE_KEY === '') {
   console.error('❌ Invalid VITE_SUPABASE_PUBLISHABLE_KEY in .env - update with your real API key');
 }
 

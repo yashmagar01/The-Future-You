@@ -35,7 +35,7 @@ const Record = () => {
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching user role:', error);
@@ -120,7 +120,7 @@ const Record = () => {
       // Get video duration
       const video = document.createElement('video');
       video.preload = 'metadata';
-      
+
       const duration = await new Promise<number>((resolve) => {
         video.onloadedmetadata = () => {
           resolve(Math.floor(video.duration));
@@ -176,18 +176,17 @@ const Record = () => {
 
         {/* Role-based banner */}
         {!loadingRole && (
-          <Alert 
-            className={`mb-6 sm:mb-8 animate-slide-up ${
-              userRole === 'tester' || userRole === 'admin' 
-                ? 'border-primary bg-primary/5' 
+          <Alert
+            className={`mb-6 sm:mb-8 animate-slide-up ${userRole === 'tester' || userRole === 'admin'
+                ? 'border-primary bg-primary/5'
                 : 'border-accent bg-accent/5'
-            }`}
+              }`}
           >
             {userRole === 'tester' || userRole === 'admin' ? (
               <>
                 <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
                 <AlertDescription className="text-sm">
-                  <strong className="text-primary">Tester Priority:</strong> Your analysis will be ready soon. 
+                  <strong className="text-primary">Tester Priority:</strong> Your analysis will be ready soon.
                   You'll receive an email notification when it's complete.
                 </AlertDescription>
               </>
@@ -195,7 +194,7 @@ const Record = () => {
               <>
                 <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
                 <AlertDescription className="text-sm">
-                  <strong className="text-accent">Standard Processing:</strong> Your analysis will be ready in 2–3 days. 
+                  <strong className="text-accent">Standard Processing:</strong> Your analysis will be ready in 2–3 days.
                   You'll receive an email when it's done.
                 </AlertDescription>
               </>
@@ -206,7 +205,7 @@ const Record = () => {
         <Alert className="mb-6 sm:mb-8 animate-slide-up">
           <AlertCircle className="h-4 w-4" aria-hidden="true" />
           <AlertDescription className="text-sm">
-            <strong>Pro Tips:</strong> Find a quiet space, maintain good posture, look at the camera, 
+            <strong>Pro Tips:</strong> Find a quiet space, maintain good posture, look at the camera,
             and speak clearly. Try to fill the full 5 minutes to get comprehensive feedback.
           </AlertDescription>
         </Alert>

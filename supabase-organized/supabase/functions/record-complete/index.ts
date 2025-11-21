@@ -80,28 +80,21 @@ serve(async (req: Request) => {
 
         if (updateError) throw updateError;
 
-        // Trigger processing
-        // Production: Enqueue job to SQS / PubSub
-        /*
-        const sqs = new SQSClient({ region: "us-east-1" });
-        await sqs.send(new SendMessageCommand({
-            QueueUrl: Deno.env.get("SQS_QUEUE_URL"),
-            MessageBody: JSON.stringify({ recordingId, userId: user.id })
-        }));
-        */
+        // Trigger processing worker (fire and forget)
+        // We use the anon key here, but the worker might need service role. 
+        // The worker endpoint should be protected.
+        // For now, we rely on the cron job to pick it up, or we can try to invoke it.
 
-        // Local/MVP: The worker polls the DB for 'pending' status, so we just need to ensure status is 'pending'.
-        // We already updated status to 'pending' above.
-
-        // Optional: Trigger worker via HTTP if it exposes an endpoint (e.g. Cloud Run)
         try {
-            if (Deno.env.get("WORKER_WEBHOOK_URL")) {
-                fetch(Deno.env.get("WORKER_WEBHOOK_URL")!, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ recordingId }),
-                }).catch(err => console.error("Failed to trigger worker webhook:", err));
-            }
+            // Optional: Trigger worker immediately
+            fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-recordings`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`, // Or CRON_SECRET if configured
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+            }).catch(err => console.error("Failed to trigger worker:", err));
         } catch (e) {
             // Ignore trigger errors
         }

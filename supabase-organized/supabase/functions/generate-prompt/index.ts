@@ -4,7 +4,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { generatePrompts, UserProfile } from "../_shared/promptGenerator.ts";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -39,34 +38,34 @@ serve(async (req: Request) => {
             );
         }
 
-        // Fetch user profile for personalization
-        const { data: profile } = await supabaseClient
-            .from("profiles")
+        // Fetch active prompts
+        const { data: prompts, error } = await supabaseClient
+            .from("prompts")
             .select("*")
-            .eq("id", user.id)
-            .single();
+            .eq("is_active", true);
 
-        // Construct UserProfile object from DB data
-        const userProfile: UserProfile = {
-            name: profile?.full_name || "Friend",
-            role: profile?.role || "any",
-            goals: profile?.onboarding_data?.goals || [],
-            style: "casual", // Default or fetch from preferences
-            topics: [] // Could come from query params or recent events
-        };
+        if (error) throw error;
 
-        // Generate prompts using the shared module
-        const prompts = generatePrompts(userProfile);
+        if (!prompts || prompts.length === 0) {
+            // Fallback prompt if no active prompts in DB
+            return new Response(
+                JSON.stringify({
+                    prompt: {
+                        id: "default",
+                        text: "What is one thing you learned about yourself today?",
+                        category: "daily"
+                    }
+                }),
+                { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        // Randomly select a prompt
+        // TODO: Implement smarter selection logic based on user history
+        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
 
         return new Response(
-            JSON.stringify({
-                prompt: {
-                    id: "generated",
-                    text: prompts.medium, // Default to medium for backward compatibility
-                    category: "personalized",
-                    variations: prompts
-                }
-            }),
+            JSON.stringify({ prompt: randomPrompt }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
 

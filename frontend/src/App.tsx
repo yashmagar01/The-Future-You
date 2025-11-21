@@ -13,6 +13,7 @@ import Gallery from "./pages/Gallery";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Onboarding from "./pages/Onboarding";
 import Waitlist from "./pages/Waitlist";
 import WaitlistConfirm from "./pages/WaitlistConfirm";
 import WaitlistAdmin from "./pages/WaitlistAdmin";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/register" element={<Signup />} />
+              <Route path="/onboarding" element={<Onboarding />} />
             <Route 
               path="/record" 
               element={

@@ -57,3 +57,6 @@ export const supabase = createClient<Database>(
     }
   }
 );
+
+// Export the URL for direct API calls (e.g., Edge Functions)
+export const supabaseUrl = SUPABASE_URL || 'https://placeholder.supabase.co';

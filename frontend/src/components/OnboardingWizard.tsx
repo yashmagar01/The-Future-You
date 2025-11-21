@@ -5,12 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client (ensure you have env vars set)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase, supabaseUrl } from '@/integrations/supabase/client';
 
 interface OnboardingData {
     fullName: string;

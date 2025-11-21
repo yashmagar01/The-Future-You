@@ -44,9 +44,27 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
         // Check if onboarding is complete
         // User needs onboarding if: onboarding_data is null, empty object, or missing required fields
+        
+        console.log("ProtectedRoute Debug:", {
+          profile,
+          onboarding_data: profile?.onboarding_data,
+          type: typeof profile?.onboarding_data,
+          keys: profile?.onboarding_data ? Object.keys(profile.onboarding_data) : []
+        });
+
+        const onboardingData = profile?.onboarding_data;
+        
         const hasOnboardingData = 
-          profile?.onboarding_data && 
-          Object.keys(profile.onboarding_data).length > 0;
+          onboardingData && 
+          typeof onboardingData === 'object' && 
+          Object.keys(onboardingData).length > 0;
+
+        console.log("ProtectedRoute Decision:", { 
+          hasOnboardingData, 
+          needsOnboarding: !hasOnboardingData,
+          dataType: typeof onboardingData,
+          isObject: typeof onboardingData === 'object'
+        });
 
         setNeedsOnboarding(!hasOnboardingData);
       } catch (err) {

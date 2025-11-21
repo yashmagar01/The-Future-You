@@ -69,35 +69,39 @@ serve(async (req: Request) => {
             );
         }
 
-        // Update status to pending (ready for processing)
+        // Update status to uploaded (ready for processing)
         const { error: updateError } = await supabaseClient
             .from("recordings")
             .update({
-                status: "pending",
+                status: "uploaded",
                 updated_at: new Date().toISOString()
             })
             .eq("id", recordingId);
 
         if (updateError) throw updateError;
 
-        // Trigger processing worker (fire and forget)
-        // We use the anon key here, but the worker might need service role. 
-        // The worker endpoint should be protected.
-        // For now, we rely on the cron job to pick it up, or we can try to invoke it.
+        // Trigger external processing worker (fire and forget)
+        // This can be deployed on Cloud Run, ECS, or any container orchestration
+        const workerUrl = Deno.env.get("WORKER_URL"); // e.g., https://worker.example.com/process
 
-        try {
-            // Optional: Trigger worker immediately
-            fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-recordings`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`, // Or CRON_SECRET if configured
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({}),
-            }).catch(err => console.error("Failed to trigger worker:", err));
-        } catch (e) {
-            // Ignore trigger errors
+        if (workerUrl) {
+            try {
+                fetch(workerUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Deno.env.get("WORKER_SECRET") || ""}` // Optional auth
+                    },
+                    body: JSON.stringify({ recordingId }),
+                }).catch(err => console.error("Failed to trigger worker:", err));
+            } catch (e) {
+                // Ignore trigger errors - worker can also be triggered by cron
+                console.error("Worker trigger error:", e);
+            }
+        } else {
+            console.log("WORKER_URL not configured - relying on cron job");
         }
+
 
         return new Response(
             JSON.stringify({ success: true, message: "Recording marked for processing" }),

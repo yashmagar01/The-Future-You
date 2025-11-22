@@ -9,18 +9,21 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [react()],
-  // Exclude MediaPipe tasks-vision from Vite's dependency pre-bundling and treat it as external in production builds
+  // Ensure MediaPipe tasks-vision is bundled correctly for production builds
   optimizeDeps: {
-    exclude: ["@mediapipe/tasks-vision"]
+    // Pre-bundle the package for faster dev and include it for production
+    include: ["@mediapipe/tasks-vision"]
   },
   build: {
-    rollupOptions: {
-      external: ["@mediapipe/tasks-vision"]
+    // Allow CommonJS handling for the package
+    commonjsOptions: {
+      include: [/node_modules/]
     }
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@mediapipe/tasks-vision": path.resolve(__dirname, "node_modules/@mediapipe/tasks-vision"),
     },
   },
 }));

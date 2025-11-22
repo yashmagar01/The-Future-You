@@ -19,6 +19,11 @@ interface Script {
     meta?: any;
 }
 
+interface OnboardingData {
+    script?: Script;
+    [key: string]: any;
+}
+
 export function ScriptDisplay({ userId }: { userId: string }) {
     const [script, setScript] = useState<Script | null>(null);
     const [loading, setLoading] = useState(true);
@@ -43,15 +48,16 @@ export function ScriptDisplay({ userId }: { userId: string }) {
 
             if (error) throw error;
 
-            setProfileData(data?.onboarding_data);
+            const onboardingData = data?.onboarding_data as unknown as OnboardingData | null;
+            setProfileData(onboardingData);
 
-            if (data?.onboarding_data?.script) {
-                console.log("ScriptDisplay: Found existing script:", data.onboarding_data.script);
-                setScript(data.onboarding_data.script);
+            if (onboardingData?.script) {
+                console.log("ScriptDisplay: Found existing script:", onboardingData.script);
+                setScript(onboardingData.script);
             } else {
                 console.log("ScriptDisplay: No script found, generating...");
                 // No script found, generate one
-                generateScript(data?.onboarding_data);
+                generateScript(onboardingData);
             }
         } catch (error) {
             console.error('Error fetching script:', error);

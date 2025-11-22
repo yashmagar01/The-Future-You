@@ -163,7 +163,7 @@ export default function Profile() {
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
           </CardHeader>
-          <Card Content>
+          <CardContent>
             <Tabs defaultValue="personal" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="activity">Activity</TabsTrigger>

@@ -5,6 +5,7 @@ import { AlertCircle, Loader2, Clock, Zap } from "lucide-react";
 import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
+import { ScriptDisplay } from "@/components/ScriptDisplay";
 import { useCreateRecording } from "@/hooks/useRecordings";
 import { uploadRecording } from "@/hooks/useRecordings";
 import { useAuth } from "@/contexts/AuthContext";
@@ -229,27 +230,10 @@ const Record = () => {
           />
         )}
 
-        <Card className="p-4 sm:p-6 animate-slide-up">
-          <h2 className="text-base sm:text-lg font-semibold mb-4">What to Talk About</h2>
-          <ul className="space-y-3 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-0.5">•</span>
-              <span>Practice an upcoming presentation or interview</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-0.5">•</span>
-              <span>Reflect on your day and express your thoughts clearly</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-0.5">•</span>
-              <span>Explain a complex topic to build articulation skills</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary mt-0.5">•</span>
-              <span>Share a story or experience to work on engagement</span>
-            </li>
-          </ul>
-        </Card>
+        {/* Script Display */}
+        <div className="animate-slide-up">
+          {user && <ScriptDisplay userId={user.id} />}
+        </div>
       </div>
     </Layout>
   );

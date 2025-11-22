@@ -98,10 +98,11 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                 throw new Error("No active session");
             }
 
-            // Update profile directly via client (RLS allows this)
+            // Use upsert to ensure profile exists (fixes loop if profile was missing)
             const { error } = await supabase
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: session.user.id,
                     full_name: data.fullName,
                     onboarding_data: {
                         reflection_style: data.reflectionStyle,
@@ -111,9 +112,9 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         reflection_frequency: data.reflectionFrequency,
                         notifications_enabled: data.notificationsEnabled,
                         completed_at: new Date().toISOString()
-                    }
-                })
-                .eq('id', session.user.id);
+                    },
+                    updated_at: new Date().toISOString()
+                });
 
             if (error) throw error;
 

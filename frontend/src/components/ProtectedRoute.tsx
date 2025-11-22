@@ -37,6 +37,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         const profile = data as unknown as { onboarding_data: any } | null;
 
         if (error) {
+          // If profile doesn't exist (PGRST116), treat as needing onboarding
+          if (error.code === 'PGRST116') {
+            console.log("Profile not found, redirecting to onboarding");
+            setNeedsOnboarding(true);
+            setCheckingOnboarding(false);
+            return;
+          }
+          
           console.error("Error fetching profile:", error);
           setCheckingOnboarding(false);
           return;
@@ -45,26 +53,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         // Check if onboarding is complete
         // User needs onboarding if: onboarding_data is null, empty object, or missing required fields
         
-        console.log("ProtectedRoute Debug:", {
-          profile,
-          onboarding_data: profile?.onboarding_data,
-          type: typeof profile?.onboarding_data,
-          keys: profile?.onboarding_data ? Object.keys(profile.onboarding_data) : []
-        });
-
         const onboardingData = profile?.onboarding_data;
         
         const hasOnboardingData = 
           onboardingData && 
           typeof onboardingData === 'object' && 
           Object.keys(onboardingData).length > 0;
-
-        console.log("ProtectedRoute Decision:", { 
-          hasOnboardingData, 
-          needsOnboarding: !hasOnboardingData,
-          dataType: typeof onboardingData,
-          isObject: typeof onboardingData === 'object'
-        });
 
         setNeedsOnboarding(!hasOnboardingData);
       } catch (err) {

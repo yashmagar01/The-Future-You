@@ -83,25 +83,25 @@ const TechStackSummary = () => {
     },
     {
       icon: Sparkles,
-      title: "Analysis & Summaries (LLM)",
-      rationale: "GPT-4 with RAG pipeline generates personalized, actionable feedback by analyzing transcripts, emotions, and posture data.",
+      title: "Analysis & Summaries (Gemini)",
+      rationale: "Google's Gemini 1.5 Flash provides high-speed, multimodal reasoning to generate personalized feedback from transcripts and sensor data.",
       color: "from-emerald-500 to-emerald-600",
       bgColor: "bg-emerald-500/10",
       details: {
-        apis: ["OpenAI GPT-4o", "Claude 3.5 Sonnet (alternative)"],
+        apis: ["Google Gemini 1.5 Flash", "Gemini 1.5 Pro (advanced)"],
         whyChosen: [
-          "Best-in-class reasoning for nuanced feedback",
-          "RAG pipeline stores user history for trends",
-          "Generates specific, actionable improvement tips",
-          "Function calling for structured data extraction"
+          "Extremely fast inference for real-time feedback",
+          "Large context window (1M tokens) for long sessions",
+          "Multimodal capabilities (text, audio, video)",
+          "Cost-effective compared to GPT-4o"
         ],
         costConsiderations: [
-          "GPT-4o: ~$0.15 per session (optimized prompts)",
-          "Claude 3.5: ~$0.12 per session (faster)",
-          "Vector DB (Pinecone/Qdrant): ~$70/month",
-          "Caching reduces costs by 50% for repeat users"
+          "Flash: Free tier available (15 RPM)",
+          "Pay-as-you-go: ~$0.35 / 1M input tokens",
+          "Significantly cheaper than OpenAI equivalents",
+          "Efficient for high-volume processing"
         ],
-        docsLink: "https://platform.openai.com/docs/guides/gpt"
+        docsLink: "https://ai.google.dev/gemini-api/docs"
       }
     }
   ];

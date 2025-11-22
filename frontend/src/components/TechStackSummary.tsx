@@ -1,242 +1,110 @@
-import { useState } from "react";
-import { Mic, Smile, Eye, Sparkles, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ExternalLink, Cpu, Activity, Brain, Mic, FileText } from "lucide-react";
 
-const TechStackSummary = () => {
-  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+export default function TechStackSummary() {
+  const docsLink = "/mnt/data/Final Tech Stack.pdf";
 
-  const toggleCard = (index: number) => {
-    setExpandedCards(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
-  };
-
-  const techStack = [
+  const stackItems = [
     {
-      icon: Mic,
-      title: "Transcription (Whisper/AWS)",
-      rationale: "OpenAI's Whisper provides state-of-the-art speech recognition with multilingual support and high accuracy.",
-      color: "from-blue-500 to-blue-600",
-      bgColor: "bg-blue-500/10",
-      details: {
-        apis: ["OpenAI Whisper API", "AWS Transcribe (fallback)"],
-        whyChosen: [
-          "99%+ accuracy across accents and languages",
-          "Open-source model with cloud API option",
-          "Excellent handling of filler words and pauses",
-          "Cost-effective at $0.006/minute"
-        ],
-        costConsiderations: [
-          "Primary: Whisper API (~$0.36/hour)",
-          "Fallback: AWS Transcribe (~$0.024/minute)",
-          "Self-hosted option available for high-volume"
-        ],
-        docsLink: "https://platform.openai.com/docs/guides/speech-to-text"
-      }
+      title: "Speech-to-Text",
+      icon: <Mic className="h-5 w-5 text-primary" />,
+      tech: "Vosk (Offline)",
+      description: "Privacy-first, offline speech recognition using Vosk Node bindings. No audio leaves the device/server.",
+      details: "Replaces OpenAI Whisper API for zero-latency, cost-free transcription.",
+      status: "Local-First"
     },
     {
-      icon: Smile,
-      title: "Emotion Detection (Hume/Azure)",
-      rationale: "Hume AI's empathic AI detects 48+ emotions from voice and facial expressions with industry-leading accuracy.",
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-500/10",
-      details: {
-        apis: ["Hume AI API", "Azure Face API (secondary)"],
-        whyChosen: [
-          "Detects 48 emotional states from voice & face",
-          "Real-time prosody analysis (tone, pitch, energy)",
-          "Superior to AWS Rekognition in academic benchmarks",
-          "Single API for both audio and visual emotion"
-        ],
-        costConsiderations: [
-          "Primary: Hume AI (~$0.002/second)",
-          "Fallback: Azure Face API (~$1/1000 calls)",
-          "Free tier: 500 requests/month"
-        ],
-        docsLink: "https://dev.hume.ai/docs"
-      }
+      title: "Emotion & Sentiment",
+      icon: <Activity className="h-5 w-5 text-primary" />,
+      tech: "Transformers.js",
+      description: "Local sentiment analysis using HuggingFace Transformers.js running directly in the browser/worker.",
+      details: "Replaces Hume/Azure. Real-time emotion detection from text and audio features.",
+      status: "Local-First"
     },
     {
-      icon: Eye,
-      title: "Pose/Posture (MediaPipe)",
-      rationale: "Google's MediaPipe offers real-time pose detection in the browser with zero API costs and full privacy.",
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-500/10",
-      details: {
-        apis: ["MediaPipe Pose (TensorFlow.js)", "MediaPipe Holistic"],
-        whyChosen: [
-          "Client-side processing = zero cost & full privacy",
-          "33 body landmarks tracked at 30+ FPS",
-          "Detects posture, hand gestures, eye contact",
-          "No video upload required for pose analysis"
-        ],
-        costConsiderations: [
-          "Completely free (runs in browser)",
-          "No API keys or usage limits",
-          "Reduces server bandwidth costs",
-          "Optional: GPU acceleration for better performance"
-        ],
-        docsLink: "https://developers.google.com/mediapipe/solutions/vision/pose_landmarker"
-      }
+      title: "Pose & Posture",
+      icon: <Cpu className="h-5 w-5 text-primary" />,
+      tech: "MediaPipe Pose",
+      description: "Real-time body landmark detection for posture analysis using Google's MediaPipe.",
+      details: "Runs entirely client-side via WebAssembly.",
+      status: "Client-Side"
     },
     {
-      icon: Sparkles,
-      title: "Analysis & Summaries (LLM)",
-      rationale: "GPT-4 with RAG pipeline generates personalized, actionable feedback by analyzing transcripts, emotions, and posture data.",
-      color: "from-emerald-500 to-emerald-600",
-      bgColor: "bg-emerald-500/10",
-      details: {
-        apis: ["OpenAI GPT-4o", "Claude 3.5 Sonnet (alternative)"],
-        whyChosen: [
-          "Best-in-class reasoning for nuanced feedback",
-          "RAG pipeline stores user history for trends",
-          "Generates specific, actionable improvement tips",
-          "Function calling for structured data extraction"
-        ],
-        costConsiderations: [
-          "GPT-4o: ~$0.15 per session (optimized prompts)",
-          "Claude 3.5: ~$0.12 per session (faster)",
-          "Vector DB (Pinecone/Qdrant): ~$70/month",
-          "Caching reduces costs by 50% for repeat users"
-        ],
-        docsLink: "https://platform.openai.com/docs/guides/gpt"
-      }
+      title: "Summaries & Thoughts",
+      icon: <Brain className="h-5 w-5 text-primary" />,
+      tech: "Transformers.js (BART/Pegasus)",
+      description: "Local summarization and thought structure analysis using distilled LLMs.",
+      details: "Replaces Gemini/GPT-4. Generates insights without external API calls.",
+      status: "Local-First"
+    },
+    {
+      title: "Speech Clarity",
+      icon: <FileText className="h-5 w-5 text-primary" />,
+      tech: "Custom Regex + NLP",
+      description: "Filler word detection and clarity scoring using optimized pattern matching.",
+      details: "Lightweight, instant feedback on 'um', 'uh', and pacing.",
+      status: "Custom Logic"
     }
   ];
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-muted/30 to-background">
-      <div className="container mx-auto max-w-7xl">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            <Sparkles className="h-4 w-4" />
-            Tech Stack Deep Dive
-          </div>
-          <h2 className="text-4xl font-bold mb-4">Implementation Choices</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Developer-facing details on our AI infrastructure, API choices, and cost optimization strategies
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {techStack.map((tech, index) => {
-            const Icon = tech.icon;
-            const isExpanded = expandedCards[index];
-
-            return (
-              <Card 
-                key={index}
-                className="p-6 border-2 hover:border-border/80 transition-all"
-                style={{ animationDelay: `${index * 75}ms` }}
-              >
-                {/* Header */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${tech.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                    <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+    <Card className="w-full h-full bg-card/50 backdrop-blur-sm border-primary/10">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Cpu className="h-6 w-6 text-primary" />
+          MVP Tech Stack
+        </CardTitle>
+        <CardDescription>
+          Local-first architecture (Privacy & Performance)
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-4">
+            {stackItems.map((item, index) => (
+              <Card key={index} className="bg-muted/50 border-none">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {item.icon}
+                      <CardTitle className="text-base">{item.title}</CardTitle>
+                    </div>
+                    <Badge variant="outline" className="bg-background/50">
+                      {item.status}
+                    </Badge>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold mb-2">{tech.title}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {tech.rationale}
+                </CardHeader>
+                <CardContent className="pb-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm text-primary">{item.tech}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {item.description}
                     </p>
+                    <p className="text-xs text-muted-foreground/80 italic border-l-2 border-primary/20 pl-2">
+                      {item.details}
+                    </p>
+                    <a 
+                      href={docsLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-2"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      Source: Final Tech Stack.pdf
+                    </a>
                   </div>
-                </div>
-
-                {/* Expandable Content */}
-                {isExpanded && (
-                  <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in">
-                    {/* APIs */}
-                    <div>
-                      <h4 className="text-sm font-semibold mb-2 text-foreground">APIs Used</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {tech.details.apis.map((api, idx) => (
-                          <span 
-                            key={idx}
-                            className={`inline-flex items-center px-3 py-1 rounded-full ${tech.bgColor} text-xs font-medium`}
-                          >
-                            {api}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Why Chosen */}
-                    <div>
-                      <h4 className="text-sm font-semibold mb-2 text-foreground">Why We Chose This</h4>
-                      <ul className="space-y-1.5">
-                        {tech.details.whyChosen.map((reason, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <span className="text-brand-green mt-1">•</span>
-                            <span>{reason}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Cost Considerations */}
-                    <div>
-                      <h4 className="text-sm font-semibold mb-2 text-foreground">Cost Considerations</h4>
-                      <ul className="space-y-1.5">
-                        {tech.details.costConsiderations.map((cost, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <span className="text-primary mt-1">$</span>
-                            <span>{cost}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Documentation Link */}
-                    <div>
-                      <a
-                        href={tech.details.docsLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-brand-green hover:text-brand-green/80 transition-colors font-medium"
-                      >
-                        View Documentation
-                        <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Toggle Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleCard(index)}
-                  className="w-full mt-4 text-xs"
-                  aria-expanded={isExpanded}
-                  aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${tech.title} details`}
-                >
-                  {isExpanded ? (
-                    <>
-                      Show Less <ChevronUp className="ml-2 h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      Read More <ChevronDown className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                </CardContent>
               </Card>
-            );
-          })}
-        </div>
-
-        {/* Bottom Note */}
-        <div className="mt-12 text-center">
-          <p className="text-sm text-muted-foreground max-w-3xl mx-auto">
-            All cost estimates are based on current pricing (Nov 2025) and optimized usage patterns. 
-            Actual costs may vary based on volume and regional pricing.
-          </p>
-        </div>
-      </div>
-    </section>
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
-};
+}
 
-export default TechStackSummary;
+

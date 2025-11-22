@@ -110,11 +110,13 @@ export const VideoRecorder = ({
     } catch (err) {
       console.error('Camera access error:', err);
       setError('Unable to access camera. Please check permissions and try again.');
-      toast({
-        title: 'Camera Error',
-        description: 'Could not access your camera. Please grant permission.',
-        variant: 'destructive',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'Camera Error',
+          description: 'Could not access your camera. Please grant permission.',
+          variant: 'destructive',
+        });
+      }, 0);
     }
   };
 
@@ -180,28 +182,34 @@ export const VideoRecorder = ({
         }
       }, 1000);
 
-      toast({
-        title: 'Recording started',
-        description: 'Speak clearly and maintain eye contact.',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'Recording started',
+          description: 'Speak clearly and maintain eye contact.',
+        });
+      }, 0);
     } catch (err) {
       console.error('Recording error:', err);
       setError('Failed to start recording. Please try again.');
-      toast({
-        title: 'Recording Error',
-        description: 'Could not start recording. Please try again.',
-        variant: 'destructive',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'Recording Error',
+          description: 'Could not start recording. Please try again.',
+          variant: 'destructive',
+        });
+      }, 0);
     }
   };
 
   const startRecording = () => {
     if (!stream) {
-      toast({
-        title: 'No camera access',
-        description: 'Please allow camera access to record.',
-        variant: 'destructive',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'No camera access',
+          description: 'Please allow camera access to record.',
+          variant: 'destructive',
+        });
+      }, 0);
       return;
     }
 

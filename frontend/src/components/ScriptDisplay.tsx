@@ -19,6 +19,11 @@ interface Script {
     meta?: any;
 }
 
+interface OnboardingData {
+    script?: Script;
+    [key: string]: any;
+}
+
 export function ScriptDisplay({ userId }: { userId: string }) {
     const [script, setScript] = useState<Script | null>(null);
     const [loading, setLoading] = useState(true);
@@ -43,15 +48,16 @@ export function ScriptDisplay({ userId }: { userId: string }) {
 
             if (error) throw error;
 
-            setProfileData(data?.onboarding_data);
+            const onboardingData = data?.onboarding_data as unknown as OnboardingData | null;
+            setProfileData(onboardingData);
 
-            if (data?.onboarding_data?.script) {
-                console.log("ScriptDisplay: Found existing script:", data.onboarding_data.script);
-                setScript(data.onboarding_data.script);
+            if (onboardingData?.script) {
+                console.log("ScriptDisplay: Found existing script:", onboardingData.script);
+                setScript(onboardingData.script);
             } else {
                 console.log("ScriptDisplay: No script found, generating...");
                 // No script found, generate one
-                generateScript(data?.onboarding_data);
+                generateScript(onboardingData);
             }
         } catch (error) {
             console.error('Error fetching script:', error);
@@ -74,42 +80,68 @@ export function ScriptDisplay({ userId }: { userId: string }) {
         try {
             setGenerating(true);
             
-            // TODO: Implement local LLM generation (e.g. WebLLM or Transformers.js) per Final Tech Stack.pdf
-            // Cloud API calls (Gemini) are disabled for MVP local-first compliance.
-            console.log("TODO: Generate script using local LLM. Using static template for now.");
+            console.log("ScriptDisplay: Calling prompt-generator Edge Function with data:", profileData);
 
-            // Simulate generation delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Use Supabase's built-in functions.invoke() which handles auth automatically
+            const { data: newScript, error: functionError } = await supabase.functions.invoke('prompt-generator', {
+                body: profileData
+            });
 
-            const newScript = {
-                variations: {
-                    short: `Hi ${profileData.name || 'Friend'}, take a moment to reflect. What was the most significant part of your day? (Local Template)`,
-                    medium: `Hi ${profileData.name || 'Friend'}. Reflection is key to growth. Think about your goal of ${profileData.primary_goal || 'self-improvement'}. What steps did you take today? (Local Template)`,
-                    long: `Hello ${profileData.name || 'Friend'}. Let's dive deep. You are focusing on ${profileData.focus_areas || 'general reflection'}. Walk through your day. What went well? What could be improved? Remember, every step counts. (Local Template)`
-                }
+            if (functionError) {
+                console.error("Edge Function error:", functionError);
+                throw new Error(functionError.message || "Failed to generate script");
+            }
+
+            if (!newScript) {
+                throw new Error("No script returned from Edge Function");
+            }
+
+            console.log("ScriptDisplay: Generated AI script:", newScript);
+            console.log("ScriptDisplay: Script type:", typeof newScript);
+            console.log("ScriptDisplay: Script keys:", Object.keys(newScript));
+            console.log("ScriptDisplay: Has variations?", !!newScript.variations);
+            console.log("ScriptDisplay: Variations keys:", newScript.variations ? Object.keys(newScript.variations) : "none");
+            console.log("ScriptDisplay: Short content:", newScript.variations?.short);
+            console.log("ScriptDisplay: Medium content:", newScript.variations?.medium);
+            console.log("ScriptDisplay: Long content:", newScript.variations?.long);
+            
+            setScript(newScript);
+            console.log("ScriptDisplay: Script state updated");
+
+            // Save to profile - remove old script first to avoid overwriting
+            const { script: oldScript, ...profileDataWithoutScript } = profileData || {};
+            const updatedOnboardingData = {
+                ...profileDataWithoutScript,
+                script: newScript
             };
 
-            console.log("ScriptDisplay: Generated local script:", newScript);
-            setScript(newScript);
+            console.log("ScriptDisplay: Saving to database:", updatedOnboardingData);
 
-            // Save to profile
             const { error } = await supabase
                 .from('profiles')
                 .update({
-                    onboarding_data: {
-                        ...profileData,
-                        script: newScript
-                    }
+                    onboarding_data: updatedOnboardingData
                 })
                 .eq('id', userId);
 
-            if (error) console.error('Error saving script:', error);
+            if (error) {
+                console.error('Error saving script:', error);
+            } else {
+                console.log('ScriptDisplay: Successfully saved to database');
+                // Update local state with the new data
+                setProfileData(updatedOnboardingData);
+            }
+
+            toast({
+                title: "Script Generated!",
+                description: "Your personalized script is ready.",
+            });
 
         } catch (error) {
             console.error('Error generating script:', error);
             toast({
                 title: "Generation Failed",
-                description: "Could not generate script locally.",
+                description: error instanceof Error ? error.message : "Could not generate script.",
                 variant: "destructive"
             });
         } finally {
@@ -170,6 +202,8 @@ export function ScriptDisplay({ userId }: { userId: string }) {
                                 script.variations?.[type as keyof typeof script.variations] || 
                                 script[type as keyof Script] || 
                                 script[type.charAt(0).toUpperCase() + type.slice(1) as keyof Script];
+                            
+                            console.log(`ScriptDisplay RENDER: ${type} content:`, content ? content.substring(0, 50) + "..." : "EMPTY");
                             
                             return (
                                 <TabsContent key={type} value={type} className="h-full m-0 p-0">

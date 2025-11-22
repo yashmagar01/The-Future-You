@@ -30,8 +30,8 @@ const TechCards = () => {
     {
       icon: Sparkles,
       title: "LLM Summarization",
-      description: "GPT-4 powered analysis generates personalized feedback, actionable tips, and tracks improvement patterns over time.",
-      tech: "OpenAI GPT-4, RAG Pipeline",
+      description: "Local analysis generates personalized feedback, actionable tips, and tracks improvement patterns over time.",
+      tech: "Transformers.js (Local)",
       color: "from-emerald-500 to-emerald-600",
       bgColor: "bg-emerald-500/10"
     }

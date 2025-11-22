@@ -26,6 +26,8 @@ export function ScriptDisplay({ userId }: { userId: string }) {
     const [copied, setCopied] = useState(false);
     const { toast } = useToast();
 
+    const [profileData, setProfileData] = useState<any>(null);
+
     useEffect(() => {
         fetchScript();
     }, [userId]);
@@ -40,6 +42,8 @@ export function ScriptDisplay({ userId }: { userId: string }) {
                 .single();
 
             if (error) throw error;
+
+            setProfileData(data?.onboarding_data);
 
             if (data?.onboarding_data?.script) {
                 console.log("ScriptDisplay: Found existing script:", data.onboarding_data.script);
@@ -56,26 +60,36 @@ export function ScriptDisplay({ userId }: { userId: string }) {
         }
     };
 
+    const handleRegenerate = () => {
+        if (profileData) {
+            generateScript(profileData);
+        } else {
+            fetchScript();
+        }
+    };
+
     const generateScript = async (profileData: any) => {
         if (!profileData) return;
         
         try {
             setGenerating(true);
-            const { data: { session } } = await supabase.auth.getSession();
             
-            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/prompt-generator`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`,
-                },
-                body: JSON.stringify(profileData)
-            });
+            // TODO: Implement local LLM generation (e.g. WebLLM or Transformers.js) per Final Tech Stack.pdf
+            // Cloud API calls (Gemini) are disabled for MVP local-first compliance.
+            console.log("TODO: Generate script using local LLM. Using static template for now.");
 
-            if (!response.ok) throw new Error('Failed to generate script');
+            // Simulate generation delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-            const newScript = await response.json();
-            console.log("ScriptDisplay: Generated new script:", newScript);
+            const newScript = {
+                variations: {
+                    short: `Hi ${profileData.name || 'Friend'}, take a moment to reflect. What was the most significant part of your day? (Local Template)`,
+                    medium: `Hi ${profileData.name || 'Friend'}. Reflection is key to growth. Think about your goal of ${profileData.primary_goal || 'self-improvement'}. What steps did you take today? (Local Template)`,
+                    long: `Hello ${profileData.name || 'Friend'}. Let's dive deep. You are focusing on ${profileData.focus_areas || 'general reflection'}. Walk through your day. What went well? What could be improved? Remember, every step counts. (Local Template)`
+                }
+            };
+
+            console.log("ScriptDisplay: Generated local script:", newScript);
             setScript(newScript);
 
             // Save to profile
@@ -95,7 +109,7 @@ export function ScriptDisplay({ userId }: { userId: string }) {
             console.error('Error generating script:', error);
             toast({
                 title: "Generation Failed",
-                description: "Could not generate your personalized script. Please try again.",
+                description: "Could not generate script locally.",
                 variant: "destructive"
             });
         } finally {
@@ -126,12 +140,12 @@ export function ScriptDisplay({ userId }: { userId: string }) {
             <div className="p-4 border-b border-border/50 flex justify-between items-center bg-muted/30">
                 <h3 className="font-semibold flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    Your AI Script
+                    Your Script (Local Template)
                 </h3>
                 <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => fetchScript()} 
+                    onClick={handleRegenerate} 
                     disabled={generating}
                     className="h-8 w-8 p-0"
                 >

@@ -41,41 +41,56 @@ serve(async (req: Request) => {
         // 2. Parse Input
         const input = await req.json();
         
-        // Default values if missing
+        // Map frontend onboarding data to prompt variables
         const profileData = {
-            name: input.name || "Friend",
-            role: input.role || "student",
-            style: input.style || "clear",
-            topic1: input.topic1 || "general reflection",
-            topic2: input.topic2 || "",
-            topic3: input.topic3 || "",
-            duration_min_short: input.duration_min_short || 1,
-            duration_min_medium: input.duration_min_medium || 3,
-            duration_min_long: input.duration_min_long || 7,
-            prompt_type: input.prompt_type || "script",
-            camera_comfort: input.camera_comfort || "neutral",
-            example: input.example || "",
-            achievement: input.achievement || "",
-            one_line_memory: input.one_line_memory || "",
-            language: input.language || "English"
+            name: input.full_name || "Friend",
+            style: input.reflection_style || input.style || "conversational",
+            goal: input.primary_goal || "self-improvement",
+            focus_areas: Array.isArray(input.focus_areas) ? input.focus_areas.join(", ") : (input.focus_areas || "general reflection"),
+            experience_level: input.experience_level || "intermediate",
+            duration_short: 1,
+            duration_medium: 3,
+            duration_long: 5
         };
+
+        // Calculate target word counts (approx 130 wpm)
+        const wordsShort = 130 * profileData.duration_short;
+        const wordsMedium = 130 * profileData.duration_medium;
+        const wordsLong = 130 * profileData.duration_long;
 
         // 3. Construct System Prompt
         const systemPrompt = `
-You are generating read-aloud scripts for the Yash MVP (AI self-coaching video app).
-Task:
-Given the user profile tokens in INPUT, generate 3 variants of a script the user can read on camera:
-- short (≈130 words per minute × ${profileData.duration_min_short})
-- medium (≈130 wpm × ${profileData.duration_min_medium})
-- long (≈130 wpm × ${profileData.duration_min_long})
+You are an expert speech coach and scriptwriter for the Yash MVP (AI self-coaching video app).
+Your goal is to write a personalized, engaging script for the user to read aloud on camera.
 
-Make each variant:
-- natural spoken style for the user's chosen style: ${profileData.style}
-- include \`(pause)\` tokens every 25–40 words
-- include one 1-line exam-friendly takeaway at the end if user.role == "student" or if one_line_memory is provided
-- use the user's example and achievement concretely when present
-- keep formatting as plain text with line breaks every ~10–14 words (for teleprompter readability)
-- output JSON: { "short": "...", "medium":"...", "long":"...", "meta": { "short_words": number, "medium_words": number, "long_words": number } }
+User Profile:
+- Style: ${profileData.style}
+- Primary Goal: ${profileData.goal}
+- Focus Areas: ${profileData.focus_areas}
+- Experience Level: ${profileData.experience_level}
+
+Task:
+Generate 3 variants of a script based on the user's goal and focus areas.
+The scripts must be SUBSTANTIAL and meet the following length requirements:
+
+1. SHORT (~${wordsShort} words): A quick check-in or focused thought.
+2. MEDIUM (~${wordsMedium} words): A deeper reflection or story.
+3. LONG (~${wordsLong} words): A comprehensive exploration of the topic.
+
+Guidelines:
+- STRICTLY follow the word counts. Do not write short summaries. Write the FULL spoken text.
+- Use a ${profileData.style} tone.
+- Address the user directly.
+- Include specific questions or prompts related to "${profileData.focus_areas}" to guide their reflection.
+- Break the text into natural speaking chunks with line breaks.
+- Output MUST be valid JSON with this exact structure:
+{
+  "variations": {
+    "short": "full script text...",
+    "medium": "full script text...",
+    "long": "full script text..."
+  }
+}
 `;
 
         // 4. Call Gemini API

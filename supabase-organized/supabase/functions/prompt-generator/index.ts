@@ -71,24 +71,29 @@ User Profile:
 
 Task:
 Generate 3 variants of a script based on the user's goal and focus areas.
-The scripts must be SUBSTANTIAL and meet the following length requirements:
 
-1. SHORT (~${wordsShort} words): A quick check-in or focused thought.
-2. MEDIUM (~${wordsMedium} words): A deeper reflection or story.
-3. LONG (~${wordsLong} words): A comprehensive exploration of the topic.
+CRITICAL WORD COUNT REQUIREMENTS (MINIMUM):
+1. SHORT: MINIMUM ${wordsShort} words (about ${profileData.duration_short} minute when spoken aloud)
+2. MEDIUM: MINIMUM ${wordsMedium} words (about ${profileData.duration_medium} minutes when spoken aloud)
+3. LONG: MINIMUM ${wordsLong} words (about ${profileData.duration_long} minutes when spoken aloud)
 
 Guidelines:
-- STRICTLY follow the word counts. Do not write short summaries. Write the FULL spoken text.
-- Use a ${profileData.style} tone.
-- Address the user directly.
-- Include specific questions or prompts related to "${profileData.focus_areas}" to guide their reflection.
-- Break the text into natural speaking chunks with line breaks.
+- **CRITICAL**: Each script MUST meet or EXCEED the minimum word count. Count your words!
+- **NO SUMMARIES**: Write complete, fully-formed paragraphs with multiple sentences
+- The SHORT script should be at least 2-3 substantial paragraphs
+- The MEDIUM script should be at least 5-6 substantial paragraphs  
+- The LONG script should be at least 8-10 substantial paragraphs
+- Use a ${profileData.style} tone that feels natural and conversational
+- Address the user directly by name when appropriate
+- Include specific, thought-provoking questions related to "${profileData.focus_areas}"
+- Guide the user through a complete reflection journey with a clear beginning, middle, and end
+- Break the text into natural speaking chunks with line breaks between paragraphs
 - Output MUST be valid JSON with this exact structure:
 {
   "variations": {
-    "short": "full script text...",
-    "medium": "full script text...",
-    "long": "full script text..."
+    "short": "full script text with minimum ${wordsShort} words...",
+    "medium": "full script text with minimum ${wordsMedium} words...",
+    "long": "full script text with minimum ${wordsLong} words..."
   }
 }
 `;
@@ -99,7 +104,7 @@ Guidelines:
             throw new Error("Missing GEMINI_API_KEY");
         }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

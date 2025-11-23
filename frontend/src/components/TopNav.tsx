@@ -12,7 +12,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 
 export function TopNav() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40">
@@ -82,7 +82,7 @@ export function TopNav() {
                 <Link to="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => logout()}>
+              <DropdownMenuItem onClick={() => signOut()}>
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -1,8 +1,5 @@
 // Supabase Edge Function: onboard
 // POST /onboard - Save onboarding data
-```typescript
-// Supabase Edge Function: onboard
-// POST /onboard - Save onboarding data
 // GET /onboard?userId=... - Get user profile
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -112,4 +109,3 @@ serve(async (req: Request) => {
         );
     }
 });
-```

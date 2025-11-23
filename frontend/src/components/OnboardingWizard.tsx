@@ -103,6 +103,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                 .from('profiles')
                 .upsert({
                     id: session.user.id,
+                    email: session.user.email || '',
                     full_name: data.fullName,
                     onboarding_data: {
                         reflection_style: data.reflectionStyle,

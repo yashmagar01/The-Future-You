@@ -11,11 +11,11 @@ const HowItWorks = () => {
       subtitle: "5-10 min reflection",
       description: "Record directly or upload your daily reflection video securely. We support all major formats.",
       bullets: ["Webcam or file upload", "Private & secure", "Instant processing"],
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
-      borderColor: "border-emerald-200",
-      gradient: "from-emerald-500 to-green-600",
-      shadow: "shadow-emerald-500/10"
+      color: "text-brand-green",
+      bgColor: "bg-brand-green/10",
+      borderColor: "border-brand-green/20",
+      gradient: "from-brand-green to-emerald-600",
+      shadow: "shadow-brand-green/10"
     },
     {
       icon: Brain,
@@ -24,9 +24,9 @@ const HowItWorks = () => {
       subtitle: "Instant feedback",
       description: "Our AI analyzes your speech patterns, tone, and body language to identify key areas for growth.",
       bullets: ["Voice analysis", "Posture detection", "Sentiment tracking"],
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
       gradient: "from-blue-500 to-indigo-600",
       shadow: "shadow-blue-500/10"
     },
@@ -37,9 +37,9 @@ const HowItWorks = () => {
       subtitle: "Actionable goals",
       description: "Receive a personalized report with specific tips and exercises to improve your communication skills.",
       bullets: ["Confidence score", "Improvement tips", "Progress tracking"],
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      borderColor: "border-purple-200",
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20",
       gradient: "from-purple-500 to-pink-600",
       shadow: "shadow-purple-500/10"
     }
@@ -55,7 +55,7 @@ const HowItWorks = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-slate-900">
-              How It <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Works</span>
+              How It <span className="text-brand-green">Works</span>
             </h2>
             <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
               Three simple steps to transform your communication skills with the power of AI.
@@ -65,7 +65,7 @@ const HowItWorks = () => {
 
         <div className="relative grid md:grid-cols-3 gap-8 lg:gap-12">
           {/* Animated Connecting Line (Desktop) */}
-          <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-100 via-blue-100 to-purple-100 -z-10" />
+          <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-green/20 via-blue-500/20 to-purple-500/20 -z-10" />
           
           {steps.map((step, index) => {
             const Icon = step.icon;

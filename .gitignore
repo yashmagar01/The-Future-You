@@ -37,5 +37,3 @@ cypress/downloads
 *.njsproj
 *.sln
 *.sw?
-.pdf 
-.png

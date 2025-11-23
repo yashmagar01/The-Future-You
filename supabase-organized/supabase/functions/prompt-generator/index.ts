@@ -101,8 +101,11 @@ Guidelines:
         // 4. Call Gemini API
         const geminiKey = Deno.env.get("GEMINI_API_KEY");
         if (!geminiKey) {
-            throw new Error("Missing GEMINI_API_KEY");
+            console.error("Error: GEMINI_API_KEY is missing from environment variables");
+            throw new Error("Configuration Error: GEMINI_API_KEY is missing. Please set it in your Supabase secrets.");
         }
+
+        console.log("Calling Gemini API with key length:", geminiKey.length);
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=${geminiKey}`, {
             method: "POST",
@@ -127,7 +130,8 @@ Guidelines:
 
         if (!response.ok) {
             const errorData = await response.text();
-            throw new Error(`Gemini API Error: ${errorData}`);
+            console.error("Gemini API Error:", errorData);
+            throw new Error(`Gemini API Error (${response.status}): ${errorData}`);
         }
 
         const aiData = await response.json();
@@ -137,10 +141,17 @@ Guidelines:
         const textResponse = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!textResponse) {
-            throw new Error("No content generated from Gemini");
+            console.error("Unexpected Gemini response structure:", JSON.stringify(aiData));
+            throw new Error("No content generated from Gemini. The model might have blocked the response.");
         }
 
-        const generatedContent = JSON.parse(textResponse);
+        let generatedContent;
+        try {
+            generatedContent = JSON.parse(textResponse);
+        } catch (e) {
+            console.error("Failed to parse Gemini response as JSON:", textResponse);
+            throw new Error("AI returned invalid JSON format");
+        }
 
         // 5. Return Result
         return new Response(
@@ -149,9 +160,12 @@ Guidelines:
         );
 
     } catch (error: any) {
-        console.error("Error:", error);
+        console.error("Edge Function Error:", error);
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ 
+                error: error.message || "Internal Server Error",
+                details: error.toString() 
+            }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }

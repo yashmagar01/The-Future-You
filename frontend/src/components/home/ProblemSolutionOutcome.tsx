@@ -45,7 +45,7 @@ const ProblemSolutionOutcome = () => {
       blobColor: "bg-blue-500",
       description: "Build genuine confidence through consistent practice. Track measurable improvement and become the speaker you've always wanted to be.",
       points: [
-        "95% of users report increased confidence",
+        "Targeted confidence building",
         "Measurable progress tracking",
         "Improved professional opportunities",
         "Lifelong communication skills"

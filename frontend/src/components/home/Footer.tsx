@@ -7,25 +7,15 @@ const Footer = () => {
       { label: "Features", href: "#features" },
       { label: "How it Works", href: "#how-it-works" },
       { label: "Roadmap", href: "#roadmap" },
-      { label: "Pricing", href: "/pricing" }
+      { label: "Join Beta", href: "/record" }
     ],
     company: [
       { label: "About", href: "/about" },
-      { label: "Blog", href: "/blog" },
-      { label: "Careers", href: "/careers" },
       { label: "Contact", href: "/contact" }
-    ],
-    resources: [
-      { label: "Documentation", href: "/docs" },
-      { label: "Help Center", href: "/help" },
-      { label: "Community", href: "/community" },
-      { label: "Status", href: "/status" }
     ],
     legal: [
       { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "/cookies" },
-      { label: "GDPR", href: "/gdpr" }
+      { label: "Terms of Service", href: "/terms" }
     ]
   };
 
@@ -33,14 +23,14 @@ const Footer = () => {
     { icon: Github, href: "https://github.com", label: "GitHub" },
     { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
     { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-    { icon: Mail, href: "mailto:hello@thefutureyou.com", label: "Email" }
+    { icon: Mail, href: "mailto:yashajaymagar10@gmail.com", label: "Email" }
   ];
 
   return (
     <footer className="border-t border-border bg-muted/30" role="contentinfo" aria-label="Site footer">
       <div className="container mx-auto max-w-7xl px-4 py-12">
         {/* Top Section */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
@@ -106,23 +96,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Resources</h3>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-brand-green transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Legal Links */}
           <div>
             <h3 className="font-semibold mb-4">Legal</h3>
@@ -152,9 +125,6 @@ const Footer = () => {
             </Link>
             <Link to="/terms" className="hover:text-brand-green transition-colors">
               Terms
-            </Link>
-            <Link to="/cookies" className="hover:text-brand-green transition-colors">
-              Cookies
             </Link>
           </div>
         </div>

@@ -1,227 +1,187 @@
-import { useEffect, useRef } from "react";
+import { ArrowRight, Video, Sparkles, ShieldCheck, Users, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Video, TrendingUp, Sparkles, ShieldCheck, Users } from "lucide-react";
-import { motion, useScroll, useTransform, animate } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { useRef } from "react";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
-// Stats Counter Component
-const Counter = ({ from, to, suffix = "" }: { from: number; to: number; suffix?: string }) => {
-  const nodeRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const node = nodeRef.current;
-    if (!node) return;
-
-    const controls = animate(from, to, {
-      duration: 2.5,
-      onUpdate(value) {
-        node.textContent = Math.floor(value).toLocaleString() + suffix;
-      },
-      ease: "easeOut"
-    });
-
-    return () => controls.stop();
-  }, [from, to, suffix]);
-
-  return <span ref={nodeRef} />;
-};
-
 const Hero = () => {
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -150]);
-
-  const handlePrimaryClick = () => {
-    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, { type: 'primary' });
+  const ctaVariant = getCTAVariant();
+  
+  const ctaText = ctaVariant === 'A' ? 'Start Recording — Free' : 'Get Started Free';
+  const ctaIcon = ctaVariant === 'A' ? Video : Sparkles;
+  const CtaIcon = ctaIcon;
+  
+  const handlePrimaryCTAClick = () => {
+    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, { variant: ctaVariant, type: 'primary' });
   };
 
+  const handleSecondaryCTAClick = () => {
+    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, { variant: ctaVariant, type: 'secondary' });
+  };
+
+  // Parallax effect
+  const targetRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start start", "end start"]
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
+
+  // Smooth spring animation for floating elements
+  const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+  const floatY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -50]), springConfig);
+
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
-      {/* Dynamic Background */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-green/5 via-background to-background">
-        <motion.div 
-          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-green/10 rounded-full blur-[120px] opacity-50"
-        />
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], rotate: [0, -5, 0] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px] opacity-30"
-        />
+    <header ref={targetRef} className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-12 sm:py-20 lg:py-24 px-4" role="banner" aria-label="Hero section - Your Personal Communication Coach">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-green/10 rounded-full blur-3xl animate-blob" />
+        <div className="absolute top-[20%] right-[-10%] w-[30%] h-[30%] bg-accent/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[35%] h-[35%] bg-brand-green/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          {/* Left Content */}
-          <motion.div 
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
-            }}
-            className="text-center lg:text-left"
-          >
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-green/10 text-brand-green font-medium text-sm mb-6 border border-brand-green/20">
-                <Sparkles className="w-4 h-4" />
-                AI-Powered Communication Coach
+      <div className="container mx-auto max-w-7xl relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Text Content */}
+          <div className="text-center lg:text-left animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6 animate-slide-down">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
-            </motion.div>
-
-            <motion.h1 
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6"
-            >
-              Build Confidence <br className="hidden lg:block" />
-              Through <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-green via-teal-500 to-blue-600">Daily Reflections</span>
-            </motion.h1>
-
-            <motion.p 
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
-            >
-              Transform your speaking skills with instant AI feedback. 
-              Practice in a private, judgment-free zone and track your growth over time.
-            </motion.p>
-
-            <motion.div 
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12"
-            >
+              Live Demo Available Soon
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.15]">
+              Build Confidence Through <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-green to-accent animate-gradient-x">
+                Daily AI-Powered Feedback
+              </span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Practice speaking in a judgment-free zone. Get instant AI feedback to improve your confidence, one reflection at a time.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <Button 
                 size="lg" 
-                className="relative group bg-brand-green hover:bg-brand-green/90 text-white text-lg h-14 px-8 rounded-xl shadow-lg shadow-brand-green/25 hover:shadow-brand-green/40 transition-all duration-300 hover:-translate-y-1"
+                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl transition-all hover-lift touch-manipulation min-h-[44px]"
+                onClick={handlePrimaryCTAClick}
+                data-cta-variant={ctaVariant}
+                aria-label="Start Recording - Free, No credit card required"
                 asChild
-                onClick={handlePrimaryClick}
               >
                 <Link to="/record">
-                  <Video className="mr-2 h-5 w-5" />
+                  <Video className="mr-2 h-5 w-5" aria-hidden="true" />
                   Start Recording — Free
-                  <div className="absolute inset-0 overflow-hidden rounded-xl">
-                    <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                  </div>
                 </Link>
               </Button>
-
+              
               <Button 
-                size="lg" 
-                variant="outline"
-                className="text-lg h-14 px-8 rounded-xl border-2 hover:bg-muted/50 transition-all duration-300 hover:-translate-y-1"
+                variant="outline" 
+                size="lg"
+                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 hover:bg-accent/5 transition-colors min-h-[44px]"
+                onClick={handleSecondaryCTAClick}
                 asChild
               >
-                <Link to="/dashboard">
-                  <TrendingUp className="mr-2 h-5 w-5" />
-                  View Dashboard
+                <Link to="/how-it-works">
+                  <PlayCircle className="mr-2 h-5 w-5" aria-hidden="true" />
+                  See How It Works
                 </Link>
               </Button>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
-              className="flex flex-wrap justify-center lg:justify-start gap-x-8 gap-y-4 text-sm text-muted-foreground"
-            >
+            {/* Trust Badges - Horizontal Layout */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-brand-green" />
+                <ShieldCheck className="h-4 w-4 text-brand-green flex-shrink-0" />
                 <span>100% Private & Secure</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-500" />
+                <Users className="h-4 w-4 text-accent flex-shrink-0" />
                 <span>Join 50+ Users</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span>No Credit Card Required</span>
+                <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                <span>No Credit Card</span>
               </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Visuals */}
-          <div className="relative hidden lg:block h-[600px]">
-            <motion.div style={{ y: y1 }} className="absolute right-0 top-10 z-10">
-              <div className="bg-card/80 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/20 w-72">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-brand-green/20 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-brand-green" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Confidence Score</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      <Counter from={0} to={95} suffix="%" />
-                    </p>
-                  </div>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "95%" }}
-                    transition={{ duration: 1.5, delay: 0.5 }}
-                    className="h-full bg-brand-green"
-                  />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div style={{ y: y2 }} className="absolute left-10 bottom-20 z-20">
-              <div className="bg-card/80 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/20 w-64">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <Video className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Reflections</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      <Counter from={0} to={100} suffix="+" />
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Main Visual Placeholder */}
-            <div className="absolute inset-0 flex items-center justify-center">
-               <div className="relative w-[400px] h-[500px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-[32px] shadow-2xl border-4 border-gray-800 overflow-hidden">
-                  {/* Mock UI Interface */}
-                  <div className="absolute top-0 left-0 right-0 h-8 bg-black/50 flex items-center justify-center gap-2">
-                    <div className="w-16 h-4 bg-black rounded-full" />
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                     <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center animate-pulse">
-                        <Video className="w-8 h-8 text-white" />
-                     </div>
-                  </div>
-                  
-                  {/* Floating badges inside phone */}
-                  <motion.div 
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10"
-                  >
-                    <div className="flex gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-xs text-white/80">Recording... 04:20</span>
-                    </div>
-                    <div className="h-8 flex items-end gap-1">
-                      {[40, 60, 30, 80, 50, 70, 40, 60].map((h, i) => (
-                        <motion.div 
-                          key={i}
-                          animate={{ height: [h/2, h, h/2] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
-                          className="flex-1 bg-brand-green rounded-t-sm"
-                        />
-                      ))}
-                    </div>
-                  </motion.div>
-               </div>
             </div>
+          </div>
+
+          {/* Right: Visual Element */}
+          <div className="relative animate-slide-up hidden lg:block">
+            <motion.div 
+              style={{ y, opacity, scale }}
+              className="relative z-10 bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-green/5 to-accent/5 mix-blend-overlay" />
+              
+              {/* Mock UI Interface */}
+              <div className="p-4 border-b border-border/50 flex items-center gap-2 bg-muted/30">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                </div>
+                <div className="flex-1 bg-background rounded-md h-6 mx-4 opacity-50" />
+              </div>
+              
+              <div className="relative aspect-video bg-black/5 flex items-center justify-center">
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full bg-brand-green/20 animate-pulse flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-brand-green/40 flex items-center justify-center">
+                        <Video className="h-8 w-8 text-brand-green" />
+                      </div>
+                    </div>
+                 </div>
+                 {/* Waveform Animation */}
+                 <div className="absolute bottom-8 left-8 right-8 h-12 flex items-end justify-center gap-1">
+                    {[...Array(20)].map((_, i) => (
+                      <div 
+                        key={i}
+                        className="w-1 bg-brand-green/50 rounded-full animate-wave"
+                        style={{ 
+                          height: `${Math.random() * 100}%`,
+                          animationDelay: `${i * 0.05}s`
+                        }}
+                      />
+                    ))}
+                 </div>
+              </div>
+            </motion.div>
+
+            {/* Floating Stats Cards */}
+            <motion.div 
+              style={{ y: floatY }}
+              className="absolute -top-4 -right-4 bg-card p-4 rounded-xl shadow-lg border border-border/50 animate-float"
+            >
+              <p className="text-3xl font-bold text-brand-green">95%</p>
+              <p className="text-xs text-muted-foreground">Confidence Boost</p>
+            </motion.div>
+            
+            <motion.div 
+              style={{ y: floatY }}
+              className="absolute -bottom-4 -left-4 bg-card p-4 rounded-xl shadow-lg border border-border/50 animate-float" 
+              transition={{ delay: 1 }}
+            >
+              <p className="text-3xl font-bold text-accent">100+</p>
+              <p className="text-xs text-muted-foreground">Reflections</p>
+            </motion.div>
           </div>
         </div>
       </div>
-    </section>
+    </header>
   );
+};
+
+// Helper function for A/B testing (simplified)
+const getCTAVariant = () => {
+  return Math.random() > 0.5 ? 'A' : 'B';
 };
 
 export default Hero;

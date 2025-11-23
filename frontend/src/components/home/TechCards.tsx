@@ -6,16 +6,16 @@ const TechCards = () => {
     {
       icon: Mic,
       title: "Speech-to-Text",
-      description: "Advanced ASR technology transcribes your speech with 95%+ accuracy, analyzing filler words, pacing, and articulation patterns.",
-      tech: "Whisper AI, WebSpeech API",
+      description: "Browser-based ASR technology transcribes your speech offline with zero latency, ensuring your voice data stays on your device.",
+      tech: "Vosk Browser Model",
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-500/10"
     },
     {
       icon: Smile,
       title: "Emotion Detection",
-      description: "Facial expression analysis identifies emotional states, helping you understand your tone and presence during communication.",
-      tech: "TensorFlow.js, FER Models",
+      description: "Local sentiment analysis identifies emotional states from your text, helping you understand the tone of your message.",
+      tech: "Transformers.js",
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-500/10"
     },
@@ -29,9 +29,9 @@ const TechCards = () => {
     },
     {
       icon: Sparkles,
-      title: "LLM Summarization",
-      description: "Local analysis generates personalized feedback, actionable tips, and tracks improvement patterns over time.",
-      tech: "Transformers.js (Local)",
+      title: "AI Coaching",
+      description: "Advanced reasoning generates personalized feedback and actionable tips to help you improve your communication skills.",
+      tech: "Gemini API",
       color: "from-emerald-500 to-emerald-600",
       bgColor: "bg-emerald-500/10"
     }
@@ -47,7 +47,7 @@ const TechCards = () => {
           </div>
           <h2 className="text-4xl font-bold mb-4">Tech & Implementation</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Cutting-edge AI models working together to analyze every aspect of your communication
+            A hybrid architecture combining local privacy with cloud intelligence.
           </p>
         </div>
 
@@ -89,7 +89,7 @@ const TechCards = () => {
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground">
-            All processing happens securely and your data is encrypted end-to-end
+            Audio and video processing happens locally on your device for maximum privacy.
           </p>
         </div>
       </div>

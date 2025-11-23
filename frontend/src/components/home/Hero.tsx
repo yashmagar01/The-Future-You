@@ -1,143 +1,229 @@
+import { Video, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Video, TrendingUp, Sparkles } from "lucide-react";
+import { motion, useSpring, useMotionValueEvent } from "framer-motion";
+import { useEffect, useState } from "react";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 
-// Get CTA variant from environment or localStorage (defaults to 'A')
-const getCTAVariant = (): 'A' | 'B' => {
-  // Check localStorage first
-  const storedVariant = localStorage.getItem('ctaVariant');
-  if (storedVariant === 'A' || storedVariant === 'B') {
-    return storedVariant;
-  }
-  
-  // Check environment variable
-  const envVariant = import.meta.env.VITE_CTA_VARIANT;
-  if (envVariant === 'B') {
-    return 'B';
-  }
-  
-  // Default to variant A
-  return 'A';
-};
-
 const Hero = () => {
-  const ctaVariant = getCTAVariant();
-  
-  // Variant A: "Start Recording — Free"
-  // Variant B: "Get Started Free"
-  const ctaText = ctaVariant === 'A' ? 'Start Recording — Free' : 'Get Started Free';
-  const ctaIcon = ctaVariant === 'A' ? Video : Sparkles;
-  const CtaIcon = ctaIcon;
-
   const handlePrimaryCTAClick = () => {
-    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, {
-      variant: ctaVariant,
-      location: 'hero',
-      cta_text: ctaText,
-      cta_type: 'primary',
-      destination: '/record'
-    });
+    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, { type: 'primary' });
   };
 
   const handleSecondaryCTAClick = () => {
-    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, {
-      variant: 'secondary',
-      location: 'hero',
-      cta_text: 'View Dashboard',
-      cta_type: 'secondary',
-      destination: '/dashboard'
-    });
+    logEvent(ANALYTICS_EVENTS.HERO_CTA_CLICK, { type: 'secondary' });
   };
 
-  return (
-    <header className="relative overflow-hidden bg-gradient-to-br from-brand-green/5 via-background to-accent/5 py-12 sm:py-20 lg:py-24 px-4" role="banner" aria-label="Hero section - Your Personal Communication Coach">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-brand-green/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
-      </div>
+  // State for animated counters
+  const [displayReflections, setDisplayReflections] = useState(0);
+  const [displayConfidence, setDisplayConfidence] = useState(0);
 
-      <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+  // Animated counter for reflections (0 to 100)
+  const reflectionCount = useSpring(0, { 
+    duration: 2000,
+    bounce: 0
+  });
+
+  // Animated percentage for confidence (0 to 95)
+  const confidencePercent = useSpring(0, {
+    duration: 2000,
+    bounce: 0
+  });
+
+  // Subscribe to motion value changes
+  useMotionValueEvent(reflectionCount, "change", (latest) => {
+    setDisplayReflections(Math.floor(latest));
+  });
+
+  useMotionValueEvent(confidencePercent, "change", (latest) => {
+    setDisplayConfidence(Math.floor(latest));
+  });
+
+  useEffect(() => {
+    reflectionCount.set(100);
+    confidencePercent.set(95);
+  }, [reflectionCount, confidencePercent]);
+
+  return (
+    <header className="relative bg-gradient-to-b from-slate-50 to-white py-16 sm:py-20 lg:py-24 px-4">
+      <div className="container mx-auto max-w-7xl">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          
           {/* Left: Text Content */}
-          <div className="text-center lg:text-left animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-green/10 text-brand-green text-sm font-medium mb-6 animate-scale-in">
-              <Sparkles className="h-4 w-4" />
-              Your Personal Communication Coach
+          <div className="text-center lg:text-left">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              Live Demo Available Soon
             </div>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-6 leading-tight px-2 lg:px-0">
-              Build Confidence Through{" "}
-              <span className="bg-gradient-to-r from-brand-green to-accent bg-clip-text text-transparent">
-                Daily Reflections
-              </span>
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.15] text-slate-900">
+              Build Confidence Through
             </h1>
             
-            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0 px-2 lg:px-0">
-              Transform your communication skills with AI-powered video feedback. 
-              Practice daily, track progress, and become the confident speaker you aspire to be.
+            {/* Description */}
+            <p className="text-base sm:text-lg text-slate-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Transform your speaking skills with instant AI feedback. Practice in a private, judgment-free zone and track your growth over time.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <Button 
                 size="lg" 
-                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl transition-all hover-lift bg-brand-green hover:bg-brand-green/90 touch-manipulation min-h-[44px]"
+                className="bg-brand-green hover:bg-emerald-600 text-white text-base h-12 px-6 shadow-sm hover:shadow-md transition-all font-medium"
                 onClick={handlePrimaryCTAClick}
-                data-cta-variant={ctaVariant}
-                aria-label={`${ctaText} - No credit card required`}
                 asChild
               >
                 <Link to="/record">
-                  <CtaIcon className="mr-2 h-5 w-5" aria-hidden="true" />
-                  {ctaText}
+                  <Video className="mr-2 h-5 w-5" />
+                  Start Recording — Free
                 </Link>
               </Button>
               
               <Button 
-                size="lg" 
-                variant="outline"
-                className="text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8 border-2 hover-lift touch-manipulation min-h-[44px]"
+                variant="outline" 
+                size="lg"
+                className="text-base h-12 px-6 border-slate-300 hover:bg-slate-100 hover:border-slate-400 font-medium"
                 onClick={handleSecondaryCTAClick}
-                aria-label="View your progress dashboard"
                 asChild
               >
                 <Link to="/dashboard">
-                  <TrendingUp className="mr-2 h-5 w-5" aria-hidden="true" />
+                  <TrendingUp className="mr-2 h-5 w-5" />
                   View Dashboard
                 </Link>
               </Button>
             </div>
-            
-            <p className="text-sm text-muted-foreground mt-6" role="contentinfo">
-              No credit card required • Desktop only
-            </p>
-          </div>
 
-          {/* Right: Visual Element */}
-          <div className="relative animate-slide-up hidden lg:block">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/50 bg-card">
-              <div className="aspect-video bg-gradient-to-br from-brand-green/20 to-accent/20 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-brand-green/20 flex items-center justify-center">
-                    <Video className="w-12 h-12 text-brand-green" />
-                  </div>
-                  <p className="text-lg font-semibold text-foreground mb-2">Ready to start?</p>
-                  <p className="text-sm text-muted-foreground">Record your first reflection in minutes</p>
-                </div>
+            {/* Trust Badges */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-sm text-slate-600">
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>100% Private & Secure</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Join 50+ Users</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-purple-500">●</span>
+                <span>No Credit Card Required</span>
               </div>
             </div>
-            
-            {/* Floating stats cards */}
-            <div className="absolute -top-4 -right-4 bg-card p-4 rounded-xl shadow-lg border border-border/50 animate-float">
-              <p className="text-3xl font-bold text-brand-green">95%</p>
-              <p className="text-xs text-muted-foreground">Confidence Boost</p>
-            </div>
-            
-            <div className="absolute -bottom-4 -left-4 bg-card p-4 rounded-xl shadow-lg border border-border/50 animate-float" style={{ animationDelay: "1s" }}>
-              <p className="text-3xl font-bold text-accent">10k+</p>
-              <p className="text-xs text-muted-foreground">Reflections</p>
-            </div>
+          </div>
+
+          {/* Right: Visual Mockup */}
+          <div className="relative hidden lg:block">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              {/* Main Dark Card */}
+              <div className="relative bg-slate-900 rounded-3xl shadow-2xl aspect-[4/3] flex items-center justify-center border border-slate-800">
+                {/* Recording Indicator (Pulsing Red Dot) */}
+                <div className="absolute top-6 left-6 flex items-center gap-2">
+                  <motion.div
+                    animate={{ 
+                      opacity: [1, 0.3, 1],
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="w-3 h-3 rounded-full bg-red-500"
+                  />
+                  <span className="text-xs text-slate-400 font-medium">Recording...</span>
+                </div>
+
+                {/* Video Icon */}
+                <motion.div 
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center"
+                >
+                  <Video className="h-7 w-7 text-slate-400" />
+                </motion.div>
+
+                {/* Animated Bar Chart at Bottom */}
+                <div className="absolute bottom-8 right-8 flex items-end gap-2 h-16">
+                  {[40, 60, 80, 100].map((height, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${height}%` }}
+                      transition={{ 
+                        duration: 1,
+                        delay: 0.6 + (index * 0.2),
+                        ease: "easeOut"
+                      }}
+                      className={`w-8 rounded-t-md ${
+                        index === 3 ? 'bg-brand-green' :
+                        index === 2 ? 'bg-brand-green/70' :
+                        index === 1 ? 'bg-brand-green/50' :
+                        'bg-brand-green/30'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Floating Card: Confidence Score */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-4 border border-slate-200 min-w-[180px]"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-4 w-4 text-brand-green" />
+                  <span className="text-xs font-medium text-slate-600">Confidence Score</span>
+                </div>
+                <div className="text-3xl font-bold text-slate-900 mb-2">
+                  {displayConfidence}%
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "95%" }}
+                    transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-brand-green to-teal-400"
+                  />
+                </div>
+              </motion.div>
+
+              {/* Floating Card: Total Reflections */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 border border-slate-200 min-w-[160px]"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Video className="h-4 w-4 text-blue-500" />
+                  <span className="text-xs font-medium text-slate-600">Total Reflections</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {displayReflections}+
+                </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>

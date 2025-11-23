@@ -1,125 +1,142 @@
-import { Upload, Brain, TrendingUp, ArrowRight } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Upload, Brain, TrendingUp, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const HowItWorks = () => {
   const steps = [
     {
       icon: Upload,
       step: "01",
-      title: "Upload your 5–10 min video",
-      ariaLabel: "Step 1: Upload your 5 to 10 minute video reflection",
-      bullets: [
-        "Record via webcam or upload file",
-        "Practice presentations or daily reflections",
-        "Secure, private storage"
-      ],
-      color: "from-green-500 to-green-600",
-      bgColor: "bg-green-500/10"
+      title: "Upload Video",
+      subtitle: "5-10 min reflection",
+      description: "Record directly or upload your daily reflection video securely. We support all major formats.",
+      bullets: ["Webcam or file upload", "Private & secure", "Instant processing"],
+      color: "text-brand-green",
+      bgColor: "bg-brand-green/10",
+      borderColor: "border-brand-green/20",
+      gradient: "from-brand-green to-emerald-600",
+      shadow: "shadow-brand-green/10"
     },
     {
       icon: Brain,
       step: "02",
-      title: "AI analyzes voice & posture",
-      ariaLabel: "Step 2: AI analyzes your voice and posture",
-      bullets: [
-        "Speech patterns & filler words",
-        "Body language & facial expressions",
-        "Tone, pacing, and confidence markers"
-      ],
-      color: "from-blue-500 to-blue-600",
-      bgColor: "bg-blue-500/10"
+      title: "AI Analysis",
+      subtitle: "Instant feedback",
+      description: "Our AI analyzes your speech patterns, tone, and body language to identify key areas for growth.",
+      bullets: ["Voice analysis", "Posture detection", "Sentiment tracking"],
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
+      gradient: "from-blue-500 to-indigo-600",
+      shadow: "shadow-blue-500/10"
     },
     {
       icon: TrendingUp,
       step: "03",
-      title: "Get actionable tips & goals",
-      ariaLabel: "Step 3: Get actionable tips and personalized goals",
-      bullets: [
-        "Personalized improvement suggestions",
-        "Track progress with detailed metrics",
-        "Set and achieve communication goals"
-      ],
-      color: "from-emerald-500 to-emerald-600",
-      bgColor: "bg-emerald-500/10"
+      title: "Get Insights",
+      subtitle: "Actionable goals",
+      description: "Receive a personalized report with specific tips and exercises to improve your communication skills.",
+      bullets: ["Confidence score", "Improvement tips", "Progress tracking"],
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20",
+      gradient: "from-purple-500 to-pink-600",
+      shadow: "shadow-purple-500/10"
     }
   ];
 
   return (
-    <section className="py-20 px-4 bg-muted/30">
-      <div className="container mx-auto max-w-7xl">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Three simple steps to transform your communication skills
-          </p>
+    <section className="py-24 px-4 relative overflow-hidden bg-white/50">
+      <div className="container mx-auto max-w-7xl relative z-10">
+        <div className="text-center mb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-slate-900">
+              How It <span className="text-brand-green">Works</span>
+            </h2>
+            <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+              Three simple steps to transform your communication skills with the power of AI.
+            </p>
+          </motion.div>
         </div>
 
-        <div className="relative">
-          {/* Connection Lines (Desktop) */}
-          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-blue-500 to-emerald-500 -translate-y-1/2 -z-10" />
+        <div className="relative grid md:grid-cols-3 gap-8 lg:gap-12">
+          {/* Animated Connecting Line (Desktop) */}
+          <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-green/20 via-blue-500/20 to-purple-500/20 -z-10" />
           
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div 
-                  key={index} 
-                  className="relative animate-fade-in"
-                  style={{ animationDelay: `${index * 150}ms` }}
-                >
-                  <Card 
-                    className="p-8 h-full hover-lift cursor-default bg-card border-2 hover:border-border/80 transition-all focus-within:ring-2 focus-within:ring-brand-green/50 overflow-visible"
-                    tabIndex={0}
-                    role="article"
-                    aria-label={step.ariaLabel}
-                  >
-                    {/* Step Number Badge */}
-                    <div className={`absolute -top-3 left-6 px-4 py-2 rounded-full bg-gradient-to-r ${step.color} text-white font-bold text-sm shadow-lg z-10`}>
-                      Step {step.step}
-                    </div>
-
-                    {/* Icon */}
-                    <div className={`h-16 w-16 rounded-xl bg-gradient-to-r ${step.color} flex items-center justify-center mb-6 mt-4`}>
-                      <Icon className="h-8 w-8 text-white" aria-hidden="true" />
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-xl font-bold mb-4 leading-tight">{step.title}</h3>
-                    
-                    {/* Bullet Points */}
-                    <ul className="space-y-3" role="list">
-                      {step.bullets.map((bullet, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <div className={`mt-1.5 h-1.5 w-1.5 rounded-full ${step.bgColor} flex-shrink-0`} aria-hidden="true" />
-                          <span className="text-muted-foreground text-sm leading-relaxed">
-                            {bullet}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Card>
-
-                  {/* Arrow between steps (Desktop) */}
-                  {index < steps.length - 1 && (
-                    <div className="hidden lg:flex absolute top-1/2 -right-6 xl:-right-8 -translate-y-1/2 z-10">
-                      <div className={`h-12 w-12 rounded-full bg-gradient-to-r ${step.color} flex items-center justify-center shadow-lg`}>
-                        <ArrowRight className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Arrow between steps (Mobile) */}
-                  {index < steps.length - 1 && (
-                    <div className="flex lg:hidden justify-center my-4">
-                      <div className={`h-12 w-12 rounded-full bg-gradient-to-r ${step.color} flex items-center justify-center shadow-lg`}>
-                        <ArrowRight className="h-6 w-6 text-white rotate-90" />
-                      </div>
-                    </div>
-                  )}
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2 }}
+                className="relative group"
+              >
+                {/* Step Badge */}
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-xl ring-4 ring-white transition-transform duration-300 group-hover:scale-110",
+                    "bg-gradient-to-br", step.gradient, step.shadow
+                  )}>
+                    {step.step}
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Card */}
+                <div className="pt-10 h-full">
+                  <div className={cn(
+                    "h-full p-8 rounded-3xl bg-white border shadow-xl transition-all duration-300",
+                    "hover:shadow-2xl hover:-translate-y-2",
+                    step.borderColor,
+                    step.shadow
+                  )}>
+                    {/* Icon */}
+                    <div className={cn(
+                      "w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center transition-colors duration-300",
+                      step.bgColor
+                    )}>
+                      <Icon className={cn("w-8 h-8", step.color)} />
+                    </div>
+
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold mb-2 text-slate-900">{step.title}</h3>
+                      <div className={cn("inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4", step.bgColor, step.color)}>
+                        {step.subtitle}
+                      </div>
+                      <p className="text-slate-600 mb-8 leading-relaxed">
+                        {step.description}
+                      </p>
+
+                      {/* Hover Details */}
+                      <div className="pt-6 border-t border-slate-100">
+                        <ul className="space-y-3 text-left">
+                          {step.bullets.map((bullet, idx) => (
+                            <li key={idx} className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                              <CheckCircle2 className={cn("w-4 h-4 flex-shrink-0", step.color)} />
+                              {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Arrow */}
+                {index < steps.length - 1 && (
+                  <div className="md:hidden flex justify-center my-8 text-slate-200">
+                    <ArrowRight className="w-8 h-8 rotate-90" />
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

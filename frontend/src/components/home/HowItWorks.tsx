@@ -1,4 +1,4 @@
-import { Upload, Brain, TrendingUp, ArrowRight, Sparkles } from "lucide-react";
+import { Upload, Brain, TrendingUp, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -9,35 +9,44 @@ const HowItWorks = () => {
       step: "01",
       title: "Upload Video",
       subtitle: "5-10 min reflection",
-      description: "Record directly or upload your daily reflection video securely.",
+      description: "Record directly or upload your daily reflection video securely. We support all major formats.",
       bullets: ["Webcam or file upload", "Private & secure", "Instant processing"],
-      color: "from-green-500 to-emerald-600",
-      shadow: "shadow-green-500/20"
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200",
+      gradient: "from-emerald-500 to-green-600",
+      shadow: "shadow-emerald-500/10"
     },
     {
       icon: Brain,
       step: "02",
       title: "AI Analysis",
       subtitle: "Instant feedback",
-      description: "Our AI analyzes your speech patterns, tone, and body language.",
+      description: "Our AI analyzes your speech patterns, tone, and body language to identify key areas for growth.",
       bullets: ["Voice analysis", "Posture detection", "Sentiment tracking"],
-      color: "from-blue-500 to-indigo-600",
-      shadow: "shadow-blue-500/20"
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
+      gradient: "from-blue-500 to-indigo-600",
+      shadow: "shadow-blue-500/10"
     },
     {
       icon: TrendingUp,
       step: "03",
       title: "Get Insights",
       subtitle: "Actionable goals",
-      description: "Receive a personalized report with tips to improve your skills.",
+      description: "Receive a personalized report with specific tips and exercises to improve your communication skills.",
       bullets: ["Confidence score", "Improvement tips", "Progress tracking"],
-      color: "from-purple-500 to-pink-600",
-      shadow: "shadow-purple-500/20"
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200",
+      gradient: "from-purple-500 to-pink-600",
+      shadow: "shadow-purple-500/10"
     }
   ];
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
+    <section className="py-24 px-4 relative overflow-hidden bg-white/50">
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="text-center mb-24">
           <motion.div
@@ -45,10 +54,10 @@ const HowItWorks = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              How It <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-green to-blue-500">Works</span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-slate-900">
+              How It <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Works</span>
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
               Three simple steps to transform your communication skills with the power of AI.
             </p>
           </motion.div>
@@ -56,7 +65,7 @@ const HowItWorks = () => {
 
         <div className="relative grid md:grid-cols-3 gap-8 lg:gap-12">
           {/* Animated Connecting Line (Desktop) */}
-          <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500/20 via-blue-500/20 to-purple-500/20 -z-10" />
+          <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-100 via-blue-100 to-purple-100 -z-10" />
           
           {steps.map((step, index) => {
             const Icon = step.icon;
@@ -72,8 +81,8 @@ const HowItWorks = () => {
                 {/* Step Badge */}
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
                   <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-xl ring-4 ring-background transition-transform duration-300 group-hover:scale-110",
-                    "bg-gradient-to-br", step.color, step.shadow
+                    "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-xl ring-4 ring-white transition-transform duration-300 group-hover:scale-110",
+                    "bg-gradient-to-br", step.gradient, step.shadow
                   )}>
                     {step.step}
                   </div>
@@ -82,32 +91,34 @@ const HowItWorks = () => {
                 {/* Card */}
                 <div className="pt-10 h-full">
                   <div className={cn(
-                    "h-full p-8 rounded-3xl bg-card border border-border/50 shadow-xl transition-all duration-300",
-                    "hover:shadow-2xl hover:-translate-y-2 group-hover:border-brand-green/30"
+                    "h-full p-8 rounded-3xl bg-white border shadow-xl transition-all duration-300",
+                    "hover:shadow-2xl hover:-translate-y-2",
+                    step.borderColor,
+                    step.shadow
                   )}>
                     {/* Icon */}
                     <div className={cn(
-                      "w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center bg-gradient-to-br opacity-10 group-hover:opacity-20 transition-opacity",
-                      step.color
+                      "w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center transition-colors duration-300",
+                      step.bgColor
                     )}>
-                      <Icon className={cn("w-8 h-8", step.color.split(' ')[1].replace('to-', 'text-'))} />
+                      <Icon className={cn("w-8 h-8", step.color)} />
                     </div>
 
                     <div className="text-center">
-                      <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                      <p className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">
+                      <h3 className="text-2xl font-bold mb-2 text-slate-900">{step.title}</h3>
+                      <div className={cn("inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4", step.bgColor, step.color)}>
                         {step.subtitle}
-                      </p>
-                      <p className="text-muted-foreground mb-6">
+                      </div>
+                      <p className="text-slate-600 mb-8 leading-relaxed">
                         {step.description}
                       </p>
 
                       {/* Hover Details */}
-                      <div className="pt-4 border-t border-border/50">
-                        <ul className="space-y-2 text-left">
+                      <div className="pt-6 border-t border-slate-100">
+                        <ul className="space-y-3 text-left">
                           {step.bullets.map((bullet, idx) => (
-                            <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Sparkles className="w-3 h-3 text-brand-green" />
+                            <li key={idx} className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                              <CheckCircle2 className={cn("w-4 h-4 flex-shrink-0", step.color)} />
                               {bullet}
                             </li>
                           ))}
@@ -119,7 +130,7 @@ const HowItWorks = () => {
 
                 {/* Mobile Arrow */}
                 {index < steps.length - 1 && (
-                  <div className="md:hidden flex justify-center my-8 text-muted-foreground/30">
+                  <div className="md:hidden flex justify-center my-8 text-slate-200">
                     <ArrowRight className="w-8 h-8 rotate-90" />
                   </div>
                 )}

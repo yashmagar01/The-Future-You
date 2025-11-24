@@ -73,6 +73,7 @@ export default function Profile() {
         .from('profiles')
         .upsert({
           id: user.id,
+          email: user.email!,
           full_name: editedProfile.full_name,
           bio: editedProfile.bio,
           updated_at: new Date().toISOString(),

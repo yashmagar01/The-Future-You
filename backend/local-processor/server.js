@@ -32,6 +32,11 @@ if (!fs.existsSync(tmpDir)) {
   fs.mkdirSync(tmpDir);
 }
 
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.send('Local Processor is running!');
+});
+
 app.post('/process', async (req, res) => {
   const { recording_id, video_path } = req.body;
 

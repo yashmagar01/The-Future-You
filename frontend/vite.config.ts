@@ -28,15 +28,15 @@ export default defineConfig({
     port: 8080,
   },
   plugins: [
-    react(),
-    wasmPath ? viteStaticCopy({
+    react() as any,
+    wasmPath ? (viteStaticCopy({
       targets: [
         {
           src: `${wasmPath}/*`,
           dest: "wasm",
         },
       ],
-    }) : null,
+    }) as any) : null,
   ],
   // Include MediaPipe tasks-vision for Vite's dependency pre-bundling
   optimizeDeps: {

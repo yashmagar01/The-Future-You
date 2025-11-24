@@ -174,36 +174,6 @@ const Record = () => {
         console.error('Failed to trigger local processing:', err);
       }
 
-      // Trigger local processing
-      try {
-        await fetch('http://localhost:3001/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            recording_id: recording.id, 
-            video_path: videoUrl.split('/recordings/')[1] 
-          })
-        });
-        console.log('Local processing triggered');
-      } catch (err) {
-        console.error('Failed to trigger local processing:', err);
-      }
-
-      // Trigger local processing
-      try {
-        await fetch('http://localhost:3001/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            recording_id: recording.id, 
-            video_path: videoUrl.split('/recordings/')[1] 
-          })
-        });
-        console.log('Local processing triggered');
-      } catch (err) {
-        console.error('Failed to trigger local processing:', err);
-      }
-
       toast({
         title: "Success!",
         description: "Your video has been uploaded successfully.",

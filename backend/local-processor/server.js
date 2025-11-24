@@ -5,12 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const fetch = require('node-fetch');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 const port = 3001;
 
-// Middleware to parse JSON bodies
+// Middleware
+app.use(cors());
 app.use(express.json());
 
 // Supabase configuration

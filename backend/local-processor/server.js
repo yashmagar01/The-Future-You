@@ -53,7 +53,7 @@ app.post('/process', async (req, res) => {
     // Create a signed URL for downloading (valid for 60 seconds)
     const { data: signedUrlData, error: signedUrlError } = await supabase
       .storage
-      .from('videos') // Adjust bucket name if different
+      .from('recordings') // Correct bucket name
       .createSignedUrl(video_path, 60);
 
     if (signedUrlError) {

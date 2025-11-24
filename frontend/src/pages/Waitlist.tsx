@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Users, Zap, Shield, TrendingUp } from "lucide-react";
+import { Sparkles, Users, Zap, Shield, TrendingUp, Rocket, Star, Clock } from "lucide-react";
+import Layout from "@/components/Layout";
 import WaitlistForm from "@/components/WaitlistForm";
 import WaitlistSuccessModal from "@/components/WaitlistSuccessModal";
 import {
@@ -9,10 +10,54 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
+import confetti from "canvas-confetti";
+
+// Countdown Component
+const Countdown = ({ targetDate }: { targetDate: Date }) => {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = targetDate.getTime() - new Date().getTime();
+      
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    <div className="flex justify-center gap-3 md:gap-6">
+      {Object.entries(timeLeft).map(([unit, value]) => (
+        <div key={unit} className="flex flex-col items-center">
+          <div className="relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center border-2 border-primary/30 shadow-lg backdrop-blur-sm">
+            <span className="text-2xl md:text-3xl font-bold text-foreground">{value.toString().padStart(2, '0')}</span>
+          </div>
+          <span className="text-xs md:text-sm text-muted-foreground mt-2 capitalize font-medium">{unit}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const Waitlist = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const [waitlistCount, setWaitlistCount] = useState(0);
 
   useEffect(() => {
     // Log page view
@@ -20,31 +65,98 @@ const Waitlist = () => {
       page: "/waitlist",
       title: "Join Waitlist",
     });
+
+    // Animate count up to fixed authentic number (35)
+    const targetCount = 35; // Fixed number in 20-50 range
+    let currentCount = 0;
+    const increment = 1;
+    
+    const counter = setInterval(() => {
+      currentCount += increment;
+      if (currentCount >= targetCount) {
+        setWaitlistCount(targetCount);
+        clearInterval(counter);
+      } else {
+        setWaitlistCount(currentCount);
+      }
+    }, 30); // Faster animation
+
+    return () => clearInterval(counter);
   }, []);
 
   const handleSuccess = (email: string) => {
     setSubmittedEmail(email);
     setShowSuccessModal(true);
+    
+    // Trigger confetti animation
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+    const randomInRange = (min: number, max: number) => {
+      return Math.random() * (max - min) + min;
+    };
+
+    const interval: any = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
   };
 
   const handleCloseModal = () => {
     setShowSuccessModal(false);
   };
 
+  const launchDate = new Date('2026-04-19T00:00:00');
+
   return (
-    <div className="min-h-screen bg-background">
+    <Layout>
+      <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-primary/5 to-background">
-        <div className="container mx-auto max-w-4xl text-center">
+      <section className="py-20 px-4 bg-gradient-to-b from-primary/10 via-primary/5 to-background relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl" />
+        
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 animate-fade-in">
             <Sparkles className="h-4 w-4" />
             Early Access Waitlist
           </div>
 
+          {/* Branded Illustration */}
+          <div className="flex items-center justify-center gap-3 mb-6 animate-bounce-slow">
+            <div className="relative">
+              <Rocket className="h-12 w-12 text-primary rotate-45" />
+              <Star className="h-4 w-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
+            </div>
+            <Sparkles className="h-10 w-10 text-accent animate-pulse" style={{ animationDelay: '0.2s' }} />
+            <div className="relative">
+              <Users className="h-12 w-12 text-primary" />
+              <Star className="h-4 w-4 text-yellow-500 absolute -bottom-1 -left-1 animate-pulse" style={{ animationDelay: '0.4s' }} />
+            </div>
+          </div>
+
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Join the Yash Early Access Waitlist
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Join the Future You Early Access Waitlist
           </h1>
 
           {/* Subtitle */}
@@ -53,16 +165,25 @@ const Waitlist = () => {
             job interviews, and everyday conversations through daily video practice.
           </p>
 
+          {/* Countdown */}
+          <div className="mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Clock className="h-5 w-5 text-primary" />
+              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Launching in</p>
+            </div>
+            <Countdown targetDate={launchDate} />
+          </div>
+
           {/* Social Proof */}
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-12">
             <Users className="h-4 w-4" />
-            <span>Join <strong className="text-foreground">500+ people</strong> already on the waitlist</span>
+            <span>Join <strong className="text-foreground text-lg">{waitlistCount}+</strong> people already on the waitlist</span>
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-12 px-4 border-y bg-muted/30">
+      <section className="py-12 px-4 border-y bg-gradient-to-r from-muted/40 via-muted/30 to-muted/40">
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center space-y-3">
@@ -97,7 +218,7 @@ const Waitlist = () => {
       </section>
 
       {/* Form Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto max-w-3xl">
           <div className="bg-card border rounded-2xl shadow-lg p-8 md:p-12">
             <div className="text-center mb-8">
@@ -115,7 +236,7 @@ const Waitlist = () => {
       </section>
 
       {/* What Happens Next Section */}
-      <section className="py-16 px-4 bg-muted/30">
+      <section className="py-16 px-4 bg-gradient-to-b from-muted/40 via-muted/30 to-muted/20">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
             What Happens Next?
@@ -145,7 +266,7 @@ const Waitlist = () => {
               </div>
               <h3 className="font-semibold">Start Practicing</h3>
               <p className="text-sm text-muted-foreground">
-                Get full access to Yash and start improving your communication skills
+                Get full access to Future You and start improving your communication skills
               </p>
             </div>
           </div>
@@ -153,7 +274,7 @@ const Waitlist = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/20">
+      <section className="py-16 px-4 bg-gradient-to-b from-accent/5 via-background to-muted/30">
         <div className="container mx-auto max-w-3xl">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">
@@ -226,7 +347,8 @@ const Waitlist = () => {
         onClose={handleCloseModal}
         email={submittedEmail}
       />
-    </div>
+      </div>
+    </Layout>
   );
 };
 

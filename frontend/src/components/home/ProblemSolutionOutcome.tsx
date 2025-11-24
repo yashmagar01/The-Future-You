@@ -18,7 +18,8 @@ const ProblemSolutionOutcome = () => {
         "Expensive coaching alternatives",
         "Hard to track improvement over time"
       ],
-      checkIcon: X
+      checkIcon: X,
+      badge: null
     },
     {
       icon: Lightbulb,
@@ -34,7 +35,8 @@ const ProblemSolutionOutcome = () => {
         "Instant, detailed feedback reports",
         "Affordable and accessible 24/7"
       ],
-      checkIcon: Check
+      checkIcon: Check,
+      badge: { text: "Available Now", color: "bg-brand-green/20 text-brand-green border-brand-green/30", animate: "glow" }
     },
     {
       icon: TrendingUp,
@@ -50,7 +52,8 @@ const ProblemSolutionOutcome = () => {
         "Improved professional opportunities",
         "Lifelong communication skills"
       ],
-      checkIcon: ArrowRight
+      checkIcon: ArrowRight,
+      badge: { text: "Your Future", color: "bg-blue-500/20 text-blue-500 border-blue-500/30", animate: "pulse" }
     }
   ];
 
@@ -134,9 +137,35 @@ const ProblemSolutionOutcome = () => {
 
                   {/* Content */}
                   <div className="mb-8">
-                    <span className={`text-xs font-bold uppercase tracking-wider mb-2 block ${section.color}`}>
-                      {section.subtitle}
-                    </span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-xs font-bold uppercase tracking-wider block ${section.color}`}>
+                        {section.subtitle}
+                      </span>
+                      {section.badge && (
+                        <motion.span 
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ 
+                            opacity: 1, 
+                            scale: 1,
+                            boxShadow: section.badge.animate === "glow" 
+                              ? ["0 0 0px rgba(0,0,0,0)", "0 0 10px rgba(34,197,94,0.3)", "0 0 0px rgba(0,0,0,0)"]
+                              : "none"
+                          }}
+                          transition={{ 
+                            duration: 2, 
+                            repeat: Infinity,
+                            repeatType: "reverse" 
+                          }}
+                          className={cn(
+                            "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border",
+                            section.badge.color,
+                            section.badge.animate === "pulse" && "animate-pulse"
+                          )}
+                        >
+                          {section.badge.text}
+                        </motion.span>
+                      )}
+                    </div>
                     <h3 className="text-2xl font-bold mb-4">{section.title}</h3>
                     <p className="text-muted-foreground leading-relaxed">
                       {section.description}

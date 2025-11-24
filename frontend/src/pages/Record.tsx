@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Loader2, Clock, Zap } from "lucide-react";
+import { AlertCircle, Loader2, Clock, Zap, Info, Shield } from "lucide-react";
 import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
@@ -203,13 +203,25 @@ const Record = () => {
           </Alert>
         )}
 
-        <Alert className="mb-6 sm:mb-8 animate-slide-up">
-          <AlertCircle className="h-4 w-4" aria-hidden="true" />
-          <AlertDescription className="text-sm">
-            <strong>Pro Tips:</strong> Find a quiet space, maintain good posture, look at the camera,
-            and speak clearly. Try to fill the full 5 minutes to get comprehensive feedback.
-          </AlertDescription>
-        </Alert>
+        <div className="grid md:grid-cols-2 gap-4 mb-6 sm:mb-8 animate-slide-up">
+          <Alert className="border-blue-500/20 bg-blue-500/5">
+            <Info className="h-4 w-4 text-blue-500" aria-hidden="true" />
+            <AlertDescription className="text-sm">
+              <strong className="text-blue-600 block mb-1">Pro Tips:</strong>
+              Find a quiet space, maintain eye contact with the camera, and speak clearly. 
+              Aim for the full 5 minutes for the most accurate analysis.
+            </AlertDescription>
+          </Alert>
+
+          <Alert className="border-brand-green/20 bg-brand-green/5">
+            <Shield className="h-4 w-4 text-brand-green" aria-hidden="true" />
+            <AlertDescription className="text-sm">
+              <strong className="text-brand-green block mb-1">Privacy Guaranteed:</strong>
+              Your recording is processed locally on your device first. 
+              We never share your personal data with third parties.
+            </AlertDescription>
+          </Alert>
+        </div>
 
         {isUploading ? (
           <Card className="p-6 sm:p-8 mb-6 shadow-medium">

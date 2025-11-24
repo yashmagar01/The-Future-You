@@ -67,19 +67,25 @@ const TestimonialGrid = () => {
             return (
               <Card 
                 key={index}
-                className="p-6 hover-lift cursor-default border hover:border-border/80 transition-all group"
-                style={{ animationDelay: `${index * 75}ms` }}
+                className="p-6 hover-lift cursor-default border hover:border-border/80 transition-all group relative overflow-hidden"
+                style={{ 
+                  animationDelay: `${index * 75}ms`,
+                  borderLeft: `4px solid currentColor` 
+                }}
               >
+                {/* Colored Border Hack using text color inheritance or explicit style */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 ${benefit.color.replace('text-', 'bg-')}`} />
+
                 {/* Icon */}
-                <div className={`w-12 h-12 rounded-xl ${benefit.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                <div className={`w-12 h-12 rounded-xl ${benefit.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className={`h-6 w-6 ${benefit.color}`} />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>
+                <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">{benefit.title}</h3>
 
                 {/* Description */}
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors">
                   {benefit.description}
                 </p>
               </Card>

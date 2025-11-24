@@ -55,17 +55,11 @@ const Home = () => {
       {/* 6b. Product Roadmap Timeline */}
       <ProductRoadmap userRole="user" />
 
-      {/* 7. Detailed Roadmap (Original) */}
-      <Roadmap />
-
       {/* 8. Testimonials / Social Proof */}
       <TestimonialGrid />
 
       {/* 9. Footer CTA */}
       <FooterCTA />
-
-      {/* 10. Footer with Copyright & Links */}
-      <Footer />
       </main>
     </Layout>
   );

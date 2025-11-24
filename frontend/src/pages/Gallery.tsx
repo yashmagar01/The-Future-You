@@ -1,15 +1,26 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Video, Play, TrendingUp, Calendar, AlertCircle, Loader2, CheckCircle2, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Video, Play, TrendingUp, Calendar, AlertCircle, Loader2, CheckCircle2, Eye, Search, Filter } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useRecordings } from "@/hooks/useRecordings";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Gallery = () => {
   const { data: recordings, isLoading, error } = useRecordings();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "processing">("all");
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "0:00";
@@ -18,14 +29,49 @@ const Gallery = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const filteredRecordings = recordings?.filter(recording => {
+    const matchesSearch = (recording.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" 
+      ? true        : filterStatus === "completed" 
+        ? recording.status === "completed"
+        : recording.status === "processing";
+    
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold mb-3">Your Reflections</h1>
-          <p className="text-muted-foreground text-lg">
-            Review past recordings and track your improvement journey
-          </p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-in">
+          <div>
+            <h1 className="text-4xl font-bold mb-3">Your Reflections</h1>
+            <p className="text-muted-foreground text-lg">
+              Review past recordings and track your improvement journey
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search recordings..." 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+              <SelectTrigger className="w-full sm:w-40">
+                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {error && (
@@ -49,36 +95,38 @@ const Gallery = () => {
               </Card>
             ))}
           </div>
-        ) : recordings && recordings.length > 0 ? (
+        ) : filteredRecordings && filteredRecordings.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recordings.map((recording, index) => (
+            {filteredRecordings.map((recording, index) => (
               <Card 
                 key={recording.id} 
-                className={`overflow-hidden hover-lift group ${
+                className={`overflow-hidden hover-lift group border-2 border-transparent hover:border-primary/10 transition-all duration-300 ${
                   recording.status === 'completed' ? 'cursor-pointer' : ''
                 }`}
                 style={{ animationDelay: `${index * 75}ms` }}
               >
-                <div className="aspect-video bg-muted relative flex items-center justify-center">
+                <div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden">
                   {recording.thumbnail_url ? (
                     <img 
                       src={recording.thumbnail_url} 
                       alt={recording.title || 'Recording'}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <>
-                      {recording.status === 'pending' || recording.status === 'processing' ? (
+                      {recording.status === 'processing' ? (
                         <>
-                          <div className="relative">
-                            <Video className="h-12 w-12 text-muted-foreground" />
-                            <Loader2 className="h-6 w-6 text-primary animate-spin absolute -bottom-1 -right-1" />
+                          <div className="relative z-10">
+                            <div className="relative">
+                              <Video className="h-12 w-12 text-muted-foreground/50" />
+                              <Loader2 className="h-6 w-6 text-primary animate-spin absolute -bottom-1 -right-1" />
+                            </div>
                           </div>
                           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5" />
                         </>
                       ) : (
                         <>
-                          <Video className="h-12 w-12 text-muted-foreground" />
+                          <Video className="h-12 w-12 text-muted-foreground/50 z-10" />
                           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5" />
                         </>
                       )}
@@ -86,42 +134,42 @@ const Gallery = () => {
                   )}
                   
                   {recording.status === 'completed' && (
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                       <Button 
                         size="icon" 
-                        className="opacity-0 group-hover:opacity-100 transition-opacity scale-90 group-hover:scale-100"
+                        className="h-12 w-12 rounded-full bg-white text-primary hover:bg-white/90 hover:scale-110 transition-all duration-300 shadow-xl"
                         asChild
                       >
-                        <a href={recording.video_url} target="_blank" rel="noopener noreferrer">
-                          <Play className="h-5 w-5" />
-                        </a>
+                        <Link to={`/results/${recording.id}`}>
+                          <Play className="h-5 w-5 fill-current ml-0.5" />
+                        </Link>
                       </Button>
                     </div>
                   )}
                   
-                  <Badge className="absolute top-2 right-2 bg-background/90">
+                  <Badge className="absolute top-3 right-3 bg-black/60 backdrop-blur-md hover:bg-black/70 transition-colors border-0">
                     {formatDuration(recording.duration_seconds)}
                   </Badge>
                   
-                  {(recording.status === 'pending' || recording.status === 'processing') && (
-                    <Badge className="absolute top-2 left-2 bg-accent/90 text-accent-foreground flex items-center gap-1.5">
+                  {recording.status === 'processing' && (
+                    <Badge className="absolute top-3 left-3 bg-yellow-500/90 hover:bg-yellow-500 text-white border-0 flex items-center gap-1.5 shadow-sm">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      {recording.status === 'pending' ? 'Pending' : 'Processing'}
+                      Processing
                     </Badge>
                   )}
                   
                   {recording.status === 'completed' && (
-                    <Badge className="absolute top-2 left-2 bg-success/90 text-success-foreground flex items-center gap-1.5">
+                    <Badge className="absolute top-3 left-3 bg-green-500/90 hover:bg-green-500 text-white border-0 flex items-center gap-1.5 shadow-sm">
                       <CheckCircle2 className="h-3 w-3" />
                       Ready
                     </Badge>
                   )}
                 </div>
 
-                <div className="p-4">
+                <div className="p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+                      <Calendar className="h-3.5 w-3.5" />
                       {new Date(recording.created_at).toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric',
@@ -129,52 +177,53 @@ const Gallery = () => {
                       })}
                     </div>
                     {recording.feedback && recording.feedback.overall_score && (
-                      <div className="flex items-center gap-1.5">
-                        <TrendingUp className="h-4 w-4 text-success" />
-                        <span className="font-bold text-success">{recording.feedback.overall_score}</span>
-                        <span className="text-sm text-muted-foreground">/100</span>
+                      <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-1 rounded-md">
+                        <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                        <span className="font-bold text-green-700 text-sm">{recording.feedback.overall_score}</span>
                       </div>
                     )}
                   </div>
 
-                  {recording.title && (
-                    <h3 className="font-medium text-sm mb-2 line-clamp-1">
-                      {recording.title}
-                    </h3>
-                  )}
+                  <h3 className="font-semibold text-base mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                    {recording.title || "Untitled Recording"}
+                  </h3>
 
-                  {recording.status === 'completed' && recording.feedback && recording.feedback.improvements && recording.feedback.improvements.length > 0 && (
-                    <div className="space-y-1 mb-3">
-                      {recording.feedback.improvements.slice(0, 2).map((improvement, i) => (
+                  {recording.status === 'completed' && recording.feedback && recording.feedback.areas_for_improvement && recording.feedback.areas_for_improvement.length > 0 ? (
+                    <div className="space-y-1.5 mb-4">
+                      {recording.feedback.areas_for_improvement.slice(0, 2).map((improvement, i) => (
                         <div 
                           key={i} 
-                          className="text-xs text-muted-foreground flex items-start gap-1.5"
+                          className="text-xs text-muted-foreground flex items-start gap-2"
                         >
-                          <span className="text-primary mt-0.5">•</span>
+                          <span className="text-primary/60 mt-0.5">•</span>
                           <span className="line-clamp-1">{improvement}</span>
                         </div>
                       ))}
                     </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mb-4 line-clamp-2">
+                      {recording.status === 'completed' 
+                        ? "No specific improvements noted yet." 
+                        : "Analysis in progress..."}
+                    </p>
                   )}
 
-                  {(recording.status === 'pending' || recording.status === 'processing') && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 p-2 rounded-md bg-muted/50">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      <span>Analysis in progress... You'll receive an email when ready.</span>
-                    </div>
-                  )}
-
-                  {recording.status === 'completed' && recording.feedback && (
+                  {recording.status === 'completed' ? (
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="w-full mt-2"
+                      className="w-full group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300"
                       asChild
                     >
                       <Link to={`/results/${recording.id}`}>
                         <Eye className="h-4 w-4 mr-2" />
-                        View Full Analysis
+                        View Analysis
                       </Link>
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="secondary" disabled className="w-full opacity-50">
+                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                      Analyzing...
                     </Button>
                   )}
                 </div>
@@ -182,16 +231,28 @@ const Gallery = () => {
             ))}
           </div>
         ) : (
-          <Card className="p-12 text-center animate-scale-in">
-            <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No recordings yet</h2>
-            <p className="text-muted-foreground mb-6">
-              Start your journey by recording your first reflection
+          <div className="text-center py-20 animate-scale-in">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+              <Video className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              {searchQuery || filterStatus !== 'all' ? "No matching recordings" : "No recordings yet"}
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+              {searchQuery || filterStatus !== 'all' 
+                ? "Try adjusting your search or filters to find what you're looking for."
+                : "Start your journey by recording your first reflection. We'll analyze it and help you improve."}
             </p>
-            <Button asChild>
-              <Link to="/record">Record Your First Video</Link>
-            </Button>
-          </Card>
+            {(searchQuery || filterStatus !== 'all') ? (
+              <Button onClick={() => { setSearchQuery(""); setFilterStatus("all"); }} variant="outline">
+                Clear Filters
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="rounded-full px-8">
+                <Link to="/record">Record Your First Video</Link>
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </Layout>

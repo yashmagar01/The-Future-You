@@ -55,9 +55,6 @@ const Home = () => {
       {/* 6b. Product Roadmap Timeline */}
       <ProductRoadmap userRole="user" />
 
-      {/* 7. Detailed Roadmap (Original) */}
-      <Roadmap />
-
       {/* 8. Testimonials / Social Proof */}
       <TestimonialGrid />
 

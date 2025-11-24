@@ -7,7 +7,7 @@ export interface Milestone {
   id: string;
   title: string;
   date: string;
-  status: 'scheduled' | 'future';
+  status: 'scheduled' | 'future' | 'completed';
   color: {
     bg: string;
     text: string;
@@ -27,7 +27,7 @@ export const timelineData: Milestone[] = [
     id: 'mvp',
     title: 'MVP Launch',
     date: '19 April 2025',
-    status: 'scheduled',
+    status: 'completed',
     color: {
       bg: 'bg-green-500/10',
       text: 'text-green-600',
@@ -49,7 +49,7 @@ export const timelineData: Milestone[] = [
     id: 'nvp',
     title: 'NVP Release',
     date: '20 July 2025',
-    status: 'future',
+    status: 'completed',
     color: {
       bg: 'bg-blue-500/10',
       text: 'text-blue-600',

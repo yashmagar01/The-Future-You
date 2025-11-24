@@ -1,9 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic } from 'lucide-react';
+import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic, Shield, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { Slider } from "@/components/ui/slider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface VideoRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -316,190 +323,267 @@ export const VideoRecorder = ({
   };
 
   return (
-    <div className="space-y-6">
-      {error && (
-        <Alert variant="destructive" className="animate-fade-in">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+    <TooltipProvider>
+      <div className="space-y-6">
+        {error && (
+          <Alert variant="destructive" className="animate-fade-in">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      <Card className="p-4 sm:p-8 shadow-medium animate-scale-in">
-        <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden relative touch-pan-y">
-          {isPreviewing && !isReviewing ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              webkit-playsinline="true"
-              x-webkit-airplay="allow"
-              className={`w-full h-full object-cover ${isRecording ? 'brightness-110' : ''}`}
-              aria-label="Video preview"
-            />
-          ) : isReviewing && recordedBlob ? (
-            <video
-              src={URL.createObjectURL(recordedBlob)}
-              controls
-              className="w-full h-full object-contain bg-black"
-              aria-label="Recording review"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center p-4">
-              <div className="text-center">
-                <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                <Button
-                  onClick={requestCameraAccess}
-                  size="lg"
-                  className="min-h-[44px] touch-manipulation"
-                  aria-label="Enable camera access"
-                >
-                  Enable Camera
-                </Button>
-              </div>
+        <Card className="p-4 sm:p-8 shadow-medium animate-scale-in border-2 border-border/50">
+          <div className="aspect-video bg-slate-950 rounded-xl mb-6 overflow-hidden relative touch-pan-y group shadow-inner">
+            {/* Privacy Badge */}
+            <div className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md text-white/90 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 border border-white/10">
+              <Shield className="h-3 w-3" />
+              Private & Local
             </div>
-          )}
 
-          {/* Countdown Overlay */}
-          {countdown !== null && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 backdrop-blur-sm">
-              <div className="text-9xl font-bold text-white animate-bounce">
-                {countdown}
-              </div>
-            </div>
-          )}
-
-          {/* Recording Indicator & Timer */}
-          {isRecording && !isReviewing && (
-            <div className="absolute top-4 left-4 flex items-center gap-3 bg-black/70 text-white px-4 py-2 rounded-full backdrop-blur-md z-10">
-              <div className={`h-3 w-3 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'}`} />
-              <span className="font-mono font-medium text-base">{formatTime(recordingTime)}</span>
-            </div>
-          )}
-
-          {/* Audio Visualizer */}
-          {isRecording && !isPaused && !isReviewing && (
-            <div className="absolute bottom-4 right-4 flex items-end gap-1 h-8 z-10">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-1.5 bg-green-500 rounded-t-sm transition-all duration-75"
-                  style={{
-                    height: `${Math.max(4, Math.min(32, audioLevel * (1 + i * 0.5)))}px`,
-                    opacity: 0.8
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {!isReviewing ? (
-              <>
-                {!isRecording ? (
-                  <Button
-                    size="lg"
-                    className="px-8 min-h-[44px] touch-manipulation w-full sm:w-auto"
-                    onClick={startRecording}
-                    disabled={!isPreviewing || countdown !== null}
-                    aria-label="Start recording video"
-                  >
-                    <Circle className="mr-2 h-5 w-5 fill-current text-red-500" />
-                    Start Recording
-                  </Button>
-                ) : (
-                  <div className="flex gap-4 w-full sm:w-auto">
-                    <Button
-                      size="lg"
-                      variant={isPaused ? "default" : "secondary"}
-                      className="flex-1 sm:flex-none min-h-[44px]"
-                      onClick={togglePause}
-                      aria-label={isPaused ? "Resume recording" : "Pause recording"}
-                    >
-                      {isPaused ? (
-                        <>
-                          <Play className="mr-2 h-5 w-5" /> Resume
-                        </>
-                      ) : (
-                        <>
-                          <Pause className="mr-2 h-5 w-5" /> Pause
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="destructive"
-                      className="flex-1 sm:flex-none min-h-[44px]"
-                      onClick={stopRecording}
-                      aria-label="Stop recording"
-                    >
-                      <Square className="mr-2 h-5 w-5 fill-current" />
-                      Stop
-                    </Button>
-                  </div>
-                )}
-              </>
+            {isPreviewing && !isReviewing ? (
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                webkit-playsinline="true"
+                x-webkit-airplay="allow"
+                className={`w-full h-full object-cover transition-all duration-500 ${isRecording ? 'brightness-110 scale-[1.02]' : ''}`}
+                aria-label="Video preview"
+              />
+            ) : isReviewing && recordedBlob ? (
+              <video
+                src={URL.createObjectURL(recordedBlob)}
+                controls
+                className="w-full h-full object-contain bg-black"
+                aria-label="Recording review"
+              />
             ) : (
-              <div className="flex gap-4 w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="flex-1 sm:flex-none min-h-[44px]"
-                  onClick={handleDiscard}
-                >
-                  <RotateCcw className="mr-2 h-5 w-5" />
-                  Retake
-                </Button>
-                <Button
-                  size="lg"
-                  className="flex-1 sm:flex-none min-h-[44px]"
-                  onClick={handleSave}
-                >
-                  <Check className="mr-2 h-5 w-5" />
-                  Save Recording
-                </Button>
+              <div className="w-full h-full flex items-center justify-center p-4 bg-slate-900/50">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-6 animate-pulse">
+                    <Video className="h-10 w-10 text-slate-400" aria-hidden="true" />
+                  </div>
+                  <Button
+                    onClick={requestCameraAccess}
+                    size="lg"
+                    className="min-h-[44px] touch-manipulation font-semibold"
+                    aria-label="Enable camera access"
+                  >
+                    Enable Camera Access
+                  </Button>
+                  <p className="text-sm text-slate-500 mt-4">
+                    We need camera access to analyze your speech and body language.
+                    <br />Your video is processed locally.
+                  </p>
+                </div>
               </div>
             )}
 
-            {!isRecording && !isReviewing && (
-              <Button
-                size="lg"
-                variant="outline"
-                className="px-8 min-h-[44px] touch-manipulation"
-                asChild
-              >
-                <label className="cursor-pointer">
-                  <Upload className="mr-2 h-5 w-5" aria-hidden="true" />
-                  Upload Video
-                  <input
-                    type="file"
-                    accept="video/*"
-                    capture="user"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    aria-label="Upload or capture video"
-                  />
-                </label>
-              </Button>
+            {/* Countdown Overlay */}
+            {countdown !== null && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-30 backdrop-blur-sm">
+                <div className="text-9xl font-bold text-white animate-bounce drop-shadow-2xl">
+                  {countdown}
+                </div>
+              </div>
+            )}
+
+            {/* Recording Indicator & Timer */}
+            {isRecording && !isReviewing && (
+              <div className="absolute top-4 left-4 flex items-center gap-3 bg-red-500/90 text-white px-4 py-2 rounded-full backdrop-blur-md z-20 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className={`h-3 w-3 rounded-full ${isPaused ? 'bg-yellow-300' : 'bg-white animate-pulse'}`} />
+                <span className="font-mono font-bold text-base tracking-wider">{formatTime(recordingTime)}</span>
+              </div>
+            )}
+
+            {/* Audio Visualizer & Confidence Preview */}
+            {isRecording && !isPaused && !isReviewing && (
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/80 to-transparent z-10 flex items-end justify-between px-6 pb-6">
+                {/* Audio Bars */}
+                <div className="flex items-end gap-1 h-12">
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-2 bg-brand-green rounded-t-sm transition-all duration-75 shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                      style={{
+                        height: `${Math.max(4, Math.min(48, audioLevel * (1 + i * 0.3)))}px`,
+                        opacity: 0.8 + (i * 0.02)
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Confidence Meter Preview (Mock) */}
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[10px] uppercase tracking-wider text-white/70 font-semibold">Confidence Detect</span>
+                  <div className="h-1.5 w-24 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${Math.min(100, Math.max(20, audioLevel * 2))}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Timeline Slider (Visual Only during recording) */}
+            {isRecording && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-20">
+                <div 
+                  className="h-full bg-red-500 transition-all duration-1000 ease-linear"
+                  style={{ width: `${(recordingTime / maxDuration) * 100}%` }}
+                />
+              </div>
             )}
           </div>
 
-          {isRecording && (
-            <div className="text-center animate-fade-in">
-              <div className="flex items-center justify-center gap-2 text-destructive">
-                <span className="font-medium">Recording time: {formatTime(recordingTime)} / {formatMaxTime(maxDuration)}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                {recordingTime < 300
-                  ? 'Try to record at least 5 minutes for better feedback'
-                  : 'Great! You\'re doing well'}
-              </p>
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {!isReviewing ? (
+                <>
+                  {!isRecording ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="lg"
+                          className="px-8 min-h-[52px] touch-manipulation w-full sm:w-auto rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-red-600 hover:bg-red-700 text-white"
+                          onClick={startRecording}
+                          disabled={!isPreviewing || countdown !== null}
+                          aria-label="Start recording video"
+                        >
+                          <div className="p-1 bg-white/20 rounded-full mr-3">
+                            <Circle className="h-4 w-4 fill-current text-white" />
+                          </div>
+                          <span className="text-lg font-semibold">Start Recording</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Begin your 5-minute reflection</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <div className="flex gap-4 w-full sm:w-auto justify-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="lg"
+                            variant={isPaused ? "default" : "secondary"}
+                            className="flex-1 sm:flex-none min-h-[52px] rounded-full px-8"
+                            onClick={togglePause}
+                            aria-label={isPaused ? "Resume recording" : "Pause recording"}
+                          >
+                            {isPaused ? (
+                              <>
+                                <Play className="mr-2 h-5 w-5 fill-current" /> Resume
+                              </>
+                            ) : (
+                              <>
+                                <Pause className="mr-2 h-5 w-5 fill-current" /> Pause
+                              </>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{isPaused ? "Continue recording" : "Pause temporarily"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="lg"
+                            variant="destructive"
+                            className="flex-1 sm:flex-none min-h-[52px] rounded-full px-8 shadow-lg hover:shadow-red-500/20"
+                            onClick={stopRecording}
+                            aria-label="Stop recording"
+                          >
+                            <Square className="mr-2 h-5 w-5 fill-current" />
+                            Stop
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Finish and review</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex gap-4 w-full sm:w-auto justify-center">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="flex-1 sm:flex-none min-h-[52px] rounded-full px-8 border-2"
+                    onClick={handleDiscard}
+                  >
+                    <RotateCcw className="mr-2 h-5 w-5" />
+                    Retake
+                  </Button>
+                  <Button
+                    size="lg"
+                    className="flex-1 sm:flex-none min-h-[52px] rounded-full px-8 bg-brand-green hover:bg-brand-green/90 text-white shadow-lg hover:shadow-brand-green/20"
+                    onClick={handleSave}
+                  >
+                    <Check className="mr-2 h-5 w-5" />
+                    Save Recording
+                  </Button>
+                </div>
+              )}
+
+              {!isRecording && !isReviewing && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="lg"
+                      variant="ghost"
+                      className="px-6 min-h-[52px] touch-manipulation rounded-full text-muted-foreground hover:text-foreground"
+                      asChild
+                    >
+                      <label className="cursor-pointer flex items-center gap-2">
+                        <Upload className="h-5 w-5" aria-hidden="true" />
+                        <span className="font-medium">Upload File</span>
+                        <input
+                          type="file"
+                          accept="video/*"
+                          capture="user"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          aria-label="Upload or capture video"
+                        />
+                      </label>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload an existing video file</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
-          )}
-        </div>
-      </Card>
-    </div>
+
+            {isRecording && (
+              <div className="text-center animate-fade-in">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
+                  <Info className="h-4 w-4" />
+                  <span className="text-sm font-medium">Recording time: {formatTime(recordingTime)} / {formatMaxTime(maxDuration)}</span>
+                </div>
+                <Slider 
+                  value={[recordingTime]} 
+                  max={maxDuration} 
+                  step={1} 
+                  disabled 
+                  className="w-full max-w-md mx-auto"
+                />
+                <p className="text-sm text-muted-foreground mt-3 font-medium">
+                  {recordingTime < 300
+                    ? '💡 Tip: Record at least 5 minutes for better feedback'
+                    : '✨ Great! You\'re doing well'}
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+    </TooltipProvider>
   );
 };

@@ -419,7 +419,7 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
             <span className="text-destructive">*</span>
             {" "}
             <a
-              href="/privacy"
+              href="/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"

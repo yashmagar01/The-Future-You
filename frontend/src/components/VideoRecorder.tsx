@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-<<<<<<< HEAD
-import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic, Shield, Info } from 'lucide-react';
+import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic, Shield, Info, User } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { usePoseDetection, type PoseData } from '@/hooks/usePoseDetection';
+import { analyzePosture, type PostureMetrics } from '@/utils/poseAnalysis';
 import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
@@ -12,13 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-=======
-import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic, User } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
-import { usePoseDetection, type PoseData } from '@/hooks/usePoseDetection';
-import { analyzePosture, type PostureMetrics } from '@/utils/poseAnalysis';
->>>>>>> origin/main
+
 
 interface VideoRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -392,61 +387,16 @@ export const VideoRecorder = ({
           </Alert>
         )}
 
-<<<<<<< HEAD
         <Card className="p-4 sm:p-8 shadow-medium animate-scale-in border-2 border-border/50">
           <div className="aspect-video bg-slate-950 rounded-xl mb-6 overflow-hidden relative touch-pan-y group shadow-inner">
             {/* Privacy Badge */}
             <div className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md text-white/90 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 border border-white/10">
               <Shield className="h-3 w-3" />
               Private & Local
-=======
-      <Card className="p-4 sm:p-8 shadow-medium animate-scale-in">
-        <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden relative touch-pan-y">
-          {isPreviewing && !isReviewing ? (
-            <div className="relative w-full h-full">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                webkit-playsinline="true"
-                x-webkit-airplay="allow"
-                className={`w-full h-full object-cover ${isRecording ? 'brightness-110' : ''}`}
-                aria-label="Video preview"
-              />
-              {/* Pose overlay canvas */}
-              {showPoseOverlay && (
-                <canvas
-                  ref={poseCanvasRef}
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                  aria-hidden="true"
-                />
-              )}
-            </div>
-          ) : isReviewing && recordedBlob ? (
-            <video
-              src={URL.createObjectURL(recordedBlob)}
-              controls
-              className="w-full h-full object-contain bg-black"
-              aria-label="Recording review"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center p-4">
-              <div className="text-center">
-                <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                <Button
-                  onClick={requestCameraAccess}
-                  size="lg"
-                  className="min-h-[44px] touch-manipulation"
-                  aria-label="Enable camera access"
-                >
-                  Enable Camera
-                </Button>
-              </div>
->>>>>>> origin/main
             </div>
 
             {isPreviewing && !isReviewing ? (
+              <div className="relative w-full h-full">
               <video
                 ref={videoRef}
                 autoPlay
@@ -457,6 +407,15 @@ export const VideoRecorder = ({
                 className={`w-full h-full object-cover transition-all duration-500 ${isRecording ? 'brightness-110 scale-[1.02]' : ''}`}
                 aria-label="Video preview"
               />
+              {/* Pose overlay canvas */}
+              {showPoseOverlay && (
+                <canvas
+                  ref={poseCanvasRef}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  aria-hidden="true"
+                />
+              )}
+              </div>
             ) : isReviewing && recordedBlob ? (
               <video
                 src={URL.createObjectURL(recordedBlob)}

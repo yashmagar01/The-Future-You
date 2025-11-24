@@ -60,9 +60,6 @@ const Home = () => {
 
       {/* 9. Footer CTA */}
       <FooterCTA />
-
-      {/* 10. Footer with Copyright & Links */}
-      <Footer />
       </main>
     </Layout>
   );

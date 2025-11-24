@@ -1,0 +1,173 @@
+// Supabase Edge Function: prompt-generator
+// POST /prompt-generator - Generate personalized scripts using Gemini API
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+declare const Deno: any;
+
+serve(async (req: Request) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    try {
+        const supabaseClient = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+            {
+                global: { headers: { Authorization: req.headers.get("Authorization")! } },
+            }
+        );
+
+        // 1. Verify Auth
+        const {
+            data: { user },
+            error: authError,
+        } = await supabaseClient.auth.getUser();
+
+        if (authError || !user) {
+            return new Response(
+                JSON.stringify({ error: "Unauthorized" }),
+                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+        // 2. Parse Input
+        const input = await req.json();
+        
+        // Map frontend onboarding data to prompt variables
+        const profileData = {
+            name: input.full_name || "Friend",
+            style: input.reflection_style || input.style || "conversational",
+            goal: input.primary_goal || "self-improvement",
+            focus_areas: Array.isArray(input.focus_areas) ? input.focus_areas.join(", ") : (input.focus_areas || "general reflection"),
+            experience_level: input.experience_level || "intermediate",
+            duration_short: 1,
+            duration_medium: 3,
+            duration_long: 5
+        };
+
+        // Calculate target word counts (approx 130 wpm)
+        const wordsShort = 130 * profileData.duration_short;
+        const wordsMedium = 130 * profileData.duration_medium;
+        const wordsLong = 130 * profileData.duration_long;
+
+        // 3. Construct System Prompt
+        const systemPrompt = `
+You are an expert speech coach and scriptwriter for the Yash MVP (AI self-coaching video app).
+Your goal is to write a personalized, engaging script for the user to read aloud on camera.
+
+User Profile:
+- Style: ${profileData.style}
+- Primary Goal: ${profileData.goal}
+- Focus Areas: ${profileData.focus_areas}
+- Experience Level: ${profileData.experience_level}
+
+Task:
+Generate 3 variants of a script based on the user's goal and focus areas.
+
+CRITICAL WORD COUNT REQUIREMENTS (MINIMUM):
+1. SHORT: MINIMUM ${wordsShort} words (about ${profileData.duration_short} minute when spoken aloud)
+2. MEDIUM: MINIMUM ${wordsMedium} words (about ${profileData.duration_medium} minutes when spoken aloud)
+3. LONG: MINIMUM ${wordsLong} words (about ${profileData.duration_long} minutes when spoken aloud)
+
+Guidelines:
+- **CRITICAL**: Each script MUST meet or EXCEED the minimum word count. Count your words!
+- **NO SUMMARIES**: Write complete, fully-formed paragraphs with multiple sentences
+- The SHORT script should be at least 2-3 substantial paragraphs
+- The MEDIUM script should be at least 5-6 substantial paragraphs  
+- The LONG script should be at least 8-10 substantial paragraphs
+- Use a ${profileData.style} tone that feels natural and conversational
+- Address the user directly by name when appropriate
+- Include specific, thought-provoking questions related to "${profileData.focus_areas}"
+- Guide the user through a complete reflection journey with a clear beginning, middle, and end
+- Break the text into natural speaking chunks with line breaks between paragraphs
+- Output MUST be valid JSON with this exact structure:
+{
+  "variations": {
+    "short": "full script text with minimum ${wordsShort} words...",
+    "medium": "full script text with minimum ${wordsMedium} words...",
+    "long": "full script text with minimum ${wordsLong} words..."
+  }
+}
+`;
+
+        // 4. Call Gemini API
+        const geminiKey = Deno.env.get("GEMINI_API_KEY");
+        if (!geminiKey) {
+            console.error("Error: GEMINI_API_KEY is missing from environment variables");
+            throw new Error("Configuration Error: GEMINI_API_KEY is missing. Please set it in your Supabase secrets.");
+        }
+
+        console.log("Calling Gemini API with key length:", geminiKey.length);
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                contents: [
+                    {
+                        role: "user",
+                        parts: [{ text: JSON.stringify(profileData) }]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error("Gemini API Error:", errorData);
+            throw new Error(`Gemini API Error (${response.status}): ${errorData}`);
+        }
+
+        const aiData = await response.json();
+        
+        // Parse Gemini response
+        // Gemini returns candidates[0].content.parts[0].text
+        const textResponse = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!textResponse) {
+            console.error("Unexpected Gemini response structure:", JSON.stringify(aiData));
+            throw new Error("No content generated from Gemini. The model might have blocked the response.");
+        }
+
+        let generatedContent;
+        try {
+            generatedContent = JSON.parse(textResponse);
+        } catch (e) {
+            console.error("Failed to parse Gemini response as JSON:", textResponse);
+            throw new Error("AI returned invalid JSON format");
+        }
+
+        // 5. Return Result
+        return new Response(
+            JSON.stringify(generatedContent),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+
+    } catch (error: any) {
+        console.error("Edge Function Error:", error);
+        return new Response(
+            JSON.stringify({ 
+                error: error.message || "Internal Server Error",
+                details: error.toString() 
+            }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+    }
+});
+

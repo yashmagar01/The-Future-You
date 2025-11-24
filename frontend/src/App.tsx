@@ -13,10 +13,13 @@ import Gallery from "./pages/Gallery";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Onboarding from "./pages/Onboarding";
 import Waitlist from "./pages/Waitlist";
 import WaitlistConfirm from "./pages/WaitlistConfirm";
 import WaitlistAdmin from "./pages/WaitlistAdmin";
 import AdminPanel from "./pages/AdminPanel";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,30 +37,47 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/register" element={<Signup />} />
-            <Route 
-              path="/record" 
-              element={
-                <ProtectedRoute>
-                  <Record />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/gallery" 
-              element={
-                <ProtectedRoute>
-                  <Gallery />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route 
+                path="/record" 
+                element={
+                  <ProtectedRoute>
+                    <Record />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/gallery" 
+                element={
+                  <ProtectedRoute>
+                    <Gallery />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
               {/* Waitlist Routes */}
               <Route path="/waitlist" element={<Waitlist />} />
               <Route path="/waitlist/confirm" element={<WaitlistConfirm />} />

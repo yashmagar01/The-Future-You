@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+<<<<<<< HEAD
 import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic, Shield, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +12,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+=======
+import { Video, Circle, Square, Upload, AlertCircle, Loader2, Pause, Play, RotateCcw, Check, X, Mic, User } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { usePoseDetection, type PoseData } from '@/hooks/usePoseDetection';
+import { analyzePosture, type PostureMetrics } from '@/utils/poseAnalysis';
+>>>>>>> origin/main
 
 interface VideoRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -33,6 +41,9 @@ export const VideoRecorder = ({
   const [error, setError] = useState<string>('');
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [showPoseOverlay, setShowPoseOverlay] = useState(true);
+  const [postureMetrics, setPostureMetrics] = useState<PostureMetrics | null>(null);
+  const [poseHistory, setPoseHistory] = useState<PoseData[]>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -43,8 +54,30 @@ export const VideoRecorder = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const poseCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const { toast } = useToast();
+
+  // Initialize pose detection
+  const {
+    isLoading: poseLoading,
+    error: poseError,
+    poseData,
+    startPoseDetection,
+    stopPoseDetection
+  } = usePoseDetection({
+    onPoseDetected: (data: PoseData) => {
+      if (isRecording && data.landmarks.length > 0) {
+        // Analyze posture
+        const metrics = analyzePosture(data.landmarks[0]);
+        setPostureMetrics(metrics);
+        
+        // Store pose data for recording
+        setPoseHistory(prev => [...prev, data].slice(-300)); // Keep last 300 frames
+      }
+    },
+    enableCanvas: showPoseOverlay
+  });
 
   // Request camera access on mount
   useEffect(() => {
@@ -88,6 +121,7 @@ export const VideoRecorder = ({
 
   const requestCameraAccess = async () => {
     try {
+      console.log('Requesting camera access...');
       setError('');
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -98,9 +132,13 @@ export const VideoRecorder = ({
         audio: true
       });
 
+      console.log('Camera access granted, stream:', mediaStream);
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        console.log('Video element srcObject set');
+      } else {
+        console.error('videoRef.current is null!');
       }
 
       // Setup audio analysis
@@ -114,18 +152,34 @@ export const VideoRecorder = ({
       analyserRef.current = analyser;
 
       setIsPreviewing(true);
+      
+      // Start pose detection on video (optional, non-blocking)
+      if (videoRef.current) {
+        setTimeout(() => {
+          if (videoRef.current && poseCanvasRef.current) {
+            try {
+              startPoseDetection(videoRef.current, poseCanvasRef.current);
+            } catch (err) {
+              console.warn('Pose detection failed to start, continuing without it:', err);
+            }
+          }
+        }, 1000); // Wait longer for video to be ready
+      }
     } catch (err) {
       console.error('Camera access error:', err);
       setError('Unable to access camera. Please check permissions and try again.');
-      toast({
-        title: 'Camera Error',
-        description: 'Could not access your camera. Please grant permission.',
-        variant: 'destructive',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'Camera Error',
+          description: 'Could not access your camera. Please grant permission.',
+          variant: 'destructive',
+        });
+      }, 0);
     }
   };
 
   const stopCamera = () => {
+    stopPoseDetection();
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -187,28 +241,34 @@ export const VideoRecorder = ({
         }
       }, 1000);
 
-      toast({
-        title: 'Recording started',
-        description: 'Speak clearly and maintain eye contact.',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'Recording started',
+          description: 'Speak clearly and maintain eye contact.',
+        });
+      }, 0);
     } catch (err) {
       console.error('Recording error:', err);
       setError('Failed to start recording. Please try again.');
-      toast({
-        title: 'Recording Error',
-        description: 'Could not start recording. Please try again.',
-        variant: 'destructive',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'Recording Error',
+          description: 'Could not start recording. Please try again.',
+          variant: 'destructive',
+        });
+      }, 0);
     }
   };
 
   const startRecording = () => {
     if (!stream) {
-      toast({
-        title: 'No camera access',
-        description: 'Please allow camera access to record.',
-        variant: 'destructive',
-      });
+      setTimeout(() => {
+        toast({
+          title: 'No camera access',
+          description: 'Please allow camera access to record.',
+          variant: 'destructive',
+        });
+      }, 0);
       return;
     }
 
@@ -332,12 +392,58 @@ export const VideoRecorder = ({
           </Alert>
         )}
 
+<<<<<<< HEAD
         <Card className="p-4 sm:p-8 shadow-medium animate-scale-in border-2 border-border/50">
           <div className="aspect-video bg-slate-950 rounded-xl mb-6 overflow-hidden relative touch-pan-y group shadow-inner">
             {/* Privacy Badge */}
             <div className="absolute top-4 right-4 z-20 bg-black/40 backdrop-blur-md text-white/90 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 border border-white/10">
               <Shield className="h-3 w-3" />
               Private & Local
+=======
+      <Card className="p-4 sm:p-8 shadow-medium animate-scale-in">
+        <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden relative touch-pan-y">
+          {isPreviewing && !isReviewing ? (
+            <div className="relative w-full h-full">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                webkit-playsinline="true"
+                x-webkit-airplay="allow"
+                className={`w-full h-full object-cover ${isRecording ? 'brightness-110' : ''}`}
+                aria-label="Video preview"
+              />
+              {/* Pose overlay canvas */}
+              {showPoseOverlay && (
+                <canvas
+                  ref={poseCanvasRef}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+          ) : isReviewing && recordedBlob ? (
+            <video
+              src={URL.createObjectURL(recordedBlob)}
+              controls
+              className="w-full h-full object-contain bg-black"
+              aria-label="Recording review"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center p-4">
+              <div className="text-center">
+                <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                <Button
+                  onClick={requestCameraAccess}
+                  size="lg"
+                  className="min-h-[44px] touch-manipulation"
+                  aria-label="Enable camera access"
+                >
+                  Enable Camera
+                </Button>
+              </div>
+>>>>>>> origin/main
             </div>
 
             {isPreviewing && !isReviewing ? (

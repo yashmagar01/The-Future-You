@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProtectedRouteProps {
@@ -10,8 +11,67 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!user) {
+        setCheckingOnboarding(false);
+        return;
+      }
+
+      // Skip onboarding check if already on onboarding page
+      if (location.pathname === "/onboarding") {
+        setCheckingOnboarding(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("onboarding_data")
+          .eq("id", user.id)
+          .single();
+
+        const profile = data as unknown as { onboarding_data: any } | null;
+
+        if (error) {
+          // If profile doesn't exist (PGRST116), treat as needing onboarding
+          if (error.code === 'PGRST116') {
+            console.log("Profile not found, redirecting to onboarding");
+            setNeedsOnboarding(true);
+            setCheckingOnboarding(false);
+            return;
+          }
+          
+          console.error("Error fetching profile:", error);
+          setCheckingOnboarding(false);
+          return;
+        }
+
+        // Check if onboarding is complete
+        // User needs onboarding if: onboarding_data is null, empty object, or missing required fields
+        
+        const onboardingData = profile?.onboarding_data;
+        
+        const hasOnboardingData = 
+          onboardingData && 
+          typeof onboardingData === 'object' && 
+          Object.keys(onboardingData).length > 0;
+
+        setNeedsOnboarding(!hasOnboardingData);
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      } finally {
+        setCheckingOnboarding(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [user, location.pathname]);
+
+  if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="space-y-4 w-full max-w-md px-4">
@@ -26,6 +86,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (!user) {
     // Redirect to login but save the attempted location
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Redirect to onboarding if user hasn't completed it
+  if (needsOnboarding) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <>{children}</>;

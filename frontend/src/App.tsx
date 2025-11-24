@@ -21,6 +21,10 @@ import AdminPanel from "./pages/AdminPanel";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +42,10 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/register" element={<Signup />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route 
                 path="/record" 
                 element={

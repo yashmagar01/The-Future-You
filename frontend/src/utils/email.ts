@@ -173,8 +173,8 @@ export const generateConfirmationEmail = (confirmUrl: string, name?: string): st
         <p>If the button doesn't work, copy and paste this link into your browser:</p>
         <p style="word-break: break-all; color: #667eea;">${confirmUrl}</p>
         <p style="margin-top: 20px;">
-          <a href="https://yash.com" style="color: #667eea; text-decoration: none;">Visit Website</a> |
-          <a href="https://yash.com/privacy" style="color: #667eea; text-decoration: none;">Privacy Policy</a>
+          <a href="https://thefutureyou.app" style="color: #667eea; text-decoration: none;">Visit Website</a> |
+          <a href="https://thefutureyou.app/privacy-policy" style="color: #667eea; text-decoration: none;">Privacy Policy</a>
         </p>
       </div>
     </body>
@@ -304,8 +304,8 @@ export const generatePromotionEmail = (inviteUrl: string, name?: string): string
       <div class="footer">
         <p><strong>Need help?</strong> Email us at support@yash.com</p>
         <p style="margin-top: 20px;">
-          <a href="https://yash.com/dashboard" style="color: #10b981; text-decoration: none;">Go to Dashboard</a> |
-          <a href="https://yash.com/privacy" style="color: #10b981; text-decoration: none;">Privacy Policy</a>
+          <a href="https://thefutureyou.app/dashboard" style="color: #10b981; text-decoration: none;">Go to Dashboard</a> |
+          <a href="https://thefutureyou.app/privacy-policy" style="color: #10b981; text-decoration: none;">Privacy Policy</a>
         </p>
       </div>
     </body>

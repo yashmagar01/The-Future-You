@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Lock, Video, Bell, Save, Info } from 'lucide-react';
+import { User, Lock, Video, Bell, Save, Info, Shield, Download, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -29,6 +29,7 @@ export default function Settings() {
     webcamPreview: true,
     pushNotifications: true,
     recordingReminders: true,
+    betaConsent: false,
   });
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -59,6 +60,7 @@ export default function Settings() {
       webcamPreview: true,
       pushNotifications: true,
       recordingReminders: true,
+      betaConsent: false,
     };
     
     setSettings(defaultSettings);
@@ -68,6 +70,25 @@ export default function Settings() {
       title: 'Settings reset',
       description: 'All settings have been restored to defaults.',
     });
+  };
+
+  const handleExportData = () => {
+    toast({
+      title: "Export Started",
+      description: "We're preparing your data. You'll receive an email shortly.",
+    });
+    // In real implementation: fetch('/api/account/export-data')
+  };
+
+  const handleDeleteAccount = () => {
+    if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      toast({
+        title: "Account Scheduled for Deletion",
+        description: "Your account will be deleted within 24 hours.",
+        variant: "destructive",
+      });
+      // In real implementation: fetch('/api/account/delete', { method: 'POST' })
+    }
   };
 
   return (
@@ -236,13 +257,13 @@ export default function Settings() {
         <Card className="hover-lift border-border/50 transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-warning/10 rounded-lg">
-                <Bell className="h-5 w-5 text-warning" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Bell className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>Manage your notification preferences</CardDescription>
-              </div>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>
+                Manage how you want to be notified
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -270,6 +291,61 @@ export default function Settings() {
                 checked={settings.recordingReminders}
                 onCheckedChange={(checked) => updateSetting('recordingReminders', checked)}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Data & Privacy Settings */}
+        <Card className="hover-lift border-border/50 transition-all duration-300">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle>Data & Privacy</CardTitle>
+              <CardDescription>
+                Manage your data, consent, and account ownership
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+              <div className="space-y-0.5">
+                <Label className="text-base">Beta Program Consent</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow us to retain videos for up to 12 months to improve our AI models.
+                </p>
+              </div>
+              <Switch
+                checked={settings.betaConsent}
+                onCheckedChange={(checked) => updateSetting('betaConsent', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
+              <div className="space-y-0.5">
+                <Label className="text-base">Export Your Data</Label>
+                <p className="text-sm text-muted-foreground">
+                  Download a copy of all your transcripts and analysis.
+                </p>
+              </div>
+              <Button variant="outline" onClick={handleExportData} className="gap-2">
+                <Download className="h-4 w-4" />
+                Download Data
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-colors">
+              <div className="space-y-0.5">
+                <Label className="text-base text-destructive">Delete Account</Label>
+                <p className="text-sm text-destructive/80">
+                  Permanently remove your account and all associated data.
+                </p>
+              </div>
+              <Button variant="destructive" onClick={handleDeleteAccount} className="gap-2">
+                <Trash2 className="h-4 w-4" />
+                Delete Account
+              </Button>
             </div>
           </CardContent>
         </Card>

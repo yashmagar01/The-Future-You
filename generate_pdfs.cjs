@@ -8,7 +8,8 @@ const fs = require('fs');
 
   const files = [
     { input: 'privacy-policy.html', output: 'privacy-policy.pdf' },
-    { input: 'terms.html', output: 'terms.pdf' }
+    { input: 'terms.html', output: 'terms.pdf' },
+    { input: 'report.html', output: 'PROJECT_IMPLEMENTATION_REPORT_NOV_24_2025.pdf' }
   ];
 
   for (const file of files) {

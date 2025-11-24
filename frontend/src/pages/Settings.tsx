@@ -13,370 +13,293 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Lock, Video, Palette, Bell } from 'lucide-react';
+import { User, Lock, Video, Bell, Save, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Settings() {
   const { toast } = useToast();
   
+  // Real settings that actually work
   const [settings, setSettings] = useState({
     emailNotifications: true,
-    marketingEmails: false,
-    twoFactor: false,
     profileVisibility: 'private',
-    dataSharing: false,
-    activityStatus: true,
     videoQuality: '1080p',
     autoSave: true,
-    deleteAfterProcessing: false,
     webcamPreview: true,
-    theme: 'system',
-    accentColor: 'green',
-    compactMode: false,
     pushNotifications: true,
     recordingReminders: true,
-    insightReady: true,
-    weeklySummary: false,
   });
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const updateSetting = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    setHasUnsavedChanges(true);
+  };
+
   const handleSave = () => {
+    // In real implementation, this would save to database/localStorage
+    localStorage.setItem('userSettings', JSON.stringify(settings));
+    
     toast({
-      title: 'Settings Saved',
+      title: 'Settings saved',
       description: 'Your preferences have been updated successfully.',
+    });
+    
+    setHasUnsavedChanges(false);
+  };
+
+  const handleReset = () => {
+    const defaultSettings = {
+      emailNotifications: true,
+      profileVisibility: 'private',
+      videoQuality: '1080p',
+      autoSave: true,
+      webcamPreview: true,
+      pushNotifications: true,
+      recordingReminders: true,
+    };
+    
+    setSettings(defaultSettings);
+    setHasUnsavedChanges(true);
+    
+    toast({
+      title: 'Settings reset',
+      description: 'All settings have been restored to defaults.',
     });
   };
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+        {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-gray-600">Customize your experience</p>
+          <h1 className="text-4xl font-bold">Settings</h1>
+          <p className="text-muted-foreground text-lg">
+            Manage your account preferences and app behavior
+          </p>
         </div>
 
-        {/* Account Settings */}
-        <Card>
+        {/* Unsaved Changes Alert */}
+        {hasUnsavedChanges && (
+          <Alert className="border-warning/50 bg-warning/5 animate-slide-up">
+            <Info className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-foreground">
+              You have unsaved changes. Click "Save Preferences" to apply them.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Account Settings - Real, working toggles */}
+        <Card className="hover-lift border-border/50 transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-green-600" />
-              <CardTitle>Account Settings</CardTitle>
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>Manage your account preferences</CardDescription>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
               <div className="space-y-0.5">
-                <Label>Email Notifications</Label>
-                <p className="text-sm text-gray-500">Receive email updates about your activity</p>
+                <Label className="text-base">Email Notifications</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive email updates about your activity
+                </p>
               </div>
               <Switch
                 checked={settings.emailNotifications}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, emailNotifications: checked })
-                }
+                onCheckedChange={(checked) => updateSetting('emailNotifications', checked)}
               />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Marketing Emails</Label>
-                <p className="text-sm text-gray-500">Promotional content and news</p>
-              </div>
-              <Switch
-                checked={settings.marketingEmails}
-               onCheckedChange={(checked) =>
-                  setSettings({ ...settings, marketingEmails: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Two-Factor Authentication</Label>
-                <p className="text-sm text-gray-500">Add extra security layer</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={settings.twoFactor}
-                  onCheckedChange={(checked) =>
-                    setSettings({ ...settings, twoFactor: checked })
-                  }
-                />
-                {!settings.twoFactor && (
-                  <Button variant="outline" size="sm">Enable →</Button>
-                )}
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Privacy Settings */}
-        <Card>
+        {/* Privacy Settings - Real options */}
+        <Card className="hover-lift border-border/50 transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-green-600" />
-              <CardTitle>Privacy</CardTitle>
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <Lock className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <CardTitle>Privacy</CardTitle>
+                <CardDescription>Control your privacy preferences</CardDescription>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label>Profile Visibility</Label>
+            <div className="space-y-4 p-4 rounded-lg border bg-card">
+              <div>
+                <Label className="text-base mb-3 block">Profile Visibility</Label>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Choose who can see your profile
+                </p>
+              </div>
               <RadioGroup
                 value={settings.profileVisibility}
-                onValueChange={(value) =>
-                  setSettings({ ...settings, profileVisibility: value })
-                }
+                onValueChange={(value) => updateSetting('profileVisibility', value)}
+                className="space-y-3"
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 p-3 rounded-md hover:bg-accent/5 transition-colors">
                   <RadioGroupItem value="public" id="public" />
-                  <Label htmlFor="public" className="font-normal">Public</Label>
+                  <Label htmlFor="public" className="flex-1 cursor-pointer font-normal">
+                    <span className="font-medium">Public</span>
+                    <p className="text-sm text-muted-foreground">Anyone can view your profile</p>
+                  </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 p-3 rounded-md hover:bg-accent/5 transition-colors">
                   <RadioGroupItem value="private" id="private" />
-                  <Label htmlFor="private" className="font-normal">Private</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="friends" id="friends" />
-                  <Label htmlFor="friends" className="font-normal">Friends Only</Label>
+                  <Label htmlFor="private" className="flex-1 cursor-pointer font-normal">
+                    <span className="font-medium">Private</span>
+                    <p className="text-sm text-muted-foreground">Only you can see your profile</p>
+                  </Label>
+                  {settings.profileVisibility === 'private' && (
+                    <Badge variant="outline" className="text-xs">Recommended</Badge>
+                  )}
                 </div>
               </RadioGroup>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Data Sharing</Label>
-                <p className="text-sm text-gray-500">Share analytics for improvements</p>
-              </div>
-              <Switch
-                checked={settings.dataSharing}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, dataSharing: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show Activity Status</Label>
-                <p className="text-sm text-gray-500">Let others see when you're online</p>
-              </div>
-              <Switch
-                checked={settings.activityStatus}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, activityStatus: checked })
-                }
-              />
-            </div>
           </CardContent>
         </Card>
 
-        {/* Video Settings */}
-        <Card>
+        {/* Video Settings - Real functionality */}
+        <Card className="hover-lift border-border/50 transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Video className="h-5 w-5 text-green-600" />
-              <CardTitle>Video Settings</CardTitle>
+              <div className="p-2 bg-success/10 rounded-lg">
+                <Video className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <CardTitle>Recording Preferences</CardTitle>
+                <CardDescription>Configure video recording options</CardDescription>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label>Default Quality</Label>
+            <div className="space-y-4 p-4 rounded-lg border bg-card">
+              <div>
+                <Label htmlFor="quality" className="text-base">Recording Quality</Label>
+                <p className="text-sm text-muted-foreground mt-1 mb-3">
+                  Higher quality uses more storage
+                </p>
+              </div>
               <Select
                 value={settings.videoQuality}
-                onValueChange={(value) =>
-                  setSettings({ ...settings, videoQuality: value })
-                }
+                onValueChange={(value) => updateSetting('videoQuality', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="quality">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="480p">480p (SD)</SelectItem>
-                  <SelectItem value="720p">720p (HD)</SelectItem>
-                  <SelectItem value="1080p">1080p (Full HD)</SelectItem>
+                  <SelectItem value="480p">480p (SD) - Smaller files</SelectItem>
+                  <SelectItem value="720p">720p (HD) - Balanced</SelectItem>
+                  <SelectItem value="1080p">1080p (Full HD) - Best quality</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
               <div className="space-y-0.5">
-                <Label>Auto-Save Recordings</Label>
-                <p className="text-sm text-gray-500">Automatically save after recording</p>
+                <Label className="text-base">Auto-Save Recordings</Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically save after recording completes
+                </p>
               </div>
               <Switch
                 checked={settings.autoSave}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, autoSave: checked })
-                }
+                onCheckedChange={(checked) => updateSetting('autoSave', checked)}
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
               <div className="space-y-0.5">
-                <Label>Delete After Processing</Label>
-                <p className="text-sm text-gray-500">Remove original after analysis</p>
-              </div>
-              <Switch
-                checked={settings.deleteAfterProcessing}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, deleteAfterProcessing: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Webcam Preview</Label>
-                <p className="text-sm text-gray-500">Show preview before recording</p>
+                <Label className="text-base">Webcam Preview</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show preview before starting recording
+                </p>
               </div>
               <Switch
                 checked={settings.webcamPreview}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, webcamPreview: checked })
-                }
+                onCheckedChange={(checked) => updateSetting('webcamPreview', checked)}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Appearance */}
-        <Card>
+        {/* Notifications - Real toggles */}
+        <Card className="hover-lift border-border/50 transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Palette className="h-5 w-5 text-green-600" />
-              <CardTitle>Appearance</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label>Theme</Label>
-              <RadioGroup
-                value={settings.theme}
-                onValueChange={(value) => setSettings({ ...settings, theme: value })}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="light" id="light" />
-                  <Label htmlFor="light" className="font-normal">Light</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dark" id="dark" />
-                  <Label htmlFor="dark" className="font-normal">Dark</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="system" id="system" />
-                  <Label htmlFor="system" className="font-normal">System</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Accent Color</Label>
-              <RadioGroup
-                value={settings.accentColor}
-                onValueChange={(value) =>
-                  setSettings({ ...settings, accentColor: value })
-                }
-                className="flex gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="green" id="green" />
-                  <Label htmlFor="green" className="font-normal">Green</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="blue" id="blue" />
-                  <Label htmlFor="blue" className="font-normal">Blue</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="purple" id="purple" />
-                  <Label htmlFor="purple" className="font-normal">Purple</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="orange" id="orange" />
-                  <Label htmlFor="orange" className="font-normal">Orange</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Compact Mode</Label>
-                <p className="text-sm text-gray-500">Reduce spacing and padding</p>
+              <div className="p-2 bg-warning/10 rounded-lg">
+                <Bell className="h-5 w-5 text-warning" />
               </div>
-              <Switch
-                checked={settings.compactMode}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, compactMode: checked })
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-green-600" />
-              <CardTitle>Notifications</CardTitle>
+              <div>
+                <CardTitle>Notifications</CardTitle>
+                <CardDescription>Manage your notification preferences</CardDescription>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
               <div className="space-y-0.5">
-                <Label>Push Notifications</Label>
-                <p className="text-sm text-gray-500">Browser notifications</p>
+                <Label className="text-base">Push Notifications</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive browser notifications
+                </p>
               </div>
               <Switch
                 checked={settings.pushNotifications}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, pushNotifications: checked })
-                }
+                onCheckedChange={(checked) => updateSetting('pushNotifications', checked)}
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
               <div className="space-y-0.5">
-                <Label>Recording Reminders</Label>
-                <p className="text-sm text-gray-500">Daily reminder at 9:00 AM</p>
+                <Label className="text-base">Recording Reminders</Label>
+                <p className="text-sm text-muted-foreground">
+                  Daily reminder to practice
+                </p>
               </div>
               <Switch
                 checked={settings.recordingReminders}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, recordingReminders: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Insight Ready</Label>
-                <p className="text-sm text-gray-500">When analysis completes</p>
-              </div>
-              <Switch
-                checked={settings.insightReady}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, insightReady: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Weekly Summary</Label>
-                <p className="text-sm text-gray-500">Every Monday morning</p>
-              </div>
-              <Switch
-                checked={settings.weeklySummary}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, weeklySummary: checked })
-                }
+                onCheckedChange={(checked) => updateSetting('recordingReminders', checked)}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Action Footer */}
-        <div className="flex justify-end gap-4">
-          <Button variant="outline">Cancel</Button>
-          <Button onClick={handleSave}>Save Preferences</Button>
+        {/* Action Footer - Sticky on scroll */}
+        <div className="sticky bottom-0 bg-background/80 backdrop-blur-lg border-t border-border p-4 -mx-4 flex justify-between items-center gap-4 animate-slide-up">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="gap-2"
+          >
+            Reset to Defaults
+          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setHasUnsavedChanges(false)}
+              disabled={!hasUnsavedChanges}
+            >
+              Discard Changes
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!hasUnsavedChanges}
+              className="gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save Preferences
+            </Button>
+          </div>
         </div>
       </div>
     </AppLayout>

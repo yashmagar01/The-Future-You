@@ -57,7 +57,7 @@ const Countdown = ({ targetDate }: { targetDate: Date }) => {
 const Waitlist = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const [waitlistCount, setWaitlistCount] = useState(20);
+  const [waitlistCount, setWaitlistCount] = useState(0);
 
   useEffect(() => {
     // Log page view
@@ -66,10 +66,10 @@ const Waitlist = () => {
       title: "Join Waitlist",
     });
 
-    // Animate waitlist count up
-    const targetCount = 50 + Math.floor(Math.random() * 50);
-    let currentCount = 50;
-    const increment = Math.ceil((targetCount - 50) / 20);
+    // Animate count up to fixed authentic number (35)
+    const targetCount = 35; // Fixed number in 20-50 range
+    let currentCount = 0;
+    const increment = 1;
     
     const counter = setInterval(() => {
       currentCount += increment;
@@ -79,7 +79,7 @@ const Waitlist = () => {
       } else {
         setWaitlistCount(currentCount);
       }
-    }, 100);
+    }, 30); // Faster animation
 
     return () => clearInterval(counter);
   }, []);

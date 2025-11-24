@@ -24,6 +24,7 @@ import {
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStats, useWeeklyActivity, usePerformanceTrend, useRecordings } from "@/hooks/useRecordings";
+import { StatCardSkeleton, ChartSkeleton, ListItemSkeleton } from "@/components/LoadingSkeletons";
 import {
   ChartContainer,
   ChartTooltip,
@@ -193,15 +194,7 @@ const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {statsLoading ? (
             Array.from({ length: 4 }).map((_, index) => (
-              <Card key={index} className="border-border/50">
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-4 w-24" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-4 w-32" />
-                </CardContent>
-              </Card>
+              <StatCardSkeleton key={index} />
             ))
           ) : (
             statsCards.map((stat, index) => {
@@ -359,15 +352,18 @@ const Dashboard = () => {
 
         <div className="grid gap-6 lg:grid-cols-2 mb-8">
           {/* Performance Chart */}
-          <Card className="animate-slide-up border-border/50" style={{ animationDelay: '0.3s' }}>
-            <CardHeader>
-              <CardTitle>Performance Trend</CardTitle>
-              <CardDescription>Your progress over the last 6 months</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  score: {
+          {performanceLoading ? (
+            <ChartSkeleton />
+          ) : (
+            <Card className="animate-slide-up border-border/50" style={{ animationDelay: '0.3s' }}>
+              <CardHeader>
+                <CardTitle>Performance Trend</CardTitle>
+                <CardDescription>Your progress over the last 6 months</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    score: {
                     label: "Score",
                     color: "hsl(var(--primary))",
                   },
@@ -403,8 +399,12 @@ const Dashboard = () => {
               </ChartContainer>
             </CardContent>
           </Card>
+          )}
 
           {/* Weekly Activity */}
+          {weeklyLoading ? (
+            <ChartSkeleton />
+          ) : (
           <Card className="animate-slide-up border-border/50" style={{ animationDelay: '0.4s' }}>
             <CardHeader>
               <CardTitle>Weekly Activity</CardTitle>
@@ -441,7 +441,9 @@ const Dashboard = () => {
               </ChartContainer>
             </CardContent>
           </Card>
+          )}
         </div>
+
 
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
           {/* Progress Tracking */}

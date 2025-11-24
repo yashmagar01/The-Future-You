@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import Footer from "@/components/home/Footer";
 
 interface LayoutProps {
   children: ReactNode;
@@ -238,13 +239,7 @@ const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       
-      <footer className="border-t border-border bg-card/50 py-8 mt-auto">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2025 Yash AI
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -8,16 +8,27 @@
     "dev": "nodemon server.js",
     "test": "echo 'Run: curl -F video=@test.mp4 http://localhost:3001/analyze'"
   },
-  "keywords": ["vosk", "transformers", "mediapipe", "offline-ai", "jugaad", "zero-cost"],
+  "keywords": [
+    "vosk",
+    "transformers",
+    "mediapipe",
+    "offline-ai",
+    "jugaad",
+    "zero-cost"
+  ],
   "author": "Yash AI Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.84.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "fluent-ffmpeg": "^2.1.2",
     "multer": "^1.4.5-lts.1",
-    "fluent-ffmpeg": "^2.1.2"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "vitest": "^4.0.13"
   },
   "engines": {
     "node": ">=16.0.0"

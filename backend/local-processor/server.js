@@ -50,6 +50,24 @@ app.post('/process', async (req, res) => {
     // 1. Download video from Supabase
     console.log(`Downloading video from: ${video_path}`);
     
+    // DEBUG: List files in the folder to see what's there
+    const userId = video_path.split('/')[0];
+    console.log(`Debug: Listing files for user ${userId} in 'recordings' bucket...`);
+    const { data: listData, error: listError } = await supabase
+      .storage
+      .from('recordings')
+      .list(userId);
+    
+    if (listError) {
+      console.error('Debug: List error:', listError);
+    } else {
+      console.log('Debug: Files found:', listData.map(f => f.name));
+      // Check if our file is in the list
+      const fileName = video_path.split('/')[1];
+      const found = listData.find(f => f.name === fileName);
+      console.log(`Debug: Looking for '${fileName}', found:`, found ? 'YES' : 'NO');
+    }
+
     // Create a signed URL for downloading (valid for 60 seconds)
     const { data: signedUrlData, error: signedUrlError } = await supabase
       .storage

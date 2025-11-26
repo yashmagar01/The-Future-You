@@ -112,7 +112,16 @@ export const VideoRecorder = ({
     };
 
     visualize();
+    visualize();
   }, [stream, isRecording, isPaused]);
+
+  // Attach stream to video element when it becomes available
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      console.log('Video element srcObject set via useEffect');
+    }
+  }, [stream, isPreviewing]);
 
   const requestCameraAccess = async () => {
     try {
@@ -129,12 +138,7 @@ export const VideoRecorder = ({
 
       console.log('Camera access granted, stream:', mediaStream);
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        console.log('Video element srcObject set');
-      } else {
-        console.error('videoRef.current is null!');
-      }
+      setIsPreviewing(true);
 
       // Setup audio analysis
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();

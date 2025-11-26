@@ -12,13 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Video, Play, TrendingUp, Calendar, AlertCircle, Loader2, CheckCircle2, Eye, Search, Filter } from "lucide-react";
+import { Video, Play, TrendingUp, Calendar, AlertCircle, Loader2, CheckCircle2, Eye, Search, Filter, Trash2 } from "lucide-react";
 import Layout from "@/components/Layout";
-import { useRecordings } from "@/hooks/useRecordings";
+import { useRecordings, useDeleteRecording, deleteRecordingFile } from "@/hooks/useRecordings";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 const Gallery = () => {
   const { data: recordings, isLoading, error } = useRecordings();
+  const deleteRecording = useDeleteRecording();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "processing">("all");
 
@@ -27,6 +30,37 @@ const Gallery = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleDelete = async (e: React.MouseEvent, recording: any) => {
+    e.preventDefault(); // Prevent navigation if clicking inside a link
+    e.stopPropagation();
+    
+    if (!confirm("Are you sure you want to delete this recording? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      // 1. Delete file from storage if it exists
+      if (recording.video_url) {
+        await deleteRecordingFile(recording.video_url);
+      }
+      
+      // 2. Delete record from database
+      await deleteRecording.mutateAsync(recording.id);
+      
+      toast({
+        title: "Recording deleted",
+        description: "The recording has been permanently removed.",
+      });
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast({
+        title: "Delete failed",
+        description: "Could not delete the recording. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredRecordings = recordings?.filter(recording => {
@@ -208,24 +242,36 @@ const Gallery = () => {
                     </p>
                   )}
 
-                  {recording.status === 'completed' ? (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="w-full group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300"
-                      asChild
+                  <div className="flex gap-2">
+                    {recording.status === 'completed' ? (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300"
+                        asChild
+                      >
+                        <Link to={`/results/${recording.id}`}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Analysis
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="secondary" disabled className="flex-1 opacity-50">
+                        <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                        Analyzing...
+                      </Button>
+                    )}
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => handleDelete(e, recording)}
+                      title="Delete recording"
                     >
-                      <Link to={`/results/${recording.id}`}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Analysis
-                      </Link>
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  ) : (
-                    <Button size="sm" variant="secondary" disabled className="w-full opacity-50">
-                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                      Analyzing...
-                    </Button>
-                  )}
+                  </div>
                 </div>
               </Card>
             ))}

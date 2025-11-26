@@ -76,7 +76,7 @@ export const VideoRecorder = ({
 
   // Request camera access on mount
   useEffect(() => {
-    requestCameraAccess();
+    // requestCameraAccess(); // Removed auto-request
     return () => {
       stopCamera();
       if (audioContextRef.current) {

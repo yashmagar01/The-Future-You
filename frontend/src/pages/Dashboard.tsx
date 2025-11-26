@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useStats, useWeeklyActivity, usePerformanceTrend, useRecordings } from "@/hooks/useRecordings";
+import { useStats, useWeeklyActivity, usePerformanceTrend, useRecordings, useProfile } from "@/hooks/useRecordings";
 import { StatCardSkeleton, ChartSkeleton, ListItemSkeleton } from "@/components/LoadingSkeletons";
 import {
   ChartContainer,
@@ -34,6 +34,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "rec
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: weeklyData, isLoading: weeklyLoading } = useWeeklyActivity();
   const { data: performanceData, isLoading: performanceLoading } = usePerformanceTrend();
@@ -170,7 +171,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8 animate-fade-in">
           <h1 className="text-4xl font-bold mb-2">
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}
+            Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : (user?.email ? `, ${user.email.split('@')[0]}` : '')}
           </h1>
           <p className="text-muted-foreground text-lg">
             Here's your performance overview and insights

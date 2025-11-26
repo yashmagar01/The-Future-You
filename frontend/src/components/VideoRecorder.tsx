@@ -408,14 +408,14 @@ export const VideoRecorder = ({
                 playsInline
                 webkit-playsinline="true"
                 x-webkit-airplay="allow"
-                className={`w-full h-full object-cover transition-all duration-500 ${isRecording ? 'brightness-110 scale-[1.02]' : ''}`}
+                className={`w-full h-full object-cover transition-all duration-500 scale-x-[-1] ${isRecording ? 'brightness-110 scale-[1.02]' : ''}`}
                 aria-label="Video preview"
               />
               {/* Pose overlay canvas */}
               {showPoseOverlay && (
                 <canvas
                   ref={poseCanvasRef}
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none scale-x-[-1]"
                   aria-hidden="true"
                 />
               )}

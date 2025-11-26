@@ -387,7 +387,12 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="hidden md:block">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-brand-green/10 text-brand-green">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-11 w-11 rounded-lg hover:bg-brand-green/10 active:bg-brand-green/20 text-brand-green transition-colors"
+                    aria-label="Open navigation menu"
+                  >
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>

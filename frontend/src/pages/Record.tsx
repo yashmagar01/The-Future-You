@@ -6,19 +6,19 @@ import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
 import { ScriptDisplay } from "@/components/ScriptDisplay";
-import { useCreateRecording } from "@/hooks/useRecordings";
-import { uploadRecording } from "@/hooks/useRecordings";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useCreateRecording } from "@/hooks/useRecordings";
 
 const Record = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [userRole, setUserRole] = useState<'tester' | 'user' | 'admin'>('user');
   const [loadingRole, setLoadingRole] = useState(true);
-  const createRecording = useCreateRecording();
+  const { mutateAsync: createRecording } = useCreateRecording();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -58,7 +58,7 @@ const Record = () => {
 
     try {
       setIsUploading(true);
-      setUploadProgress(0); // Reset progress (progress bar might be static or indeterminate now)
+      setUploadProgress(0);
 
       toast({
         title: "Uploading...",
@@ -75,29 +75,21 @@ const Record = () => {
 
       if (uploadError) throw uploadError;
 
-      // 2. Insert Metadata into Database (Trigger for Backend)
-      const { error: dbError } = await supabase
-        .from('recordings')
-        .insert([
-          {
-            user_id: user.id,
-            video_url: fileName, // Storing the storage path
-            duration_seconds: duration,
-            file_size_bytes: blob.size,
-            status: 'uploaded', // This status change triggers the backend
-            title: `Recording ${new Date().toLocaleDateString()}`,
-            // created_at is usually auto-generated, but we can pass it if needed
-          },
-        ]);
-
-      if (dbError) throw dbError;
+      // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
+      await createRecording({
+        video_url: fileName,
+        duration_seconds: duration,
+        file_size_bytes: blob.size,
+        status: 'uploading',
+        title: `Recording ${new Date().toLocaleDateString()}`,
+      });
 
       toast({
         title: "Upload successful!",
         description: "AI analysis queued. You can check the status in your dashboard.",
       });
 
-      // Navigate to dashboard
+      // Navigate to dashboard (data will already be updated via React Query)
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
@@ -146,28 +138,21 @@ const Record = () => {
 
       if (uploadError) throw uploadError;
 
-      // 2. Insert Metadata into Database
-      const { error: dbError } = await supabase
-        .from('recordings')
-        .insert([
-          {
-            user_id: user.id,
-            video_url: fileName,
-            duration_seconds: duration,
-            file_size_bytes: file.size,
-            status: 'uploaded',
-            title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
-          },
-        ]);
-
-      if (dbError) throw dbError;
+      // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
+      await createRecording({
+        video_url: fileName,
+        duration_seconds: duration,
+        file_size_bytes: file.size,
+        status: 'uploading',
+        title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
+      });
 
       toast({
         title: "Upload successful!",
         description: "AI analysis queued. You can check the status in your dashboard.",
       });
 
-      // Navigate to dashboard
+      // Navigate to dashboard (data will already be updated via React Query)
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);

@@ -56,61 +56,54 @@ const Record = () => {
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
     if (!user) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
     try {
+      setIsUploading(true);
+      setUploadProgress(0); // Reset progress (progress bar might be static or indeterminate now)
+
       toast({
         title: "Uploading...",
         description: "Please wait while we upload your video.",
       });
 
-      // Convert blob to file
-      const file = new File([blob], `recording-${Date.now()}.webm`, {
-        type: 'video/webm',
-      });
+      // 1. Upload Video to Supabase Storage
+      const fileName = `${user.id}/${Date.now()}.webm`;
+      const file = new File([blob], fileName, { type: 'video/webm' });
 
-      // Upload to Supabase Storage
-      const videoUrl = await uploadRecording(file, user.id, (progress) => {
-        setUploadProgress(progress);
-      });
+      const { error: uploadError } = await supabase.storage
+        .from('recordings')
+        .upload(fileName, file);
 
-      // Create recording record in database
-      const recording = await createRecording.mutateAsync({
-        video_url: videoUrl,
-        duration_seconds: duration,
-        file_size_bytes: blob.size,
-        status: 'processing',
-        title: `Recording ${new Date().toLocaleDateString()}`,
-      });
+      if (uploadError) throw uploadError;
 
-      // Trigger local processing
-      try {
-        await fetch('http://localhost:3001/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            recording_id: recording.id, 
-            video_path: videoUrl.split('/recordings/')[1] // Extract path from URL or pass the path if available
-          })
-        });
-        console.log('Local processing triggered');
-      } catch (err) {
-        console.error('Failed to trigger local processing:', err);
-        // Don't block the UI flow for this
-      }
+      // 2. Insert Metadata into Database (Trigger for Backend)
+      const { error: dbError } = await supabase
+        .from('recordings')
+        .insert([
+          {
+            user_id: user.id,
+            video_url: fileName, // Storing the storage path
+            duration_seconds: duration,
+            file_size_bytes: blob.size,
+            status: 'uploaded', // This status change triggers the backend
+            title: `Recording ${new Date().toLocaleDateString()}`,
+            // created_at is usually auto-generated, but we can pass it if needed
+          },
+        ]);
+
+      if (dbError) throw dbError;
 
       toast({
-        title: "Success!",
-        description: "Your recording has been saved successfully.",
+        title: "Upload successful!",
+        description: "AI analysis queued. You can check the status in your dashboard.",
       });
 
-      // Navigate to gallery
+      // Navigate to dashboard
       setTimeout(() => {
-        navigate('/gallery');
+        navigate('/dashboard');
       }, 1500);
+
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Upload failed:', error);
       toast({
         title: "Upload Failed",
         description: "There was an error uploading your video. Please try again.",
@@ -118,17 +111,16 @@ const Record = () => {
       });
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
     }
   };
 
   const handleFileUpload = async (file: File) => {
     if (!user) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
     try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
       toast({
         title: "Uploading...",
         description: "Please wait while we upload your video.",
@@ -145,44 +137,41 @@ const Record = () => {
         video.src = URL.createObjectURL(file);
       });
 
-      // Upload to Supabase Storage
-      const videoUrl = await uploadRecording(file, user.id, (progress) => {
-        setUploadProgress(progress);
-      });
+      // 1. Upload Video to Supabase Storage
+      const fileName = `${user.id}/${Date.now()}-${file.name}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('recordings')
+        .upload(fileName, file);
 
-      // Create recording record in database
-      const recording = await createRecording.mutateAsync({
-        video_url: videoUrl,
-        duration_seconds: duration,
-        file_size_bytes: file.size,
-        status: 'processing',
-        title: `Uploaded ${new Date().toLocaleDateString()}`,
-      });
+      if (uploadError) throw uploadError;
 
-      // Trigger local processing
-      try {
-        await fetch('http://localhost:3001/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            recording_id: recording.id, 
-            video_path: videoUrl.split('/recordings/')[1] 
-          })
-        });
-        console.log('Local processing triggered');
-      } catch (err) {
-        console.error('Failed to trigger local processing:', err);
-      }
+      // 2. Insert Metadata into Database
+      const { error: dbError } = await supabase
+        .from('recordings')
+        .insert([
+          {
+            user_id: user.id,
+            video_url: fileName,
+            duration_seconds: duration,
+            file_size_bytes: file.size,
+            status: 'uploaded',
+            title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
+          },
+        ]);
+
+      if (dbError) throw dbError;
 
       toast({
-        title: "Success!",
-        description: "Your video has been uploaded successfully.",
+        title: "Upload successful!",
+        description: "AI analysis queued. You can check the status in your dashboard.",
       });
 
-      // Navigate to gallery
+      // Navigate to dashboard
       setTimeout(() => {
-        navigate('/gallery');
+        navigate('/dashboard');
       }, 1500);
+
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -192,7 +181,6 @@ const Record = () => {
       });
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
     }
   };
 

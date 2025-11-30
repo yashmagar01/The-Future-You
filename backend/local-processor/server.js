@@ -3,7 +3,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const {spawn } = require('child_process');
 // const fetch = require('node-fetch'); // Native fetch is available in Node 18+
 const cors = require('cors');
 require('dotenv').config();
@@ -162,7 +162,7 @@ app.post('/process', async (req, res) => {
         
         // Log to file
         const logPath = path.join(__dirname, 'logs', `error-${recording_id}.log`);
-        fs.writeFileSync(logPath, `Exit Code: ${code}\nStderr: ${pythonError}\nStdout: ${pythonData}`);
+        fs.writeFileSync(logPath, `Exit Code: ${code}\\nStderr: ${pythonError}\\nStdout: ${pythonData}`);
         
         // Update status to failed
         await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
@@ -180,7 +180,7 @@ app.post('/process', async (req, res) => {
   }
 });
 
-// Script Generation Endpoint using Hugging Face Inference Providers
+// Script Generation Endpoint - Local Template-Based (No external API required!)
 app.post('/generate-script', async (req, res) => {
   const { profileData } = req.body;
   
@@ -188,93 +188,27 @@ app.post('/generate-script', async (req, res) => {
     return res.status(400).json({ error: 'Missing profileData' });
   }
 
-  console.log('Generating script for user:', profileData.full_name || 'Unknown');
+  console.log('Generating personalized script for:', profileData.full_name || 'Unknown');
 
   try {
-    const hfToken = process.env.HUGGING_FACE_API_KEY;
-    if (!hfToken) {
-      throw new Error('HUGGING_FACE_API_KEY not set in .env file');
-    }
-
-    // Using Hugging Face Inference Providers with google/gemma-2-2b-it model
-    // This model is available via the Inference Providers and uses the router endpoint
-    const model = "google/gemma-2-2b-it"; // Using Gemma 2 2B which is free and reliable
+    const name = profileData.full_name?.split(' ')[0] || 'there';
+    const role = profileData.role || 'user';
+    const answers = profileData.onboarding_answers || {};
     
-    // Construct system + user messages
-    const systemPrompt = `You are a communication coach helping users record video reflections. Generate personalized scripts based on their profile.
-
-Output MUST be valid JSON in this exact format:
-{
-  "variations": {
-    "short": "1-minute script here",
-    "medium": "3-minute script here",
-    "long": "5-minute script here"
-  }
-}`;
-
-    const userPrompt = `Generate 3 personalized video recording scripts for:
-Name: ${profileData.full_name || 'the user'}
-Role: ${profileData.role || 'User'}
-Goals: ${JSON.stringify(profileData.onboarding_answers || {})}
-
-The scripts should help them reflect and practice communication skills.
-Remember: Output valid JSON only.`;
-
-    // Use the router.huggingface.co endpoint with OpenAI-compatible format
-    const response = await fetch(`https://router.huggingface.co/featherless-ai/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${hfToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Hugging Face API error:', response.status, errorText);
-      throw new Error(`Hugging Face API error: ${response.status} ${errorText}`);
-    }
-
-    const result = await response.json();
-    const generatedText = result.choices?.[0]?.message?.content || "";
+    // Extract goals/interests from onboarding data
+    const goals = answers.goals || answers.interests || answers.goal || 'personal growth';
+    const challenges = answers.challenges || answers.challenge || 'communication skills';
     
-    console.log('LLM raw output:', generatedText);
-
-    // Attempt to extract JSON from the text
-    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-    let scriptData;
-    
-    if (jsonMatch) {
-      try {
-        scriptData = JSON.parse(jsonMatch[0]);
-      } catch (e) {
-        console.error("Failed to parse extracted JSON:", jsonMatch[0]);
-        scriptData = null;
+    // Generate personalized scripts based on profile
+    const scriptData = {
+      variations: {
+        short: generateShortScript(name, role, goals),
+        medium: generateMediumScript(name, role, goals, challenges),
+        long: generateLongScript(name, role, goals, challenges, answers)
       }
-    }
+    };
 
-    // Fallback if JSON parsing fails
-    if (!scriptData || !scriptData.variations) {
-      console.log("Using fallback script template");
-      const name = profileData.full_name?.split(' ')[0] || 'there';
-      scriptData = {
-        variations: {
-          short: `Hi ${name}, take a moment to reflect. What was the most significant part of your day? How did you handle challenges?`,
-          medium: `Hello ${name}, let's dive deeper into your experiences. Think about a recent challenge you faced. How did you approach it? What did you learn about yourself? What would you do differently next time?`,
-          long: `Welcome ${name}. Today, I want you to explore your long-term goals and daily actions. How do your current habits align with where you want to be? What specific steps can you take this week to move closer to your aspirations? Take your time to articulate your vision clearly.`
-        }
-      };
-    }
-
+    console.log('✅ Successfully generated personalized script');
     res.json(scriptData);
 
   } catch (error) {
@@ -282,6 +216,51 @@ Remember: Output valid JSON only.`;
     res.status(500).json({ error: error.message });
   }
 });
+
+// Helper functions for template-based generation
+function generateShortScript(name, role, goals) {
+  return `Hi ${name}, let's take a quick moment for reflection. 
+
+Think about your goal of ${goals}. What's one small thing you did today that moved you closer to this goal? It could be as simple as a conversation you had or a decision you made.
+
+Remember, progress isn't always dramatic—sometimes it's the small, consistent steps that matter most. Share what's on your mind.`;
+}
+
+function generateMediumScript(name, role, goals, challenges) {
+  return `Hello ${name}, welcome to your reflection session.
+
+Today, I want you to think deeply about ${goals}. You mentioned wanting to work on ${challenges}, so let's explore that.
+
+First, consider a recent situation where ${challenges} came into play. How did you handle it? What was going through your mind at the time? Looking back, what would you do differently?
+
+Now, think about the progress you've made. Even if it feels small, acknowledge it. Growth happens in moments we often overlook.
+
+As you speak, be honest with yourself. This is your space to reflect, learn, and grow. Take your time.`;
+}
+
+function generateLongScript(name, role, goals, challenges, answers) {
+  const timeframe = answers.timeframe || 'the near future';
+  const motivation = answers.motivation || 'becoming better';
+  
+  return `Welcome, ${name}. This is your dedicated time for deep reflection and growth.
+
+Let's start with the big picture. You're focused on ${goals}, and you've identified ${challenges} as an area for improvement. These aren't random choices—they reflect what matters to you and where you want to grow.
+
+Part 1: Recent Experiences
+Think about this past week. When did you feel most aligned with your goal of ${motivation}? Describe that moment in detail. What were you doing? Who were you with? What made it significant?
+
+Now, think about a challenging moment. We all face obstacles on the path to ${goals}. What happened? How did you respond? What did you learn about yourself in that situation?
+
+Part 2: Patterns and Insights
+As you reflect on your journey, have you noticed any patterns? Are there triggers that bring out your best self? Are there situations where ${challenges} becomes more difficult? Understanding these patterns is key to sustainable growth.
+
+Part 3: Moving Forward
+Looking ahead to ${timeframe}, what specific actions can you commit to? Be concrete. Instead of "I'll work on communication," try "I'll practice active listening in my next three meetings."
+
+Remember, ${name}, this reflection practice is about progress, not perfection. Each time you show up and think deeply about your growth, you're investing in ${goals}. You're already on the path—this is just about being more intentional with each step.
+
+Take your time. Speak from the heart. Your future self will thank you for this investment.`;
+}
 
 app.listen(port, () => {
   console.log(`Local processor listening at http://localhost:${port}`);

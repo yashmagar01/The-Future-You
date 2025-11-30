@@ -98,17 +98,10 @@ export function ScriptDisplay({ userId }: { userId: string }) {
 
             const newScript = await response.json();
 
-            console.log("ScriptDisplay: Generated AI script:", newScript);
-            console.log("ScriptDisplay: Script type:", typeof newScript);
-            console.log("ScriptDisplay: Script keys:", Object.keys(newScript));
-            console.log("ScriptDisplay: Has variations?", !!newScript.variations);
-            console.log("ScriptDisplay: Variations keys:", newScript.variations ? Object.keys(newScript.variations) : "none");
-            console.log("ScriptDisplay: Short content:", newScript.variations?.short);
-            console.log("ScriptDisplay: Medium content:", newScript.variations?.medium);
-            console.log("ScriptDisplay: Long content:", newScript.variations?.long);
+            
+            console.log("ScriptDisplay: Generated AI script");
             
             setScript(newScript);
-            console.log("ScriptDisplay: Script state updated");
 
             // Save to profile - remove old script first to avoid overwriting
             const { script: oldScript, ...profileDataWithoutScript } = profileData || {};
@@ -204,8 +197,6 @@ export function ScriptDisplay({ userId }: { userId: string }) {
                                 script.variations?.[type as keyof typeof script.variations] || 
                                 script[type as keyof Script] || 
                                 script[type.charAt(0).toUpperCase() + type.slice(1) as keyof Script];
-                            
-                            console.log(`ScriptDisplay RENDER: ${type} content:`, content ? content.substring(0, 50) + "..." : "EMPTY");
                             
                             return (
                                 <TabsContent key={type} value={type} className="h-full m-0 p-0">

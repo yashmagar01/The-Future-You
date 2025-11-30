@@ -80,42 +80,47 @@ const Record = () => {
   };
 
   const uploadFileWithProgress = async (file: File, path: string) => {
+    // Get fresh session first
+    const { data: { session }, error } = await supabase.auth.getSession();
+    let token = session?.access_token;
+
+    if (error || !token) {
+      const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !newSession?.access_token) {
+        throw new Error('Session expired. Please log in again.');
+      }
+      token = newSession.access_token;
+    }
+
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const url = `${supabaseUrl}/storage/v1/object/recordings/${path}`;
       
       xhr.open('POST', url);
       
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!session?.access_token) {
-          reject(new Error('No active session'));
-          return;
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.setRequestHeader('Content-Type', file.type);
+      // xhr.setRequestHeader('x-client-info', 'supabase-js-web');
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percent);
         }
-        
-        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-        xhr.setRequestHeader('Content-Type', file.type);
-        // xhr.setRequestHeader('x-client-info', 'supabase-js-web');
-        
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(percent);
-          }
-        };
-        
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(xhr.response);
-          } else {
-            console.error('Upload failed response:', xhr.responseText);
-            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
-          }
-        };
-        
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        
-        xhr.send(file);
-      });
+      };
+      
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(xhr.response);
+        } else {
+          console.error('Upload failed response:', xhr.responseText);
+          reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+        }
+      };
+      
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      
+      xhr.send(file);
     });
   };
 

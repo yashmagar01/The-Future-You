@@ -152,9 +152,10 @@ app.post('/process', async (req, res) => {
           const feedbackData = {
             recording_id: recording_id,
             overall_score: overallScore,
-            strengths: ["Good effort"], // Placeholder
-            areas_for_improvement: ["Practice more"], // Placeholder
+            // strengths and areas_for_improvement moved to specific_feedback JSON
             specific_feedback: {
+              strengths: ["Good effort"], // Placeholder
+              areas_for_improvement: ["Practice more"], // Placeholder
               clarity: {
                 score: clarityScore,
                 wpm: wpm,

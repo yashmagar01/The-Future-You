@@ -25,6 +25,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Analysis from "./pages/Analysis";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +104,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AdminPanel />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/analysis/:id" 
+                element={
+                  <ProtectedRoute>
+                    <Analysis />
                   </ProtectedRoute>
                 } 
               />

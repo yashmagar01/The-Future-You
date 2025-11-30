@@ -49,6 +49,8 @@ def analyze_audio(audio_path, model_path):
         else:
             # part_result = json.loads(rec.PartialResult())
             pass
+            
+    wf.close()  # Close file handle to release lock
 
     final_result = json.loads(rec.FinalResult())
     transcript = final_result.get("text", "")

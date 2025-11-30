@@ -79,6 +79,7 @@ app.post('/process', async (req, res) => {
     }
 
     const videoUrl = signedUrlData.signedUrl;
+    console.log(`Debug: Generated Signed URL: ${videoUrl}`);
     const localVideoPath = path.join(tmpDir, `${recording_id}.mp4`); // Assuming mp4, ideally get ext from path
 
     const response = await fetch(videoUrl);
@@ -87,9 +88,16 @@ app.post('/process', async (req, res) => {
     }
     
     const fileStream = fs.createWriteStream(localVideoPath);
+    
+    // Node 18+ native fetch returns a Web Stream, which doesn't have .pipe()
+    // We need to convert it to a Node stream or use stream pipeline
+    const { Readable } = require('stream');
+    // @ts-ignore
+    const nodeStream = Readable.fromWeb(response.body);
+
     await new Promise((resolve, reject) => {
-        response.body.pipe(fileStream);
-        response.body.on('error', reject);
+        nodeStream.pipe(fileStream);
+        nodeStream.on('error', reject);
         fileStream.on('finish', resolve);
     });
 

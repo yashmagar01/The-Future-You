@@ -180,7 +180,7 @@ app.post('/process', async (req, res) => {
   }
 });
 
-// Script Generation Endpoint using Hugging Face
+// Script Generation Endpoint using Hugging Face Inference Providers
 app.post('/generate-script', async (req, res) => {
   const { profileData } = req.body;
   
@@ -188,76 +188,89 @@ app.post('/generate-script', async (req, res) => {
     return res.status(400).json({ error: 'Missing profileData' });
   }
 
-  console.log('Generating script for profile:', profileData.id);
+  console.log('Generating script for user:', profileData.full_name || 'Unknown');
 
   try {
-    // Construct prompt based on profile data
-    const prompt = `
-You are a communication coach helping a user record a video reflection.
-Based on their profile, generate 3 scripts (Short: ~1 min, Medium: ~3 min, Long: ~5 min) for them to speak.
+    const hfToken = process.env.HUGGING_FACE_API_KEY;
+    if (!hfToken) {
+      throw new Error('HUGGING_FACE_API_KEY not set in .env file');
+    }
 
-User Profile:
-- Name: ${profileData.full_name || 'Friend'}
-- Role: ${profileData.role || 'User'}
-- Goals: ${JSON.stringify(profileData.onboarding_answers || {})}
+    // Using Hugging Face Inference Providers with google/gemma-2-2b-it model
+    // This model is available via the Inference Providers and uses the router endpoint
+    const model = "google/gemma-2-2b-it"; // Using Gemma 2 2B which is free and reliable
+    
+    // Construct system + user messages
+    const systemPrompt = `You are a communication coach helping users record video reflections. Generate personalized scripts based on their profile.
 
-Output MUST be valid JSON in this format:
+Output MUST be valid JSON in this exact format:
 {
   "variations": {
-    "short": "...",
-    "medium": "...",
-    "long": "..."
+    "short": "1-minute script here",
+    "medium": "3-minute script here",
+    "long": "5-minute script here"
   }
-}
+}`;
 
-Generate the JSON now:
-`;
+    const userPrompt = `Generate 3 personalized video recording scripts for:
+Name: ${profileData.full_name || 'the user'}
+Role: ${profileData.role || 'User'}
+Goals: ${JSON.stringify(profileData.onboarding_answers || {})}
 
-    // Call Hugging Face API
-    const hfToken = process.env.HUGGING_FACE_API_KEY;
-    const model = "mistralai/Mistral-7B-Instruct-v0.2";
-    
-    const response = await fetch(`https://router.huggingface.co/models/${model}`, {
+The scripts should help them reflect and practice communication skills.
+Remember: Output valid JSON only.`;
+
+    // Use the router.huggingface.co endpoint with OpenAI-compatible format
+    const response = await fetch(`https://router.huggingface.co/featherless-ai/v1/chat/completions`, {
       method: "POST",
       headers: {
-        "Authorization": hfToken ? `Bearer ${hfToken}` : undefined,
+        "Authorization": `Bearer ${hfToken}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 1000,
-          return_full_text: false,
-          temperature: 0.7
-        }
+        model: model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Hugging Face API error:', response.status, errorText);
       throw new Error(`Hugging Face API error: ${response.status} ${errorText}`);
     }
 
     const result = await response.json();
-    let generatedText = result[0]?.generated_text || "";
+    const generatedText = result.choices?.[0]?.message?.content || "";
     
-    // Attempt to extract JSON from the text (LLMs sometimes add chatter)
+    console.log('LLM raw output:', generatedText);
+
+    // Attempt to extract JSON from the text
     const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+    let scriptData;
+    
     if (jsonMatch) {
-      generatedText = jsonMatch[0];
+      try {
+        scriptData = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.error("Failed to parse extracted JSON:", jsonMatch[0]);
+        scriptData = null;
+      }
     }
 
-    let scriptData;
-    try {
-      scriptData = JSON.parse(generatedText);
-    } catch (e) {
-      console.error("Failed to parse LLM output as JSON:", generatedText);
-      // Fallback if JSON parsing fails
+    // Fallback if JSON parsing fails
+    if (!scriptData || !scriptData.variations) {
+      console.log("Using fallback script template");
+      const name = profileData.full_name?.split(' ')[0] || 'there';
       scriptData = {
         variations: {
-          short: "Hi! Take a moment to reflect on your day. What went well? What could be improved?",
-          medium: "Hello! Let's dive deeper. Think about a recent challenge you faced. How did you handle it? What did you learn about yourself?",
-          long: "Welcome back. Today, I want you to explore your long-term goals. How do your current actions align with them? Take your time to articulate your vision."
+          short: `Hi ${name}, take a moment to reflect. What was the most significant part of your day? How did you handle challenges?`,
+          medium: `Hello ${name}, let's dive deeper into your experiences. Think about a recent challenge you faced. How did you approach it? What did you learn about yourself? What would you do differently next time?`,
+          long: `Welcome ${name}. Today, I want you to explore your long-term goals and daily actions. How do your current habits align with where you want to be? What specific steps can you take this week to move closer to your aspirations? Take your time to articulate your vision clearly.`
         }
       };
     }

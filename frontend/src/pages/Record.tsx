@@ -260,7 +260,9 @@ const Record = () => {
       console.log('Video duration:', duration, 'seconds');
 
       // 1. Upload Video to Supabase Storage
-      const fileName = `${user.id}/${Date.now()}-${file.name}`;
+      // Sanitize filename to remove special characters that might cause InvalidKey errors
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${user.id}/${Date.now()}-${sanitizedFileName}`;
       
       console.log('Uploading to Supabase Storage:', fileName);
       

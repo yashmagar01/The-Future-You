@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch'); // Native fetch is available in Node 18+
 const cors = require('cors');
 require('dotenv').config();
 

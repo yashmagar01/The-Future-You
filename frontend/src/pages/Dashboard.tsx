@@ -31,6 +31,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import AnalysisResults, { AnalysisData, AnalysisMetrics } from "@/components/AnalysisResults";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -39,6 +40,16 @@ const Dashboard = () => {
   const { data: weeklyData, isLoading: weeklyLoading } = useWeeklyActivity();
   const { data: performanceData, isLoading: performanceLoading } = usePerformanceTrend();
   const { data: recordings } = useRecordings();
+
+  // --- Latest Analysis Logic ---
+  const latestRecording = recordings?.[0];
+  const latestFeedback = latestRecording?.feedback;
+  
+  const analysisData: AnalysisData | null = latestFeedback ? {
+    overall_score: latestFeedback.overall_score,
+    metrics: latestFeedback.specific_feedback as unknown as AnalysisMetrics,
+    transcript_summary: (latestFeedback.specific_feedback as any)?.transcript || "No transcript available."
+  } : null;
 
   // Gamification: Streak calculation (mock for now)
   const currentStreak = Math.min((stats?.thisWeekRecordings || 0), 7);
@@ -190,6 +201,19 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Latest Analysis Results (If Available) */}
+        {analysisData && (
+          <div className="mb-8 animate-slide-up">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Latest Analysis</h2>
+              <Badge variant="outline" className="text-primary border-primary/50">
+                {new Date(latestRecording?.created_at || "").toLocaleDateString()}
+              </Badge>
+            </div>
+            <AnalysisResults analysis={analysisData} />
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">

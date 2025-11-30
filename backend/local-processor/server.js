@@ -180,87 +180,106 @@ app.post('/process', async (req, res) => {
   }
 });
 
-// Script Generation Endpoint - Local Template-Based (No external API required!)
-app.post('/generate-script', async (req, res) => {
-  const { profileData } = req.body;
+// ==========================================
+// SCRIPT GENERATION LOGIC (Local Templates)
+// ==========================================
+
+const generateTemplates = (profileData) => {
+  // 1. DATA MAPPING (Frontend -> Script Variables)
+  const name = profileData.full_name?.split(' ')[0] || "Friend";
   
-  if (!profileData) {
-    return res.status(400).json({ error: 'Missing profileData' });
-  }
+  // Map Experience Level -> Role
+  const roleMap = {
+    "Beginner": "Learner",
+    "Intermediate": "Professional",
+    "Advanced": "Leader"
+  };
+  // Fallback to "Communicator" if undefined
+  const role = roleMap[profileData.experience_level] || "Communicator";
 
-  console.log('Generating personalized script for:', profileData.full_name || 'Unknown');
+  // Map Primary Goal -> Focus Area
+  const focusMap = {
+    "clarity": "Articulation",
+    "decisions": "Decisiveness",
+    "growth": "Confidence"
+  };
+  // Fallback to "Communication" if undefined
+  const focus = focusMap[profileData.primary_goal] || "Communication";
 
+  // 2. THE TEMPLATES
+
+  // --- SHORT SCRIPT (3 Minutes) ---
+  const short = `Hi, my name is ${name}, and this is my daily check-in.
+
+Today, I am dedicating these few minutes to my personal growth as a ${role}. I know that to be effective in my field, I need to master ${focus}. It is not just about the words I say, but how I say them.
+
+Right now, I am checking in with my body and my voice. Am I slouching? Am I speaking too fast? I am taking this moment to slow down. I breathe in... and I breathe out.
+
+My goal for today is simple: To be 1% better at ${focus} than I was yesterday. I know I will face distractions. I know there will be moments of stress. But in those moments, I will remember this feeling of calm. I will remember that I have the capacity to handle whatever comes my way.
+
+I am not chasing perfection; I am chasing consistency. By recording this video, I am proving to myself that I show up. I am building the discipline required to be a great ${role}.
+
+I am ready for the day. I am clear, I am focused, and I am capable.`;
+
+  // --- MEDIUM SCRIPT (5 Minutes) ---
+  const medium = `Hello, I am ${name}. Welcome to my 5-minute practice session.
+
+Today I want to talk about the concept of 'Capacity.' As a ${role}, I often feel the pressure to know everything, to be everywhere, and to solve every problem instantly. But when I reflect on my journey to improve my ${focus}, I realize that real strength isn't about speed. It is about capacity.
+
+What does it mean to have capacity? It means having the emotional stability to pause before I react. It means having the mental clarity to listen before I speak.
+
+I admit, sometimes I struggle with ${focus}. There are times when I doubt my voice or my decisions. But I also know that these struggles are not signs of weakness—they are the growing pains of becoming a better version of myself.
+
+Think about the challenges I faced this week. There were moments of friction. Maybe I didn't speak up when I should have. Maybe I spoke too quickly. That is okay. That is data. Today, I am rewriting that narrative.
+
+I am choosing to view ${focus} not as a hurdle, but as a skill I am actively building, brick by brick. Every time I record one of these videos, I am laying another brick.
+
+I commit to being a ${role} who leads with empathy and clarity. I commit to listening more deeply. I commit to speaking with intention.
+
+If I stumble today, I will not judge myself. I will simply correct course and keep moving. This is a marathon, not a sprint. And I am in this for the long run.`;
+
+  // --- LONG SCRIPT (10 Minutes) ---
+  const long = `This is a message to my future self. My name is ${name}, and I am recording this to document who I am today, and who I am becoming.
+
+I am currently navigating my path as a ${role}. It is a journey filled with highs and lows. Today, my primary focus is on ${focus}. I chose this because I know it is the key to unlocking the next level of my potential.
+
+Let’s talk about why this matters. In a world that is constantly noisy, the ability to communicate with ${focus} is a superpower. It is the difference between being heard and being ignored. It is the difference between having an idea and leading a movement.
+
+I want to reflect on my standards. What creates a great ${role}? Is it just technical skill? No. It is the ability to connect. It is the ability to transfer an emotion or an idea from my mind to someone else’s without distortion. That is why I am here, looking at this camera, practicing this skill.
+
+I admit that sometimes the journey feels slow. Sometimes I look at others and feel like I am falling behind. I see people who seem to have natural charisma, or who speak without ever stumbling. But I remind myself that comparison is the thief of joy. I do not know their story; I only know mine.
+
+And my story is one of persistence. It is the story of someone who chooses to do the hard work when no one is watching. The person I was a year ago might have given up. But the person I am today stays in the room.
+
+I want to visualize where I will be one year from now. If I stick to this practice—if I keep showing up every day to work on my ${focus}—I will be unrecognizable. I will walk into rooms with a different energy. I will speak with a different weight. I will be the kind of ${role} that others look to for guidance, not because I am the loudest, but because I am the most grounded.
+
+To the ${name} of the future: I hope you never lost this hunger. I hope you remembered that confidence is earned, not given. I hope you are using your ${focus} to help others, to lift them up, and to solve problems that matter.
+
+I promise to keep working today, so that you can succeed tomorrow. I am signing off now, with a renewed sense of purpose.`;
+
+  return { 
+    variations: { short, medium, long } 
+  };
+};
+
+// --- API ENDPOINT ---
+app.post('/generate-script', (req, res) => {
   try {
-    const name = profileData.full_name?.split(' ')[0] || 'there';
-    const role = profileData.role || 'user';
-    const answers = profileData.onboarding_answers || {};
+    const { profileData } = req.body;
     
-    // Extract goals/interests from onboarding data
-    const goals = answers.goals || answers.interests || answers.goal || 'personal growth';
-    const challenges = answers.challenges || answers.challenge || 'communication skills';
-    
-    // Generate personalized scripts based on profile
-    const scriptData = {
-      variations: {
-        short: generateShortScript(name, role, goals),
-        medium: generateMediumScript(name, role, goals, challenges),
-        long: generateLongScript(name, role, goals, challenges, answers)
-      }
-    };
+    // Validate Input
+    if (!profileData) {
+      return res.status(400).json({ error: "Missing profileData" });
+    }
 
-    console.log('✅ Successfully generated personalized script');
-    res.json(scriptData);
+    const scripts = generateTemplates(profileData);
+    res.json(scripts);
 
   } catch (error) {
-    console.error('Script generation error:', error);
-    res.status(500).json({ error: error.message });
+    console.error("Script Generation Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-// Helper functions for template-based generation
-function generateShortScript(name, role, goals) {
-  return `Hi ${name}, let's take a quick moment for reflection. 
-
-Think about your goal of ${goals}. What's one small thing you did today that moved you closer to this goal? It could be as simple as a conversation you had or a decision you made.
-
-Remember, progress isn't always dramatic—sometimes it's the small, consistent steps that matter most. Share what's on your mind.`;
-}
-
-function generateMediumScript(name, role, goals, challenges) {
-  return `Hello ${name}, welcome to your reflection session.
-
-Today, I want you to think deeply about ${goals}. You mentioned wanting to work on ${challenges}, so let's explore that.
-
-First, consider a recent situation where ${challenges} came into play. How did you handle it? What was going through your mind at the time? Looking back, what would you do differently?
-
-Now, think about the progress you've made. Even if it feels small, acknowledge it. Growth happens in moments we often overlook.
-
-As you speak, be honest with yourself. This is your space to reflect, learn, and grow. Take your time.`;
-}
-
-function generateLongScript(name, role, goals, challenges, answers) {
-  const timeframe = answers.timeframe || 'the near future';
-  const motivation = answers.motivation || 'becoming better';
-  
-  return `Welcome, ${name}. This is your dedicated time for deep reflection and growth.
-
-Let's start with the big picture. You're focused on ${goals}, and you've identified ${challenges} as an area for improvement. These aren't random choices—they reflect what matters to you and where you want to grow.
-
-Part 1: Recent Experiences
-Think about this past week. When did you feel most aligned with your goal of ${motivation}? Describe that moment in detail. What were you doing? Who were you with? What made it significant?
-
-Now, think about a challenging moment. We all face obstacles on the path to ${goals}. What happened? How did you respond? What did you learn about yourself in that situation?
-
-Part 2: Patterns and Insights
-As you reflect on your journey, have you noticed any patterns? Are there triggers that bring out your best self? Are there situations where ${challenges} becomes more difficult? Understanding these patterns is key to sustainable growth.
-
-Part 3: Moving Forward
-Looking ahead to ${timeframe}, what specific actions can you commit to? Be concrete. Instead of "I'll work on communication," try "I'll practice active listening in my next three meetings."
-
-Remember, ${name}, this reflection practice is about progress, not perfection. Each time you show up and think deeply about your growth, you're investing in ${goals}. You're already on the path—this is just about being more intentional with each step.
-
-Take your time. Speak from the heart. Your future self will thank you for this investment.`;
-}
 
 app.listen(port, () => {
   console.log(`Local processor listening at http://localhost:${port}`);

@@ -25,7 +25,7 @@ interface PostureMetrics {
   issues_detected?: string[];
 }
 
-interface AnalysisMetrics {
+export interface AnalysisMetrics {
   clarity: ClarityMetrics;
   pacing?: PacingMetrics;
   sentiment?: SentimentMetrics;

@@ -80,21 +80,23 @@ export function ScriptDisplay({ userId }: { userId: string }) {
         try {
             setGenerating(true);
             
-            console.log("ScriptDisplay: Calling prompt-generator Edge Function with data:", profileData);
+            console.log("ScriptDisplay: Calling local backend /generate-script with data:", profileData);
 
-            // Use Supabase's built-in functions.invoke() which handles auth automatically
-            const { data: newScript, error: functionError } = await supabase.functions.invoke('prompt-generator', {
-                body: profileData
+            // Call local backend instead of Edge Function
+            const response = await fetch('http://localhost:3001/generate-script', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ profileData }),
             });
 
-            if (functionError) {
-                console.error("Edge Function error:", functionError);
-                throw new Error(functionError.message || "Failed to generate script");
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Backend error: ${response.status} ${errorText}`);
             }
 
-            if (!newScript) {
-                throw new Error("No script returned from Edge Function");
-            }
+            const newScript = await response.json();
 
             console.log("ScriptDisplay: Generated AI script:", newScript);
             console.log("ScriptDisplay: Script type:", typeof newScript);

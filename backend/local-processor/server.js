@@ -170,13 +170,102 @@ app.post('/process', async (req, res) => {
         res.status(500).json({ status: 'error', message: 'Worker failed', details: pythonError });
       }
     });
-
   } catch (error) {
     console.error('Processing error:', error);
     // Update status to failed
     if (recording_id) {
         await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
     }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Script Generation Endpoint using Hugging Face
+app.post('/generate-script', async (req, res) => {
+  const { profileData } = req.body;
+  
+  if (!profileData) {
+    return res.status(400).json({ error: 'Missing profileData' });
+  }
+
+  console.log('Generating script for profile:', profileData.id);
+
+  try {
+    // Construct prompt based on profile data
+    const prompt = `
+You are a communication coach helping a user record a video reflection.
+Based on their profile, generate 3 scripts (Short: ~1 min, Medium: ~3 min, Long: ~5 min) for them to speak.
+
+User Profile:
+- Name: ${profileData.full_name || 'Friend'}
+- Role: ${profileData.role || 'User'}
+- Goals: ${JSON.stringify(profileData.onboarding_answers || {})}
+
+Output MUST be valid JSON in this format:
+{
+  "variations": {
+    "short": "...",
+    "medium": "...",
+    "long": "..."
+  }
+}
+
+Generate the JSON now:
+`;
+
+    // Call Hugging Face API
+    const hfToken = process.env.HUGGING_FACE_API_KEY;
+    const model = "mistralai/Mistral-7B-Instruct-v0.2";
+    
+    const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+      method: "POST",
+      headers: {
+        "Authorization": hfToken ? `Bearer ${hfToken}` : undefined,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 1000,
+          return_full_text: false,
+          temperature: 0.7
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Hugging Face API error: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    let generatedText = result[0]?.generated_text || "";
+    
+    // Attempt to extract JSON from the text (LLMs sometimes add chatter)
+    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      generatedText = jsonMatch[0];
+    }
+
+    let scriptData;
+    try {
+      scriptData = JSON.parse(generatedText);
+    } catch (e) {
+      console.error("Failed to parse LLM output as JSON:", generatedText);
+      // Fallback if JSON parsing fails
+      scriptData = {
+        variations: {
+          short: "Hi! Take a moment to reflect on your day. What went well? What could be improved?",
+          medium: "Hello! Let's dive deeper. Think about a recent challenge you faced. How did you handle it? What did you learn about yourself?",
+          long: "Welcome back. Today, I want you to explore your long-term goals. How do your current actions align with them? Take your time to articulate your vision."
+        }
+      };
+    }
+
+    res.json(scriptData);
+
+  } catch (error) {
+    console.error('Script generation error:', error);
     res.status(500).json({ error: error.message });
   }
 });

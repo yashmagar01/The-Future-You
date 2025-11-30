@@ -47,8 +47,8 @@ const Dashboard = () => {
   
   const analysisData: AnalysisData | null = latestFeedback ? {
     overall_score: latestFeedback.overall_score,
-    metrics: latestFeedback.specific_feedback as unknown as AnalysisMetrics,
-    transcript_summary: (latestFeedback.specific_feedback as any)?.transcript || "No transcript available."
+    metrics: latestFeedback.key_insights as unknown as AnalysisMetrics,
+    transcript_summary: (latestFeedback.key_insights as any)?.transcript || "No transcript available."
   } : null;
 
   // Gamification: Streak calculation (mock for now)

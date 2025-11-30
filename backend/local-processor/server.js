@@ -181,13 +181,6 @@ app.post('/process', async (req, res) => {
               transcript: results.transcript
             }
           };
-              posture: {
-                score: postureScore,
-                issues_detected: []
-              },
-              transcript: results.transcript
-            }
-          };
 
           // Insert into Supabase 'feedback' table
           const { error: insertError } = await supabase

@@ -76,17 +76,36 @@ const Record = () => {
       if (uploadError) throw uploadError;
 
       // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
-      await createRecording({
+      const recordingData = await createRecording({
         video_url: fileName,
         duration_seconds: duration,
         file_size_bytes: blob.size,
-        status: 'uploading',
+        status: 'processing',
         title: `Recording ${new Date().toLocaleDateString()}`,
       });
 
+      // 3. Trigger Backend AI Processing
+      try {
+        const response = await fetch('http://localhost:3001/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recording_id: recordingData?.id,
+            video_path: fileName
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Backend processing trigger failed:', await response.text());
+        }
+      } catch (processingError) {
+        console.error('Failed to trigger backend processing:', processingError);
+        // Don't throw - upload was successful, processing can be retried
+      }
+
       toast({
         title: "Upload successful!",
-        description: "AI analysis queued. You can check the status in your dashboard.",
+        description: "AI analysis started. You can check the status in your dashboard.",
       });
 
       // Navigate to dashboard (data will already be updated via React Query)
@@ -139,17 +158,36 @@ const Record = () => {
       if (uploadError) throw uploadError;
 
       // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
-      await createRecording({
+      const recordingData = await createRecording({
         video_url: fileName,
         duration_seconds: duration,
         file_size_bytes: file.size,
-        status: 'uploading',
+        status: 'processing',
         title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
       });
 
+      // 3. Trigger Backend AI Processing
+      try {
+        const response = await fetch('http://localhost:3001/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recording_id: recordingData?.id,
+            video_path: fileName
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Backend processing trigger failed:', await response.text());
+        }
+      } catch (processingError) {
+        console.error('Failed to trigger backend processing:', processingError);
+        // Don't throw - upload was successful, processing can be retried
+      }
+
       toast({
         title: "Upload successful!",
-        description: "AI analysis queued. You can check the status in your dashboard.",
+        description: "AI analysis started. You can check the status in your dashboard.",
       });
 
       // Navigate to dashboard (data will already be updated via React Query)

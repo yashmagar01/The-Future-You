@@ -88,8 +88,11 @@ export function ScriptDisplay({ userId }: { userId: string }) {
             
             console.log("ScriptDisplay: Calling local backend /generate-script with data:", profileData);
 
-            // Call local backend instead of Edge Function
-            const response = await fetch('http://localhost:3001/generate-script', {
+            // Determine backend URL from env (useful for Vercel deploy). Falls back to localhost for dev.
+            const API_BASE = import.meta.env.VITE_LOCAL_PROCESSOR_URL || 'http://localhost:3001';
+
+            // Call backend generate endpoint
+            const response = await fetch(`${API_BASE.replace(/\/$/, '')}/generate-script`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

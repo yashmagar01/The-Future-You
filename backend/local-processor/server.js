@@ -217,7 +217,7 @@ Generate the JSON now:
     const hfToken = process.env.HUGGING_FACE_API_KEY;
     const model = "mistralai/Mistral-7B-Instruct-v0.2";
     
-    const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+    const response = await fetch(`https://router.huggingface.co/models/${model}`, {
       method: "POST",
       headers: {
         "Authorization": hfToken ? `Bearer ${hfToken}` : undefined,

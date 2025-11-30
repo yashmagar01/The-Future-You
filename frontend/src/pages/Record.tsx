@@ -14,6 +14,9 @@ import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { useCreateRecording } from "@/hooks/useRecordings";
 
 const Record = () => {
+  // API base URL with fallback to localhost
+  const API_BASE_URL = import.meta.env.VITE_LOCAL_PROCESSOR_URL || 'http://localhost:3001';
+
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingProgress, setProcessingProgress] = useState(0);
@@ -162,13 +165,17 @@ const Record = () => {
 
       console.log('Database record created:', recordingData.id);
 
+      // Wait for Supabase Storage to fully persist the file
+      console.log('Waiting for storage sync...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       // Start processing simulation
       stopProcessingSimulation = simulateProcessing(duration);
 
       // 3. Trigger Backend AI Processing
       try {
         console.log('Triggering backend processing...');
-        const response = await fetch('http://localhost:3001/process', {
+        const response = await fetch(`${API_BASE_URL}/process`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -287,13 +294,17 @@ const Record = () => {
 
       console.log('Database record created:', recordingData.id);
 
+      // Wait for Supabase Storage to fully persist the file
+      console.log('Waiting for storage sync...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       // Start processing simulation
       stopProcessingSimulation = simulateProcessing(duration);
 
       // 3. Trigger Backend AI Processing
       try {
         console.log('Triggering backend processing...');
-        const response = await fetch('http://localhost:3001/process', {
+        const response = await fetch(`${API_BASE_URL}/process`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

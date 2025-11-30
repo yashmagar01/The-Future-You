@@ -131,25 +131,59 @@ app.post('/process', async (req, res) => {
           const results = JSON.parse(pythonData);
           console.log('Analysis results:', results);
 
-          // Insert into Supabase
+          // Calculate derived metrics
+          const duration = results.duration || 60; // Default to 60s if missing
+          const wpm = Math.round(results.transcript.split(' ').length / (duration / 60));
+          const clarityScore = Math.max(0, 100 - (results.filler_count * 5)); // Penalize 5 points per filler
+          const pacingScore = (wpm > 120 && wpm < 160) ? 100 : 80; // Simple logic
+          const sentimentLabel = results.sentiment_score > 0 ? "Positive" : "Neutral";
+          const postureScore = Math.round(results.posture_score * 100);
+          
+          const overallScore = Math.round((clarityScore + pacingScore + postureScore) / 3);
+
+          const feedbackData = {
+            recording_id: recording_id,
+            overall_score: overallScore,
+            strengths: ["Good effort"], // Placeholder
+            areas_for_improvement: ["Practice more"], // Placeholder
+            specific_feedback: {
+              clarity: {
+                score: clarityScore,
+                wpm: wpm,
+                filler_word_count: results.filler_count,
+                filler_words_detected: [] 
+              },
+              pacing: {
+                score: pacingScore,
+                feedback: wpm < 120 ? "Try to speak a bit faster." : (wpm > 160 ? "Slow down a bit." : "Perfect pace.")
+              },
+              sentiment: {
+                score: sentimentLabel,
+                confidence_level: "Medium"
+              },
+              posture: {
+                score: postureScore,
+                issues_detected: []
+              },
+              transcript: results.transcript
+            }
+          };
+
+          // Insert into Supabase 'feedback' table
           const { error: insertError } = await supabase
-            .from('insights')
-            .insert([{
-              recording_id: recording_id,
-              transcript: results.transcript,
-              filler_words: results.filler_count,
-              sentiment_score: results.sentiment_score,
-              posture_score: results.posture_score,
-              status: 'completed'
-            }]);
+            .from('feedback')
+            .insert([feedbackData]);
 
           if (insertError) {
             console.error('Supabase insert error:', insertError);
             throw new Error(`Supabase insert failed: ${insertError.message}`);
           }
+          
+          // Update recording status to completed
+          await supabase.from('recordings').update({ status: 'completed' }).eq('id', recording_id);
 
           console.log('Results saved to Supabase');
-          res.json({ status: 'success', message: 'Processing complete', data: results });
+          res.json({ status: 'success', message: 'Processing complete', data: feedbackData });
         } catch (parseError) {
           console.error('Error parsing Python output or saving to DB:', parseError);
           // Update status to failed
@@ -189,10 +223,14 @@ const generateTemplates = (profileData) => {
   const name = profileData.full_name?.split(' ')[0] || "Friend";
   
   // Map Experience Level -> Role
+  // Handle both capitalized (old data) and lowercase (new onboarding) values
   const roleMap = {
     "Beginner": "Learner",
+    "beginner": "Learner",
     "Intermediate": "Professional",
-    "Advanced": "Leader"
+    "intermediate": "Professional",
+    "Advanced": "Leader",
+    "advanced": "Leader"
   };
   // Fallback to "Communicator" if undefined
   const role = roleMap[profileData.experience_level] || "Communicator";

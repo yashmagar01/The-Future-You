@@ -139,7 +139,8 @@ def analyze_audio(audio_path, model_path):
         "transcript": transcript,
         "filler_count": filler_count,
         "sentiment_score": sentiment_score,
-        "posture_score": posture_score
+        "posture_score": posture_score,
+        "duration": duration if 'duration' in locals() else 0
     }
 
 def main():

@@ -10,12 +10,14 @@ import { ScriptDisplay } from "@/components/ScriptDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { useCreateRecording } from "@/hooks/useRecordings";
 
 const Record = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState("");
   const [userRole, setUserRole] = useState<'tester' | 'user' | 'admin'>('user');
   const [loadingRole, setLoadingRole] = useState(true);
   const { mutateAsync: createRecording } = useCreateRecording();
@@ -53,12 +55,80 @@ const Record = () => {
     fetchUserRole();
   }, [user]);
 
+  // Helper to simulate processing progress
+  const simulateProcessing = (duration: number) => {
+    setProcessingProgress(0);
+    setStatusMessage("Initializing AI models...");
+    
+    const totalTime = duration * 1000 * 0.5; // Estimate processing as 50% of duration
+    const intervalTime = 100;
+    const steps = totalTime / intervalTime;
+    let currentStep = 0;
+
+    const interval = setInterval(() => {
+      currentStep++;
+      const progress = Math.min(Math.round((currentStep / steps) * 100), 95); // Cap at 95% until done
+      setProcessingProgress(progress);
+      
+      if (progress > 20 && progress < 40) setStatusMessage("Transcribing speech...");
+      if (progress > 40 && progress < 70) setStatusMessage("Analyzing sentiment...");
+      if (progress > 70) setStatusMessage("Generating insights...");
+      
+    }, intervalTime);
+
+    return () => clearInterval(interval);
+  };
+
+  const uploadFileWithProgress = async (file: File, path: string) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const url = `${supabaseUrl}/storage/v1/object/recordings/${path}`;
+      
+      xhr.open('POST', url);
+      
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.access_token) {
+          reject(new Error('No active session'));
+          return;
+        }
+        
+        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+        xhr.setRequestHeader('Content-Type', file.type);
+        // xhr.setRequestHeader('x-client-info', 'supabase-js-web');
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percent);
+          }
+        };
+        
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(xhr.response);
+          } else {
+            console.error('Upload failed response:', xhr.responseText);
+            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        
+        xhr.send(file);
+      });
+    });
+  };
+
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
     if (!user) return;
+
+    let stopProcessingSimulation: (() => void) | undefined;
 
     try {
       setIsUploading(true);
       setUploadProgress(0);
+      setProcessingProgress(0);
+      setStatusMessage("Starting upload...");
 
       toast({
         title: "Uploading...",
@@ -70,18 +140,13 @@ const Record = () => {
       const file = new File([blob], fileName, { type: 'video/webm' });
 
       console.log('Uploading recording to Supabase Storage:', fileName);
-      const { error: uploadError } = await supabase.storage
-        .from('recordings')
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
+      
+      await uploadFileWithProgress(file, fileName);
 
       console.log('Upload successful, creating database record...');
+      setStatusMessage("Finalizing upload...");
 
-      // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
+      // 2. Use Hook to Insert Metadata
       const recordingData = await createRecording({
         video_url: fileName,
         duration_seconds: duration,
@@ -91,6 +156,9 @@ const Record = () => {
       });
 
       console.log('Database record created:', recordingData.id);
+
+      // Start processing simulation
+      stopProcessingSimulation = simulateProcessing(duration);
 
       // 3. Trigger Backend AI Processing
       try {
@@ -114,6 +182,8 @@ const Record = () => {
           });
         } else {
           console.log('Backend processing triggered successfully');
+          setProcessingProgress(100);
+          setStatusMessage("Analysis complete!");
         }
       } catch (processingError) {
         console.error('Failed to trigger backend processing:', processingError);
@@ -129,7 +199,7 @@ const Record = () => {
         description: "AI analysis started. You can check the status in your dashboard.",
       });
 
-      // Navigate to dashboard (data will already be updated via React Query)
+      // Navigate to dashboard
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
@@ -142,8 +212,8 @@ const Record = () => {
         description: errorMessage,
         variant: "destructive",
       });
-      // Don't navigate on error - stay on page
     } finally {
+      if (stopProcessingSimulation) stopProcessingSimulation();
       setIsUploading(false);
     }
   };
@@ -151,9 +221,13 @@ const Record = () => {
   const handleFileUpload = async (file: File) => {
     if (!user) return;
 
+    let stopProcessingSimulation: (() => void) | undefined;
+
     try {
       setIsUploading(true);
       setUploadProgress(0);
+      setProcessingProgress(0);
+      setStatusMessage("Starting upload...");
 
       toast({
         title: "Uploading...",
@@ -189,18 +263,13 @@ const Record = () => {
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
       
       console.log('Uploading to Supabase Storage:', fileName);
-      const { error: uploadError } = await supabase.storage
-        .from('recordings')
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
+      
+      await uploadFileWithProgress(file, fileName);
 
       console.log('Upload successful, creating database record...');
+      setStatusMessage("Finalizing upload...");
 
-      // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
+      // 2. Use Hook to Insert Metadata
       const recordingData = await createRecording({
         video_url: fileName,
         duration_seconds: duration,
@@ -210,6 +279,9 @@ const Record = () => {
       });
 
       console.log('Database record created:', recordingData.id);
+
+      // Start processing simulation
+      stopProcessingSimulation = simulateProcessing(duration);
 
       // 3. Trigger Backend AI Processing
       try {
@@ -233,6 +305,8 @@ const Record = () => {
           });
         } else {
           console.log('Backend processing triggered successfully');
+          setProcessingProgress(100);
+          setStatusMessage("Analysis complete!");
         }
       } catch (processingError) {
         console.error('Failed to trigger backend processing:', processingError);
@@ -248,7 +322,7 @@ const Record = () => {
         description: "AI analysis started. You can check the status in your dashboard.",
       });
 
-      // Navigate to dashboard (data will already be updated via React Query)
+      // Navigate to dashboard
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
@@ -261,8 +335,8 @@ const Record = () => {
         description: errorMessage,
         variant: "destructive",
       });
-      // Don't navigate on error - stay on page
     } finally {
+      if (stopProcessingSimulation) stopProcessingSimulation();
       setIsUploading(false);
     }
   };
@@ -328,9 +402,19 @@ const Record = () => {
         {isUploading ? (
           <Card className="p-6 sm:p-8 mb-6 shadow-medium">
             <div className="text-center space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" aria-hidden="true" />
-              <h3 className="text-lg font-semibold">Uploading your video...</h3>
-              <Progress value={uploadProgress} className="w-full" />
+              {uploadProgress < 100 ? (
+                <>
+                  <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" aria-hidden="true" />
+                  <h3 className="text-lg font-semibold">Uploading your video... {uploadProgress}%</h3>
+                  <Progress value={uploadProgress} className="w-full" />
+                </>
+              ) : (
+                <>
+                  <Zap className="h-12 w-12 animate-pulse mx-auto text-brand-green" aria-hidden="true" />
+                  <h3 className="text-lg font-semibold">{statusMessage || "Analyzing content..."}</h3>
+                  <Progress value={processingProgress} className="w-full" />
+                </>
+              )}
               <p className="text-sm text-muted-foreground">
                 Please don't close this page. This may take a few moments.
               </p>

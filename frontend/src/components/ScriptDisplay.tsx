@@ -42,14 +42,20 @@ export function ScriptDisplay({ userId }: { userId: string }) {
             setLoading(true);
             const { data, error } = await supabase
                 .from('profiles')
-                .select('onboarding_data')
+                .select('onboarding_data, full_name')
                 .eq('id', userId)
                 .single();
 
             if (error) throw error;
 
             const onboardingData = data?.onboarding_data as unknown as OnboardingData | null;
-            setProfileData(onboardingData);
+            // Merge full_name into the data we use
+            const fullProfileData = {
+                ...onboardingData,
+                full_name: data.full_name
+            };
+            
+            setProfileData(fullProfileData);
 
             if (onboardingData?.script) {
                 console.log("ScriptDisplay: Found existing script:", onboardingData.script);
@@ -57,7 +63,7 @@ export function ScriptDisplay({ userId }: { userId: string }) {
             } else {
                 console.log("ScriptDisplay: No script found, generating...");
                 // No script found, generate one
-                generateScript(onboardingData);
+                generateScript(fullProfileData);
             }
         } catch (error) {
             console.error('Error fetching script:', error);

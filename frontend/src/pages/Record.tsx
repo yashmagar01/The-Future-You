@@ -69,11 +69,17 @@ const Record = () => {
       const fileName = `${user.id}/${Date.now()}.webm`;
       const file = new File([blob], fileName, { type: 'video/webm' });
 
+      console.log('Uploading recording to Supabase Storage:', fileName);
       const { error: uploadError } = await supabase.storage
         .from('recordings')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      console.log('Upload successful, creating database record...');
 
       // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
       const recordingData = await createRecording({
@@ -84,8 +90,11 @@ const Record = () => {
         title: `Recording ${new Date().toLocaleDateString()}`,
       });
 
+      console.log('Database record created:', recordingData.id);
+
       // 3. Trigger Backend AI Processing
       try {
+        console.log('Triggering backend processing...');
         const response = await fetch('http://localhost:3001/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -96,11 +105,23 @@ const Record = () => {
         });
 
         if (!response.ok) {
-          console.error('Backend processing trigger failed:', await response.text());
+          const errorText = await response.text();
+          console.error('Backend processing trigger failed:', errorText);
+          toast({
+            title: "Processing Warning",
+            description: "Upload succeeded but AI analysis may not start. Check backend logs.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Backend processing triggered successfully');
         }
       } catch (processingError) {
         console.error('Failed to trigger backend processing:', processingError);
-        // Don't throw - upload was successful, processing can be retried
+        toast({
+          title: "Backend Unavailable",
+          description: "Upload succeeded but backend is not running. Start backend to process video.",
+          variant: "destructive",
+        });
       }
 
       toast({
@@ -115,11 +136,13 @@ const Record = () => {
 
     } catch (error) {
       console.error('Upload failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your video. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+      // Don't navigate on error - stay on page
     } finally {
       setIsUploading(false);
     }
@@ -137,25 +160,45 @@ const Record = () => {
         description: "Please wait while we upload your video.",
       });
 
-      // Get video duration
+      // Get video duration with timeout
       const video = document.createElement('video');
       video.preload = 'metadata';
 
-      const duration = await new Promise<number>((resolve) => {
-        video.onloadedmetadata = () => {
-          resolve(Math.floor(video.duration));
-        };
-        video.src = URL.createObjectURL(file);
+      const duration = await Promise.race([
+        new Promise<number>((resolve, reject) => {
+          video.onloadedmetadata = () => {
+            if (isNaN(video.duration) || video.duration === 0) {
+              reject(new Error('Invalid video duration'));
+            } else {
+              resolve(Math.floor(video.duration));
+            }
+          };
+          video.onerror = () => reject(new Error('Failed to load video metadata'));
+          video.src = URL.createObjectURL(file);
+        }),
+        new Promise<number>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout loading video metadata')), 10000)
+        )
+      ]).finally(() => {
+        URL.revokeObjectURL(video.src);
       });
+
+      console.log('Video duration:', duration, 'seconds');
 
       // 1. Upload Video to Supabase Storage
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
       
+      console.log('Uploading to Supabase Storage:', fileName);
       const { error: uploadError } = await supabase.storage
         .from('recordings')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      console.log('Upload successful, creating database record...');
 
       // 2. Use Hook to Insert Metadata (Automatic Cache Invalidation)
       const recordingData = await createRecording({
@@ -166,8 +209,11 @@ const Record = () => {
         title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
       });
 
+      console.log('Database record created:', recordingData.id);
+
       // 3. Trigger Backend AI Processing
       try {
+        console.log('Triggering backend processing...');
         const response = await fetch('http://localhost:3001/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -178,11 +224,23 @@ const Record = () => {
         });
 
         if (!response.ok) {
-          console.error('Backend processing trigger failed:', await response.text());
+          const errorText = await response.text();
+          console.error('Backend processing trigger failed:', errorText);
+          toast({
+            title: "Processing Warning",
+            description: "Upload succeeded but AI analysis may not start. Check backend logs.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Backend processing triggered successfully');
         }
       } catch (processingError) {
         console.error('Failed to trigger backend processing:', processingError);
-        // Don't throw - upload was successful, processing can be retried
+        toast({
+          title: "Backend Unavailable",
+          description: "Upload succeeded but backend is not running. Start backend to process video.",
+          variant: "destructive",
+        });
       }
 
       toast({
@@ -197,11 +255,13 @@ const Record = () => {
 
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your video. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+      // Don't navigate on error - stay on page
     } finally {
       setIsUploading(false);
     }

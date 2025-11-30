@@ -152,10 +152,14 @@ app.post('/process', async (req, res) => {
           const feedbackData = {
             recording_id: recording_id,
             overall_score: overallScore,
-            // strengths and areas_for_improvement moved to specific_feedback JSON
-            specific_feedback: {
-              strengths: ["Good effort"], // Placeholder
-              areas_for_improvement: ["Practice more"], // Placeholder
+            clarity_score: clarityScore,
+            pace_score: pacingScore,
+            tone_score: sentimentLabel === "Positive" ? 85 : 60, // Simple mapping
+            confidence_score: postureScore,
+            filler_words_count: results.filler_count,
+            strengths: ["Good effort", "Clear audio"], 
+            improvements: ["Practice pacing", "Reduce filler words"],
+            key_insights: {
               clarity: {
                 score: clarityScore,
                 wpm: wpm,
@@ -170,6 +174,13 @@ app.post('/process', async (req, res) => {
                 score: sentimentLabel,
                 confidence_level: "Medium"
               },
+              posture: {
+                score: results.posture_score * 100,
+                issues_detected: []
+              },
+              transcript: results.transcript
+            }
+          };
               posture: {
                 score: postureScore,
                 issues_detected: []

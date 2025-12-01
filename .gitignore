@@ -47,3 +47,8 @@ cypress/downloads
 *.sln
 *.sw?
 node_modules
+
+# Python Virtual Environment
+venv/
+backend/local-processor/venv/
+backend/local-processor/tmp/

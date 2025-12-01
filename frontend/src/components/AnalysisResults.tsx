@@ -273,12 +273,9 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
             </div>
           )}
         </ScoreCard>
-        </ScoreCard>
 
         {/* Structure Analysis Card */}
-        <div className="h-full">
-           <StructureAnalysis score={metrics.structure_score || 0} />
-        </div>
+        <StructureAnalysis score={metrics.structure_score || 0} />
       </div>
 
       {/* Pacing Graph Section */}

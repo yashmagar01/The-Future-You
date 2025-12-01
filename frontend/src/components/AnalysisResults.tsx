@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle, AlertCircle, Mic, Activity, User, FileText, Zap } from 'lucide-react';
 import PacingGraph from './PacingGraph';
 import StructureAnalysis from './StructureAnalysis';
+import MetricCard, { DetailItem } from './MetricCard';
 
 // --- Types based on the "Golden JSON" Schema ---
 
@@ -104,6 +105,14 @@ const getProgressColor = (score: number) => {
   return "bg-red-500";
 };
 
+// Helper to determine status for MetricCard
+const getMetricStatus = (score: number): 'excellent' | 'good' | 'average' | 'needs-work' => {
+  if (score >= 80) return 'excellent';
+  if (score >= 70) return 'good';
+  if (score >= 60) return 'average';
+  return 'needs-work';
+};
+
 // --- Components ---
 
 const ScoreCard = ({ title, score, icon: Icon, children }: { title: string, score: number, icon: any, children?: React.ReactNode }) => (
@@ -190,89 +199,96 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Clarity Card */}
-        <ScoreCard title="Clarity" score={metrics.clarity.score} icon={Mic}>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span>Speaking Rate</span>
-              <span className="font-medium text-gray-900">{metrics.clarity.wpm} WPM</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>Filler Words</span>
-              <span className={`font-medium ${metrics.clarity.filler_word_count > 5 ? 'text-red-500' : 'text-green-600'}`}>
-                {metrics.clarity.filler_word_count}
-              </span>
-            </div>
-            {metrics.clarity.filler_words_detected && metrics.clarity.filler_words_detected.length > 0 && (
-              <div className="text-xs text-gray-400 mt-1">
-                Detected: {metrics.clarity.filler_words_detected.join(", ")}
+        <MetricCard
+          icon={<Mic size={24} />}
+          title="Clarity"
+          score={metrics.clarity.score}
+          status={getMetricStatus(metrics.clarity.score)}
+          details={[
+            {
+              label: "Speaking Rate",
+              value: metrics.clarity.wpm,
+              unit: "WPM",
+              tooltip: "Optimal speaking rate is 110-150 words per minute. This ensures your message is clear and easy to follow.",
+              good: metrics.clarity.wpm >= 110 && metrics.clarity.wpm <= 150
+            },
+            {
+              label: "Filler Words",
+              value: metrics.clarity.filler_word_count,
+              tooltip: "Words like 'um', 'uh', 'like' that don't add meaning. Aim for less than 5 per session.",
+              good: metrics.clarity.filler_word_count < 5
+            }
+          ]}
+          expandedContent={
+            metrics.clarity.filler_words_detected && metrics.clarity.filler_words_detected.length > 0 ? (
+              <div className="text-sm text-gray-600 space-y-2">
+                <h4 className="font-semibold text-gray-800">Filler Words Detected:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {metrics.clarity.filler_words_detected.map((word, idx) => (
+                    <span key={idx} className="px-2 py-1 bg-red-50 text-red-600 rounded-md text-xs font-medium">
+                      {word}
+                    </span>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
-        </ScoreCard>
+            ) : undefined
+          }
+        />
 
         {/* Pacing Card */}
-        <ScoreCard title="Pacing" score={metrics.pacing?.score || 0} icon={Activity}>
-          <p className="italic text-gray-600 mb-3">
-            "{metrics.pacing?.feedback || "No pacing data available."}"
-          </p>
-          
-          {/* WPM Range Visualization */}
-          {metrics.pacing?.words_per_minute !== undefined && (
-            <div className="mt-4 space-y-2">
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>WPM: <strong className="text-gray-900">{metrics.pacing.words_per_minute}</strong></span>
-                <span className={`font-medium ${
-                  metrics.pacing.words_per_minute < 110 ? 'text-orange-600' :
-                  metrics.pacing.words_per_minute <= 150 ? 'text-green-600' : 
-                  'text-red-600'
-                }`}>
-                  {metrics.pacing.words_per_minute < 110 ? 'Too Slow' :
-                   metrics.pacing.words_per_minute <= 150 ? 'Optimal' : 
-                   'Too Fast'}
-                </span>
-              </div>
-              
-              {/* Range Slider */}
-              <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                {/* Optimal zone (110-150 WPM) */}
-                <div className="absolute left-[27.5%] w-[45%] h-full bg-green-200"></div>
-                
-                {/* Current position marker */}
-                <div 
-                  className="absolute top-0 w-1 h-full bg-blue-600 transition-all"
-                  style={{ 
-                    left: `${Math.min(100, Math.max(0, (metrics.pacing.words_per_minute / 200) * 100))}%` 
-                  }}
-                ></div>
-              </div>
-              
-              <div className="flex justify-between text-[10px] text-gray-400">
-                <span>0</span>
-                <span className="text-green-600">110-150</span>
-                <span>200+</span>
-              </div>
-            </div>
-          )}
-        </ScoreCard>
+        <MetricCard
+          icon={<Activity size={24} />}
+          title="Pacing"
+          score={metrics.pacing?.score || 0}
+          status={getMetricStatus(metrics.pacing?.score || 0)}
+          details={[
+            {
+              label: "Overall Pacing",
+              value: metrics.pacing?.feedback || "No data",
+              tooltip: "How well you maintained speaking rhythm throughout your session."
+            },
+            ...(metrics.pacing?.words_per_minute ? [{
+              label: "Average WPM",
+              value: metrics.pacing.words_per_minute,
+              unit: "WPM",
+              tooltip: "Your average words per minute. Optimal range is 110-150 WPM.",
+              good: metrics.pacing.words_per_minute >= 110 && metrics.pacing.words_per_minute <= 150
+            }] as DetailItem[] : [])
+          ]}
+        />
 
         {/* Posture Card */}
-        <ScoreCard title="Posture" score={metrics.posture?.score || 0} icon={User}>
-          {metrics.posture?.issues_detected && metrics.posture.issues_detected.length > 0 ? (
-            <ul className="space-y-1">
-              {metrics.posture.issues_detected.map((issue, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-xs text-red-500">
-                  <AlertCircle size={12} className="mt-0.5 shrink-0" />
-                  {issue}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle size={16} />
-              <span>Great posture maintained!</span>
-            </div>
-          )}
-        </ScoreCard>
+        <MetricCard
+          icon={<User size={24} />}
+          title="Posture"
+          score={metrics.posture?.score || 0}
+          status={getMetricStatus(metrics.posture?.score || 0)}
+          details={[
+            {
+              label: "Posture Quality",
+              value: metrics.posture?.issues_detected && metrics.posture.issues_detected.length > 0 
+                ? `${metrics.posture.issues_detected.length} issue${metrics.posture.issues_detected.length > 1 ? 's' : ''}` 
+                : "Great!",
+              tooltip: "Body language and camera presence during your session.",
+              good: !metrics.posture?.issues_detected || metrics.posture.issues_detected.length === 0
+            }
+          ]}
+          expandedContent={
+            metrics.posture?.issues_detected && metrics.posture.issues_detected.length > 0 ? (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-gray-800">Issues Detected:</h4>
+                <ul className="space-y-1">
+                  {metrics.posture.issues_detected.map((issue, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                      <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+                      {issue}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : undefined
+          }
+        />
 
         {/* Structure Analysis Card */}
         <StructureAnalysis score={metrics.structure_score || 0} />

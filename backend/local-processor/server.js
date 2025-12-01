@@ -8,6 +8,18 @@ const {spawn } = require('child_process');
 const cors = require('cors');
 require('dotenv').config();
 
+// Singleton for Transformers.js pipeline
+let sentimentPipeline;
+async function getSentimentModel() {
+  if (!sentimentPipeline) {
+    console.log("Loading Sentiment Model (Xenova/distilbert-base-uncased-finetuned-sst-2-english)...");
+    const { pipeline } = await import('@xenova/transformers');
+    sentimentPipeline = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
+    console.log("Sentiment Model Loaded.");
+  }
+  return sentimentPipeline;
+}
+
 const app = express();
 const port = 3001;
 
@@ -151,20 +163,107 @@ app.post('/process', async (req, res) => {
           
           console.log(`WPM Calculation: ${allWords} total words - ${fillerCount} fillers = ${effectiveWords} effective words / ${(duration/60).toFixed(2)} min = ${wpm} WPM`);
           
-          const clarityScore = Math.max(0, 100 - (results.filler_count * 5)); // Penalize 5 points per filler
-          const pacingScore = (wpm > 120 && wpm < 160) ? 100 : 80; // Simple logic
-          const sentimentLabel = results.sentiment_score > 0 ? "Positive" : "Neutral";
-          const postureScore = Math.round(results.posture_score * 100);
+          // --- SCORING ALGORITHMS (The Mathematics of Believability) ---
+
+          // 1. FLUENCY: Exponential Decay
+          // Formula: Score = 100 * e^(-0.15 * max(0, DFM - 1))
+          // DFM = Filler Count / Duration in Minutes
+          const durationMin = Math.max(duration / 60, 0.01); // Avoid div by zero
+          const dfm = results.filler_count / durationMin;
+          const fluencyScore = Math.round(100 * Math.exp(-0.15 * Math.max(0, dfm - 1)));
+
+          // 2. PACING: Gaussian Distribution
+          // Formula: Score = 100 * e^(-(wpm - 140)^2 / (2 * 30^2))
+          // Center = 140, Sigma = 30
+          const pacingScore = Math.round(100 * Math.exp(-Math.pow(wpm - 140, 2) / (2 * Math.pow(30, 2))));
           
-          const overallScore = Math.round((clarityScore + pacingScore + postureScore) / 3);
+          // Combined Clarity Score (Fluency + Pacing)
+          const clarityScore = Math.round((fluencyScore + pacingScore) / 2);
+
+          // 3. CONFIDENCE: Vector Geometry (Posture)
+          // We have posture_score (visibility), average_shoulder_slope, average_centering_offset
+          // Base confidence on visibility (max 50 pts) + alignment (max 25 pts) + centering (max 25 pts)
+          
+          // Visibility Score (0 to 1 from worker)
+          const visibilityComponent = results.posture_score * 50;
+
+          // Alignment Score (Slope)
+          // Slope 0 is perfect. Slope 0.2 is bad.
+          // Score = 25 * (1 - (slope / 0.2)). Clamp at 0.
+          const slope = results.average_shoulder_slope || 0;
+          const alignmentComponent = Math.max(0, 25 * (1 - (slope / 0.2)));
+
+          // Centering Score (Offset)
+          // Offset 0 is perfect. Offset 0.3 is bad (edge of frame).
+          // Score = 25 * (1 - (offset / 0.3)). Clamp at 0.
+          const offset = results.average_centering_offset || 0;
+          const centeringComponent = Math.max(0, 25 * (1 - (offset / 0.3)));
+
+          const confidenceScore = Math.round(visibilityComponent + alignmentComponent + centeringComponent);
+
+          // 4. TONE: Sentiment Analysis (Transformers.js)
+          let toneScore = 60; // Default Neutral
+          let sentimentLabel = "Neutral";
+          let sentimentConfidence = 0;
+
+          try {
+            if (results.transcript && results.transcript.trim().length > 0) {
+                const classifier = await getSentimentModel();
+                // Truncate transcript if too long for the model (approx 512 tokens, safe bet 1500 chars)
+                const textToAnalyze = results.transcript.substring(0, 1500); 
+                const output = await classifier(textToAnalyze);
+                // Output format: [{ label: 'POSITIVE', score: 0.99 }]
+                
+                if (output && output.length > 0) {
+                    const result = output[0];
+                    sentimentLabel = result.label; // 'POSITIVE' or 'NEGATIVE'
+                    sentimentConfidence = result.score;
+
+                    // Heuristic:
+                    // If POSITIVE: Tone = 70 + (score * 30)
+                    // If NEGATIVE: Tone = 40 + (score * 30)
+                    if (sentimentLabel === 'POSITIVE') {
+                        toneScore = Math.round(70 + (sentimentConfidence * 30));
+                    } else {
+                        toneScore = Math.round(40 + (sentimentConfidence * 30));
+                    }
+
+                    // Nuance: If confidence < 0.6, pull towards 60
+                    if (sentimentConfidence < 0.6) {
+                        toneScore = Math.round((toneScore + 60) / 2);
+                        sentimentLabel = "Neutral"; // Override label if low confidence
+                    }
+                }
+            }
+          } catch (sentimentError) {
+            console.error("Sentiment Analysis Failed:", sentimentError);
+            // Fallback to neutral
+          }
+
+          // 5. ENERGY: Volume/RMS
+          // Normalize RMS (0-32768 typically for 16-bit). 
+          // Let's assume a healthy speaking volume is around 1000-8000 RMS.
+          // We'll map 0-5000 to 0-100 linearly for now, clamping at 100.
+          const rms = results.average_rms || 0;
+          const energyScore = Math.min(100, Math.round((rms / 2000) * 100)); // Adjusted target to 2000 for better sensitivity
+
+          // OVERALL SCORE
+          // Weighted Matrix: Clarity (35%), Confidence (25%), Tone (20%), Energy (20%)
+          const overallScore = Math.round(
+            (clarityScore * 0.35) + 
+            (confidenceScore * 0.25) + 
+            (toneScore * 0.20) + 
+            (energyScore * 0.20)
+          );
 
           const feedbackData = {
             recording_id: recording_id,
             overall_score: overallScore,
             clarity_score: clarityScore,
             pace_score: pacingScore,
-            tone_score: sentimentLabel === "Positive" ? 85 : 60, // Simple mapping
-            confidence_score: postureScore,
+            tone_score: toneScore,
+            confidence_score: confidenceScore,
+            energy_score: energyScore,
             filler_words_count: results.filler_count,
             strengths: ["Good effort", "Clear audio"], 
             improvements: ["Practice pacing", "Reduce filler words"],
@@ -185,8 +284,13 @@ app.post('/process', async (req, res) => {
                 confidence_level: "Medium"
               },
               posture: {
-                score: results.posture_score * 100,
-                issues_detected: []
+                score: confidenceScore,
+                issues_detected: [],
+                details: {
+                    alignment_score: Math.round(alignmentComponent),
+                    centering_score: Math.round(centeringComponent),
+                    visibility_score: Math.round(visibilityComponent)
+                }
               },
               transcript: results.transcript
             }

@@ -34,6 +34,11 @@ def analyze_audio(audio_path, model_path):
     rec = KaldiRecognizer(model, wf.getframerate())
     rec.SetWords(True)
 
+    # Calculate duration from audio
+    frames = wf.getnframes()
+    rate = wf.getframerate()
+    audio_duration = frames / float(rate)
+
     transcript = ""
     filler_count = 0
     fillers = {"um", "uh", "like", "you know", "sort of", "kind of", "actually", "basically"}
@@ -142,7 +147,8 @@ def analyze_audio(audio_path, model_path):
         "filler_count": filler_count,
         "sentiment_score": sentiment_score,
         "posture_score": posture_score,
-        "duration": duration if 'duration' in locals() else 0
+        "posture_score": posture_score,
+        "duration": audio_duration
     }
 
 def main():

@@ -140,7 +140,8 @@ app.post('/process', async (req, res) => {
           console.log('Analysis results:', results);
 
           // Calculate derived metrics
-          const duration = results.duration || 60; // Default to 60s if missing
+          const duration = results.duration || 1; // Default to 1s to avoid div by zero, but Python should provide accurate duration now
+          console.log(`Duration: ${duration}s`);
           const wpm = Math.round(results.transcript.split(' ').length / (duration / 60));
           const clarityScore = Math.max(0, 100 - (results.filler_count * 5)); // Penalize 5 points per filler
           const pacingScore = (wpm > 120 && wpm < 160) ? 100 : 80; // Simple logic

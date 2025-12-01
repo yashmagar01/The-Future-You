@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecording } from '@/hooks/useRecordings';
+import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/Layout';
 import AnalysisResults, { AnalysisData, AnalysisMetrics } from '@/components/AnalysisResults';
 import { Button } from '@/components/ui/button';
@@ -125,13 +126,41 @@ const Analysis = () => {
               )}
             </div>
 
-            {/* Analysis Component */}
-            <AnalysisResults analysis={analysisData} />
+            {/* Video Player + Analysis Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Video Player - Sticky on larger screens */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-8">
+                  <Card>
+                    <CardContent className="p-0">
+                      {recording?.video_url && (
+                        <video 
+                          controls 
+                          className="w-full rounded-lg"
+                          preload="metadata"
+                        >
+                          <source 
+                            src={supabase.storage.from('recordings').getPublicUrl(recording.video_url).data.publicUrl} 
+                            type="video/mp4" 
+                          />
+                          Your browser does not support the video tag.
+                        </video>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Analysis Results */}
+              <div className="lg:col-span-2">
+                <AnalysisResults analysis={analysisData} />
+              </div>
+            </div>
 
             {/* Action Buttons */}
             <div className="flex gap-4 justify-center pt-8">
               <Button variant="outline" onClick={() => navigate('/gallery')}>
-                View All Recordings
+                Back to Gallery
               </Button>
               <Button onClick={() => navigate('/record')}>
                 <Upload className="h-4 w-4 mr-2" />

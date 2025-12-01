@@ -246,17 +246,19 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
           </div>
         </div>
 
-        {/* Transcript Summary */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-gray-100">
+        {/* Transcript */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
               <FileText size={20} />
             </div>
-            <h3 className="font-semibold text-gray-700">Summary</h3>
+            <h3 className="font-semibold text-gray-700">Transcript</h3>
           </div>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            {transcript_summary || "No summary available for this session."}
-          </p>
+          <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+              {transcript_summary || "No transcript available for this session."}
+            </p>
+          </div>
         </div>
 
       </div>

@@ -222,9 +222,9 @@ const Gallery = () => {
                     {recording.title || "Untitled Recording"}
                   </h3>
 
-                  {recording.status === 'completed' && recording.feedback && recording.feedback.areas_for_improvement && recording.feedback.areas_for_improvement.length > 0 ? (
+                  {recording.status === 'completed' && recording.feedback && recording.feedback.improvements && recording.feedback.improvements.length > 0 ? (
                     <div className="space-y-1.5 mb-4">
-                      {recording.feedback.areas_for_improvement.slice(0, 2).map((improvement, i) => (
+                      {recording.feedback.improvements.slice(0, 2).map((improvement, i) => (
                         <div 
                           key={i} 
                           className="text-xs text-muted-foreground flex items-start gap-2"

@@ -142,7 +142,15 @@ app.post('/process', async (req, res) => {
           // Calculate derived metrics
           const duration = results.duration || 1; // Default to 1s to avoid div by zero, but Python should provide accurate duration now
           console.log(`Duration: ${duration}s`);
-          const wpm = Math.round(results.transcript.split(' ').length / (duration / 60));
+          
+          // Calculate WPM excluding filler words for accuracy
+          const allWords = results.transcript.split(' ').filter(w => w.trim().length > 0).length;
+          const fillerCount = results.filler_count || 0;
+          const effectiveWords = Math.max(1, allWords - fillerCount);
+          const wpm = Math.round(effectiveWords / (duration / 60));
+          
+          console.log(`WPM Calculation: ${allWords} total words - ${fillerCount} fillers = ${effectiveWords} effective words / ${(duration/60).toFixed(2)} min = ${wpm} WPM`);
+          
           const clarityScore = Math.max(0, 100 - (results.filler_count * 5)); // Penalize 5 points per filler
           const pacingScore = (wpm > 120 && wpm < 160) ? 100 : 80; // Simple logic
           const sentimentLabel = results.sentiment_score > 0 ? "Positive" : "Neutral";
@@ -169,7 +177,8 @@ app.post('/process', async (req, res) => {
               },
               pacing: {
                 score: pacingScore,
-                feedback: wpm < 120 ? "Try to speak a bit faster." : (wpm > 160 ? "Slow down a bit." : "Perfect pace.")
+                feedback: wpm < 120 ? "Try to speak a bit faster." : (wpm > 160 ? "Slow down a bit." : "Perfect pace."),
+                words_per_minute: wpm
               },
               sentiment: {
                 score: sentimentLabel,

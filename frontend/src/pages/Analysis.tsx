@@ -132,20 +132,39 @@ const Analysis = () => {
               <div className="lg:col-span-1">
                 <div className="sticky top-8">
                   <Card>
-                    <CardContent className="p-0">
-                      {recording?.video_url && (
-                        <video 
-                          controls 
-                          className="w-full rounded-lg"
-                          preload="metadata"
-                        >
-                          <source 
-                            src={supabase.storage.from('recordings').getPublicUrl(recording.video_url).data.publicUrl} 
-                            type="video/mp4" 
-                          />
-                          Your browser does not support the video tag.
-                        </video>
-                      )}
+                    <CardContent className="p-4">
+                      {(() => {
+                        // Debug logging
+                        const videoUrl = recording?.video_url;
+                        const publicUrl = videoUrl 
+                          ? supabase.storage.from('recordings').getPublicUrl(videoUrl).data.publicUrl 
+                          : null;
+                        
+                        console.log('🎥 Video Debug:', { videoUrl, publicUrl, recording });
+
+                        if (!videoUrl) {
+                          return (
+                            <div className="bg-red-50 border border-red-200 p-8 text-center rounded-lg">
+                              <p className="text-red-600 font-medium">Video Unavailable</p>
+                              <p className="text-xs text-red-500 mt-2">No video URL found in recording data</p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <video 
+                            controls 
+                            className="w-full rounded-lg"
+                            preload="metadata"
+                            onError={(e) => console.error('Video load error:', e)}
+                            onLoadedMetadata={() => console.log('✅ Video loaded successfully')}
+                          >
+                            <source src={publicUrl || ''} type="video/mp4" />
+                            <source src={publicUrl || ''} type="video/webm" />
+                            Your browser does not support the video tag.
+                          </video>
+                        );
+                      })()}
                     </CardContent>
                   </Card>
                 </div>

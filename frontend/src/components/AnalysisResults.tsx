@@ -13,6 +13,7 @@ interface ClarityMetrics {
 interface PacingMetrics {
   score: number;
   feedback: string;
+  words_per_minute?: number;
 }
 
 interface SentimentMetrics {
@@ -198,9 +199,47 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
 
         {/* Pacing Card */}
         <ScoreCard title="Pacing" score={metrics.pacing?.score || 0} icon={Activity}>
-          <p className="italic text-gray-600">
+          <p className="italic text-gray-600 mb-3">
             "{metrics.pacing?.feedback || "No pacing data available."}"
           </p>
+          
+          {/* WPM Range Visualization */}
+          {metrics.pacing?.words_per_minute !== undefined && (
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>WPM: <strong className="text-gray-900">{metrics.pacing.words_per_minute}</strong></span>
+                <span className={`font-medium ${
+                  metrics.pacing.words_per_minute < 110 ? 'text-orange-600' :
+                  metrics.pacing.words_per_minute <= 150 ? 'text-green-600' : 
+                  'text-red-600'
+                }`}>
+                  {metrics.pacing.words_per_minute < 110 ? 'Too Slow' :
+                   metrics.pacing.words_per_minute <= 150 ? 'Optimal' : 
+                   'Too Fast'}
+                </span>
+              </div>
+              
+              {/* Range Slider */}
+              <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                {/* Optimal zone (110-150 WPM) */}
+                <div className="absolute left-[27.5%] w-[45%] h-full bg-green-200"></div>
+                
+                {/* Current position marker */}
+                <div 
+                  className="absolute top-0 w-1 h-full bg-blue-600 transition-all"
+                  style={{ 
+                    left: `${Math.min(100, Math.max(0, (metrics.pacing.words_per_minute / 200) * 100))}%` 
+                  }}
+                ></div>
+              </div>
+              
+              <div className="flex justify-between text-[10px] text-gray-400">
+                <span>0</span>
+                <span className="text-green-600">110-150</span>
+                <span>200+</span>
+              </div>
+            </div>
+          )}
         </ScoreCard>
 
         {/* Posture Card */}
@@ -255,7 +294,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
             <h3 className="font-semibold text-gray-700">Transcript</h3>
           </div>
           <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+            <p className="text-gray-700 text-sm leading-loose whitespace-pre-wrap capitalize">
               {transcript_summary || "No transcript available for this session."}
             </p>
           </div>

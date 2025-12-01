@@ -271,6 +271,19 @@ const Record = () => {
 
       console.log('Video duration:', duration, 'seconds');
 
+      // Validate file size (Supabase free tier limit is 50MB)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(
+          `Video file is too large (${fileSizeMB} MB). Maximum allowed size is 50 MB. ` +
+          `Please compress your video or record a shorter clip.`
+        );
+      }
+      
+      console.log(`File size: ${fileSizeMB} MB (within 50 MB limit)`);
+
       // 1. Upload Video to Supabase Storage
       // Sanitize filename to remove special characters that might cause InvalidKey errors
       const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');

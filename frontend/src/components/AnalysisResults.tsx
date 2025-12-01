@@ -1,8 +1,9 @@
-import React from 'react';
-import { CheckCircle, AlertCircle, Mic, Activity, User, FileText, Zap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CheckCircle, AlertCircle, Mic, Activity, User, FileText, Zap, TrendingUp, TrendingDown } from 'lucide-react';
 import PacingGraph from './PacingGraph';
 import StructureAnalysis from './StructureAnalysis';
 import MetricCard, { DetailItem } from './MetricCard';
+import confetti from 'canvas-confetti';
 
 // --- Types based on the "Golden JSON" Schema ---
 
@@ -143,52 +144,145 @@ const ScoreCard = ({ title, score, icon: Icon, children }: { title: string, scor
 
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS }) => {
   const { overall_score, metrics, transcript_summary } = analysis;
+  const [displayScore, setDisplayScore] = useState(0);
+  const confettiTriggered = useRef(false);
+
+  // Animate score counter
+  useEffect(() => {
+    const duration = 2000;
+    const steps = 60;
+    const increment = overall_score / steps;
+    
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= overall_score) {
+        setDisplayScore(overall_score);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.floor(current));
+      }
+    }, duration / steps);
+    
+    return () => clearInterval(timer);
+  }, [overall_score]);
+
+  // Trigger confetti for high scores
+  useEffect(() => {
+    if (overall_score >= 80 && !confettiTriggered.current) {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#8b5cf6'],
+        ticks: 300,
+      });
+      confettiTriggered.current = true;
+    }
+  }, [overall_score]);
+
+  // Helper to get gradient colors based on score
+  const getGradientColors = (score: number) => {
+    if (score >= 80) return { start: '#10b981', end: '#059669' }; // Green
+    if (score >= 60) return { start: '#3b82f6', end: '#2563eb' }; // Blue
+    if (score >= 40) return { start: '#f59e0b', end: '#d97706' }; // Amber
+    return { start: '#ef4444', end: '#dc2626' }; // Red
+  };
+
+  const gradientColors = getGradientColors(overall_score);
 
   return (
     <div className="w-full max-w-5xl mx-auto p-6 space-y-8">
       
       {/* Header Section with Overall Score */}
-      <div className="relative overflow-hidden bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-50 rounded-full -ml-16 -mb-16 opacity-50 blur-3xl"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-2xl shadow-xl border border-gray-100 p-8">
+        {/* Background Blobs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full -mr-24 -mt-24 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-green-400/10 to-blue-400/10 rounded-full -ml-24 -mb-24 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="text-center md:text-left space-y-2">
-            <h2 className="text-3xl font-bold text-gray-800">Analysis Results</h2>
-            <p className="text-gray-500">Here's how you performed in your latest session.</p>
+          <div className="text-center md:text-left space-y-3 flex-1">
+            <div className="relative inline-block">
+              <h2 className="text-4xl font-bold text-gray-800 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                Analysis Results
+              </h2>
+              {/* Animated Underline */}
+              <div className="mt-2 h-1 bg-gradient-to-r from-teal-500 to-blue-500 rounded-full animate-in slide-in-from-left duration-1000" 
+                   style={{ animationDelay: '300ms' }}>
+              </div>
+            </div>
+            <p className="text-gray-600 text-lg animate-in fade-in slide-in-from-bottom-2 duration-500" 
+               style={{ animationDelay: '200ms' }}>
+              Here's how you performed in your latest session.
+            </p>
+            
+            {/* Session Comparison (mock data for now) */}
+            <div className="flex items-center gap-2 text-sm animate-in fade-in duration-500" 
+                 style={{ animationDelay: '400ms' }}>
+              <TrendingUp className="w-4 h-4 text-green-500" />
+              <span className="text-green-600 font-semibold">+6 points</span>
+              <span className="text-gray-400">vs last session</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="relative flex items-center justify-center w-32 h-32">
-              {/* Circular Progress Background */}
+          {/* Animated Circular Progress */}
+          <div className="flex items-center gap-6 animate-in zoom-in fade-in duration-700" 
+               style={{ animationDelay: '600ms' }}>
+            <div className="relative flex items-center justify-center w-40 h-40">
+              {/* SVG Circle */}
               <svg className="w-full h-full transform -rotate-90">
+                <defs>
+                  <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={gradientColors.start} />
+                    <stop offset="100%" stopColor={gradientColors.end} />
+                  </linearGradient>
+                  {overall_score >= 80 && (
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  )}
+                </defs>
+                
+                {/* Background circle */}
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
+                  cx="80"
+                  cy="80"
+                  r="70"
                   stroke="currentColor"
-                  strokeWidth="8"
+                  strokeWidth="10"
                   fill="transparent"
                   className="text-gray-100"
                 />
+                
+                {/* Progress circle */}
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
-                  stroke="currentColor"
-                  strokeWidth="8"
+                  cx="80"
+                  cy="80"
+                  r="70"
+                  stroke="url(#scoreGradient)"
+                  strokeWidth="10"
                   fill="transparent"
-                  strokeDasharray={351.86}
-                  strokeDashoffset={351.86 - (351.86 * overall_score) / 100}
-                  className={`${getScoreColor(overall_score)} transition-all duration-1000 ease-out`}
+                  strokeDasharray={439.6}
+                  strokeDashoffset={439.6 - (439.6 * displayScore) / 100}
                   strokeLinecap="round"
+                  className="transition-all duration-2000 ease-out"
+                  filter={overall_score >= 80 ? 'url(#glow)' : undefined}
+                  style={{
+                    filter: overall_score >= 80 ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))' : undefined
+                  }}
                 />
               </svg>
+              
+              {/* Center Score Display */}
               <div className="absolute flex flex-col items-center">
-                <span className={`text-4xl font-bold ${getScoreColor(overall_score)}`}>
-                  {overall_score}
+                <span className="text-5xl font-bold" style={{ color: gradientColors.start }}>
+                  {displayScore}
                 </span>
-                <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Overall</span>
+                <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold mt-1">Overall</span>
               </div>
             </div>
           </div>

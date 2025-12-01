@@ -107,8 +107,11 @@ export default function AdminPanel() {
       } else {
         // Fallback: Use profiles without emails
         usersWithEmails = (profiles || []).map(p => ({
-          ...p,
+          id: p.id,
+          full_name: p.full_name,
           email: null, // Email not available without admin function
+          role: p.role as any,
+          created_at: p.created_at,
         }));
       }
 
@@ -123,7 +126,13 @@ export default function AdminPanel() {
           .select("id, full_name, role, created_at")
           .order("created_at", { ascending: false });
         
-        setUsers((profiles || []).map(p => ({ ...p, email: null })));
+        setUsers((profiles || []).map(p => ({
+        id: p.id,
+        full_name: p.full_name,
+        email: null,
+        role: p.role as any,
+        created_at: p.created_at,
+      })));
       } catch (fallbackError) {
         console.error("Fallback fetch failed:", fallbackError);
       }

@@ -5,7 +5,11 @@ import subprocess
 import wave
 import math
 import numpy as np
-from vosk import Model, KaldiRecognizer
+import re
+from faster_whisper import WhisperModel
+
+# Removed Vosk imports
+# from vosk import Model, KaldiRecognizer
 
 def extract_audio(video_path, audio_path):
     """Extracts audio from video using ffmpeg."""
@@ -20,98 +24,134 @@ def extract_audio(video_path, audio_path):
     ]
     subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-def analyze_audio(audio_path, model_path):
-    """Transcribes audio and counts filler words."""
-    if not os.path.exists(model_path):
-        print(json.dumps({"error": f"Model not found at {model_path}"}))
+def analyze_audio(audio_path, model_path_unused):
+    """Transcribes audio using faster-whisper and performs analysis."""
+    
+    # 1. Run Whisper (faster-whisper)
+    # We use the 'base.en' model which is a good balance of speed and accuracy
+    # It will download automatically if not present
+    
+    try:
+        # Run on CPU with INT8 quantization for compatibility
+        model = WhisperModel("base.en", device="cpu", compute_type="int8")
+        
+        prompt_text = "Umm, uh, like, I mean, sort of, you know..."
+        
+        segments, info = model.transcribe(
+            audio_path, 
+            beam_size=5, 
+            initial_prompt=prompt_text,
+            word_timestamps=True
+        )
+        
+        # Collect results
+        full_transcript = ""
+        all_words = []
+        
+        for segment in segments:
+            full_transcript += segment.text + " "
+            for word in segment.words:
+                all_words.append({
+                    "word": word.word.strip(),
+                    "start": word.start,
+                    "end": word.end
+                })
+                
+        transcript = full_transcript.strip()
+        
+    except Exception as e:
+        print(json.dumps({"error": f"Whisper transcription failed: {e}"}))
         sys.exit(1)
 
-    model = Model(model_path)
+    # 3. Signal Processing (RMS) & Timeline Generation
     wf = wave.open(audio_path, "rb")
-    
     if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
         print(json.dumps({"error": "Audio file must be WAV format mono PCM."}))
         sys.exit(1)
-
-    rec = KaldiRecognizer(model, wf.getframerate())
-    rec.SetWords(True)
-
-    # Calculate duration from audio
+        
     frames = wf.getnframes()
     rate = wf.getframerate()
     audio_duration = frames / float(rate)
+    
+    rms_values = []
+    timeline = []
+    
+    chunk_size = 4000
+    bytes_per_second = wf.getframerate() * wf.getsampwidth()
+    chunk_duration = chunk_size / bytes_per_second
+    current_time = 0.0
+    
+    while True:
+        data = wf.readframes(chunk_size)
+        if len(data) == 0:
+            break
+            
+        chunk_rms = 0
+        try:
+            samples = np.frombuffer(data, dtype=np.int16)
+            if len(samples) > 0:
+                chunk_rms = np.sqrt(np.mean(samples.astype(np.float64)**2))
+                rms_values.append(chunk_rms)
+        except Exception:
+            pass
+            
+        timeline.append({
+            "time": current_time,
+            "rms": float(chunk_rms)
+        })
+        current_time += chunk_duration
+        
+    wf.close()
+    
+    avg_rms = sum(rms_values) / len(rms_values) if rms_values else 0
 
-    transcript = ""
+    # 4. Filler & Stutter Analysis
     filler_count = 0
     fillers = {"um", "uh", "like", "you know", "sort of", "kind of", "actually", "basically"}
     
-    rms_values = []
-
-    while True:
-        data = wf.readframes(4000)
-        if len(data) == 0:
-            break
-        
-        # Calculate RMS for energy analysis
-        try:
-            # Convert bytes to numpy array of int16
-            samples = np.frombuffer(data, dtype=np.int16)
-            # Calculate RMS: sqrt(mean(samples^2))
-            if len(samples) > 0:
-                rms = np.sqrt(np.mean(samples.astype(np.float64)**2))
-                rms_values.append(rms)
-        except Exception:
-            pass
-
-        if rec.AcceptWaveform(data):
-            # part_result = json.loads(rec.Result())
-            # transcript += part_result.get("text", "") + " "
-            pass
-        else:
-            # part_result = json.loads(rec.PartialResult())
-            pass
-            
-    wf.close()  # Close file handle to release lock
-
-    # Calculate average energy (RMS)
-    avg_rms = 0
-    if rms_values:
-        avg_rms = sum(rms_values) / len(rms_values)
-
-    final_result = json.loads(rec.FinalResult())
-    transcript = final_result.get("text", "")
-    
-    # Simple filler count
-    words = transcript.split()
-    for word in words:
-        if word.lower() in fillers:
+    words_list = transcript.split()
+    for word in words_list:
+        # Clean punctuation
+        clean_word = re.sub(r'[^\w\s]', '', word).lower()
+        if clean_word in fillers:
             filler_count += 1
             
-    # Posture analysis
-    posture_score = 0.5 # Default
-    eye_contact_score = 0.5 # Default
-    centering_score = 0.5 # Default
+    stutter_count = 0
+    try:
+        stutters = re.findall(r"\b(\w+)( \1\b)+", transcript, re.IGNORECASE)
+        stutter_count = len(stutters)
+    except Exception:
+        pass
+
+    # 5. Posture Analysis
+    posture_score = 0.5
+    avg_slope = 0.1
+    avg_offset = 0.1
+    avg_posture_ratio = 0.2
+    
+    # Video path is derived from audio path (assuming .wav -> .mp4)
+    video_path = audio_path.replace('.wav', '.mp4')
     
     try:
         import cv2
         import mediapipe as mp
         
-        print("Running posture analysis with MediaPipe...", file=sys.stderr)
-        
         mp_pose = mp.solutions.pose
         pose = mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5)
         
         cap = cv2.VideoCapture(video_path)
+        
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-        duration = frame_count / fps if fps > 0 else 0
+        vid_duration = frame_count / fps if fps > 0 else 0
         
-        # Analyze 1 frame per second
         scores = []
         shoulder_slopes = []
         centering_offsets = []
-
-        for i in range(0, int(duration)):
+        posture_ratios = []
+        
+        # Analyze 1 frame per second
+        for i in range(0, int(vid_duration)):
             cap.set(cv2.CAP_PROP_POS_MSEC, i * 1000)
             ret, frame = cap.read()
             if not ret:
@@ -119,92 +159,144 @@ def analyze_audio(audio_path, model_path):
                 
             results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             
+            frame_posture = "Unknown"
+            frame_score = 0.0
+            
             if results.pose_landmarks:
                 landmarks = results.pose_landmarks.landmark
                 nose = landmarks[mp_pose.PoseLandmark.NOSE]
                 left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
                 right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER]
                 
-                # Check visibility of key points
                 if (nose.visibility > 0.5 and 
                     left_shoulder.visibility > 0.5 and 
                     right_shoulder.visibility > 0.5):
                     
-                    # --- NEW SPINE GEOMETRY LOGIC ---
                     shoulder_mid_x = (left_shoulder.x + right_shoulder.x) / 2
                     shoulder_mid_y = (left_shoulder.y + right_shoulder.y) / 2
-
-                    # Calculate vertical neck length (absolute distance)
+                    
+                    shoulder_width = math.sqrt((left_shoulder.x - right_shoulder.x)**2 + (left_shoulder.y - right_shoulder.y)**2)
                     neck_length = abs(nose.y - shoulder_mid_y)
-
-                    # Calculate shoulder tilt (absolute difference in height)
+                    
+                    if shoulder_width > 0:
+                        posture_ratio = neck_length / shoulder_width
+                    else:
+                        posture_ratio = 0
+                        
                     shoulder_tilt = abs(left_shoulder.y - right_shoulder.y)
-
-                    # Scoring Logic (Calibration: Neck > 0.15 is usually good, Tilt < 0.05 is level)
-                    frame_score = 0
-                    if neck_length > 0.15: 
-                        frame_score += 0.7
-                    else: 
-                        frame_score += 0.3 # Slouch penalty
-
-                    if shoulder_tilt < 0.05: 
-                        frame_score += 0.3 # Level shoulders bonus
                     
+                    # Scoring Heuristic Update (Normalized Vector Geometry)
+                    if posture_ratio > 0.50:
+                        frame_score = 1.0
+                        frame_posture = "Regal"
+                    elif posture_ratio >= 0.35:
+                        frame_score = 0.85
+                        frame_posture = "Good"
+                    else:
+                        frame_score = 0.40
+                        frame_posture = "Slouch"
+
+                    # Apply tilt penalty if shoulders are uneven
+                    if shoulder_tilt > 0.05:
+                        frame_score -= 0.1
+                    
+                    frame_score = max(0.0, min(1.0, frame_score))
+                        
                     scores.append(frame_score)
+                    shoulder_slopes.append(shoulder_tilt)
+                    posture_ratios.append(posture_ratio)
                     
-                    # Store metrics for averaging
-                    shoulder_slopes.append(shoulder_tilt) # Using tilt as slope metric
-                    
-                    # Calculate centering (nose x position relative to center 0.5)
                     offset = abs(nose.x - 0.5)
                     centering_offsets.append(offset)
-
                 else:
-                    scores.append(0.0) # Not fully visible
+                    # scores.append(0.0) # Filter out non-visible frames
+                    frame_posture = "Not Visible"
             else:
-                scores.append(0.0) # No pose detected
+                # scores.append(0.0) # Filter out no-detection frames
+                frame_posture = "No Detection"
                 
+            # Update timeline
+            start_time = i
+            end_time = i + 1
+            for entry in timeline:
+                if start_time <= entry["time"] < end_time:
+                    entry["posture"] = frame_posture
+                    
         cap.release()
-        if scores:
-            posture_score = sum(scores) / len(scores)
         
-        if shoulder_slopes:
-            # Lower slope is better. 0 is perfect. 
-            # Average slope.
-            avg_slope = sum(shoulder_slopes) / len(shoulder_slopes)
-            # Map slope to score. If slope > 0.2 (approx 11 degrees), score drops.
-            # Let's just return the raw metric for the server to handle or a normalized one.
-            # Let's return the raw average slope.
-            pass
-
-        if centering_offsets:
-            # Lower offset is better. 0 is perfect.
-            avg_offset = sum(centering_offsets) / len(centering_offsets)
-            pass
-            
-    except ImportError:
-        print("MediaPipe or OpenCV not found. Using stub posture score.", file=sys.stderr)
-        posture_score = 0.8
-        avg_slope = 0.05
-        avg_offset = 0.1
+        if scores: posture_score = sum(scores) / len(scores)
+        if shoulder_slopes: avg_slope = sum(shoulder_slopes) / len(shoulder_slopes)
+        if centering_offsets: avg_offset = sum(centering_offsets) / len(centering_offsets)
+        if posture_ratios: avg_posture_ratio = sum(posture_ratios) / len(posture_ratios)
+        
     except Exception as e:
-        print(f"Posture analysis failed: {e}", file=sys.stderr)
-        posture_score = 0.5
-        avg_slope = 0.1
-        avg_offset = 0.2
+        if "No module named" in str(e) or "mediapipe" in str(e).lower():
+            print(f"Posture analysis skipped (Dependency missing): {e}", file=sys.stderr)
+        else:
+            print(f"Posture analysis failed: {e}", file=sys.stderr)
 
-    # Ensure variables exist if try block failed or loops didn't run
-    if 'avg_slope' not in locals(): avg_slope = 0.1
-    if 'avg_offset' not in locals(): avg_offset = 0.1
+    # 6. WPM & Timeline Aggregation
+    bucket_size = 5.0
+    num_buckets = int(math.ceil(audio_duration / bucket_size)) if audio_duration > 0 else 1
+    wpm_buckets = [0] * num_buckets
+    
+    for w in all_words:
+        mid = (w['start'] + w['end']) / 2
+        b_idx = int(mid / bucket_size)
+        if b_idx < num_buckets:
+            wpm_buckets[b_idx] += 1
+            
+    wpm_series = [count * 12 for count in wpm_buckets]
+    
+    aggregated_timeline = []
+    current_bucket_start = 0.0
+    
+    SILENCE_THRESHOLD = 500  # Adjustable threshold for silence detection
+
+    while current_bucket_start < audio_duration:
+        bucket_end = current_bucket_start + bucket_size
+        bucket_entries = [e for e in timeline if current_bucket_start <= e["time"] < bucket_end]
+        
+        if bucket_entries:
+            avg_rms_bucket = sum(e["rms"] for e in bucket_entries) / len(bucket_entries)
+            postures = [e.get("posture", "Unknown") for e in bucket_entries]
+            most_common_posture = max(set(postures), key=postures.count) if postures else "Unknown"
+            
+            b_idx = int(current_bucket_start / bucket_size)
+            current_wpm = wpm_series[b_idx] if b_idx < len(wpm_series) else 0
+            
+            # --- SILENCE GATE ---
+            if avg_rms_bucket < SILENCE_THRESHOLD:
+                print(f"DEBUG: Muted window {int(current_bucket_start)}-{int(bucket_end)}s due to low RMS: {avg_rms_bucket}", file=sys.stderr)
+                current_wpm = 0
+                if b_idx < len(wpm_series):
+                    wpm_series[b_idx] = 0  # Update source for correct std_dev calculation
+            # --------------------
+
+            aggregated_timeline.append({
+                "time": f"{int(current_bucket_start)}-{int(bucket_end)}s",
+                "rms": avg_rms_bucket,
+                "posture": most_common_posture,
+                "wpm": current_wpm
+            })
+            
+        current_bucket_start += bucket_size
+
+    # Recalculate Std Dev with corrected values (Silence Gate applied)
+    wpm_std_dev = float(np.std(wpm_series)) if wpm_series else 0.0
 
     return {
         "transcript": transcript,
         "filler_count": filler_count,
+        "stutter_count": stutter_count,
         "posture_score": posture_score,
         "average_shoulder_slope": avg_slope,
         "average_centering_offset": avg_offset,
+        "average_posture_ratio": avg_posture_ratio,
         "average_rms": avg_rms,
-        "duration": audio_duration
+        "wpm_std_dev": wpm_std_dev,
+        "duration": audio_duration,
+        "timeline": aggregated_timeline
     }
 
 def main():
@@ -216,20 +308,14 @@ def main():
     recording_id = sys.argv[2]
     
     # Temp audio path
-    audio_path = video_path.replace('.mp4', '.wav') # Simple replacement, make robust later
+    audio_path = video_path.replace('.mp4', '.wav')
     
-    # Model path - assume it's in models/vosk-model-small-en-us-0.15
-    # User asked for 'vosk-model-en-in-0.5', adapting to what's available or standard small model
-    # We will assume a 'models' directory in the current folder
-    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "vosk-model-small-en-us-0.15") 
-    # Note: Using small-en-us for speed/size in MVP unless 'en-in' is strictly required and available easily.
-    # The user mentioned 'vosk-model-en-in-0.5', I should probably try to get that one or a generic small one.
-    # Let's stick to a generic small one for the script default, but I'll try to download the requested one if possible.
-    # Actually, let's make it configurable or check what's there.
+    # Model path is now handled inside analyze_audio or hardcoded there
+    # We keep the signature but pass None or unused
     
     try:
         extract_audio(video_path, audio_path)
-        results = analyze_audio(audio_path, model_path)
+        results = analyze_audio(audio_path, None)
         
         # Add metadata
         results["recording_id"] = recording_id

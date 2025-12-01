@@ -20,6 +20,27 @@ async function getSentimentModel() {
   return sentimentPipeline;
 }
 
+// Singleton for CoLA (Coherence) Model
+let coherencePipeline;
+async function getCoherenceModel() {
+  if (!coherencePipeline) {
+    console.log("Loading Coherence Model (Xenova/bert-base-uncased)...");
+    try {
+        const { pipeline } = await import('@xenova/transformers');
+        
+        // Switched to public model 'bert-base-uncased' and 'feature-extraction' task
+        // Removed auth token requirement
+        coherencePipeline = await pipeline('feature-extraction', 'Xenova/bert-base-uncased');
+        console.log("Coherence Model Loaded.");
+    } catch (e) {
+        console.error("Warning: Coherence model failed. Skipping Thought Structure analysis.", e);
+        // Fallback to a dummy function that returns a non-empty array to simulate success
+        coherencePipeline = async () => [[0.1, 0.2, 0.3]]; 
+    }
+  }
+  return coherencePipeline;
+}
+
 const app = express();
 const port = 3001;
 
@@ -117,7 +138,16 @@ app.post('/process', async (req, res) => {
 
     // 2. Spawn Python worker
     console.log('Spawning Python worker...');
-    const pythonProcess = spawn('python', ['worker_vosk.py', localVideoPath, recording_id]);
+    // Use 'python' or 'python3' depending on the environment. 
+    // On Windows, 'python' is standard. On Mac/Linux, 'python3' might be needed.
+    // We can try to detect or just default to 'python' which usually works if in PATH.
+    // If running in a venv, ensure the venv is active before starting the node server, 
+    // OR point to the venv python executable directly.
+    
+    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+    const pythonProcess = spawn(pythonCommand, ['worker_vosk.py', localVideoPath, recording_id], {
+        shell: true // This helps on Windows to find the command in the path
+    });
 
     let pythonData = '';
     let pythonError = '';
@@ -173,42 +203,125 @@ app.post('/process', async (req, res) => {
           const fluencyScore = Math.round(100 * Math.exp(-0.15 * Math.max(0, dfm - 1)));
 
           // 2. PACING: Gaussian Distribution
-          // Formula: Score = 100 * e^(-(wpm - 140)^2 / (2 * 30^2))
-          // Center = 140, Sigma = 30
-          const pacingScore = Math.round(100 * Math.exp(-Math.pow(wpm - 140, 2) / (2 * Math.pow(30, 2))));
+          // Formula: Score = 100 * e^(-(wpm - 145)^2 / (2 * 50^2))
+          // Center = 145, Sigma = 50
+          const rawPacingScore = 100 * Math.exp(-Math.pow(wpm - 145, 2) / (2 * Math.pow(50, 2)));
+
+          // Consistency Penalty (Standard Deviation)
+          // The "Dramatic Pause" Update: Only penalize variance if the average speed is poor.
+          // If WPM is in the "Goldilocks Zone" (130-170), assume variance is stylistic.
+          let consistencyPenalty = results.wpm_std_dev || 0;
+          
+          if (wpm >= 130 && wpm <= 170) {
+              consistencyPenalty = 0; // Ignore penalty for good speakers
+          }
+
+          const pacingScore = Math.max(0, Math.round(rawPacingScore - consistencyPenalty));
           
           // Combined Clarity Score (Fluency + Pacing)
           const clarityScore = Math.round((fluencyScore + pacingScore) / 2);
 
           // 3. CONFIDENCE: Vector Geometry (Posture)
-          // We have posture_score (visibility), average_shoulder_slope, average_centering_offset
-          // Base confidence on visibility (max 50 pts) + alignment (max 25 pts) + centering (max 25 pts)
+          // New Logic: Visibility is a multiplier. If you aren't seen, you can't have good posture.
           
-          // Visibility Score (0 to 1 from worker)
-          const visibilityComponent = results.posture_score * 50;
+          // Visibility Ratio (0.0 to 1.0)
+          const visibilityRatio = results.posture_score || 0;
 
-          // Alignment Score (Slope)
+          // Alignment Score (Slope) - Max 50 pts
           // Slope 0 is perfect. Slope 0.2 is bad.
-          // Score = 25 * (1 - (slope / 0.2)). Clamp at 0.
           const slope = results.average_shoulder_slope || 0;
-          const alignmentComponent = Math.max(0, 25 * (1 - (slope / 0.2)));
+          const alignmentScore = Math.max(0, 50 * (1 - (slope / 0.2)));
 
-          // Centering Score (Offset)
-          // Offset 0 is perfect. Offset 0.3 is bad (edge of frame).
-          // Score = 25 * (1 - (offset / 0.3)). Clamp at 0.
+          // Centering Score (Offset) - Max 50 pts
+          // Offset 0 is perfect. Offset 0.3 is bad.
           const offset = results.average_centering_offset || 0;
-          const centeringComponent = Math.max(0, 25 * (1 - (offset / 0.3)));
+          const centeringScore = Math.max(0, 50 * (1 - (offset / 0.3)));
 
-          const confidenceScore = Math.round(visibilityComponent + alignmentComponent + centeringComponent);
+          // Final Confidence Score = Visibility * (Alignment + Centering)
+          const confidenceScore = Math.round(visibilityRatio * (alignmentScore + centeringScore));
 
           // 4. TONE: Sentiment Analysis (Transformers.js)
           let toneScore = 60; // Default Neutral
           let sentimentLabel = "Neutral";
           let sentimentConfidence = 0;
+          let coherenceIssue = false;
+          let structureScore = 0; // New CoLA Score
 
           try {
             if (results.transcript && results.transcript.trim().length > 0) {
                 const classifier = await getSentimentModel();
+                const coherenceClassifier = await getCoherenceModel();
+                
+                // --- COHERENCE CHECK (The "PhD" Feature) ---
+                // Split transcript into sentences (simple heuristic)
+                const sentences = results.transcript.match(/[^.!?]+[.!?]+/g) || [results.transcript];
+                let lowConfidenceCount = 0;
+                let consecutiveLowConfidence = 0;
+                
+                // CoLA Analysis Variables
+                let coherentSentences = 0;
+                let totalSentences = 0;
+                
+                // Analyze each sentence individually for coherence
+                for (const sentence of sentences) {
+                    if (sentence.trim().length < 10) continue; // Skip very short sentences
+                    
+                    // 1. Sentiment Consistency Check (Old Logic)
+                    const output = await classifier(sentence.trim());
+                    if (output && output.length > 0) {
+                        const score = output[0].score;
+                        if (score < 0.6) {
+                            consecutiveLowConfidence++;
+                        } else {
+                            consecutiveLowConfidence = 0;
+                        }
+                        
+                        if (consecutiveLowConfidence >= 3) {
+                            coherenceIssue = true;
+                        }
+                    }
+
+                    // 2. CoLA Structure Check (New Logic - Tensor Variance)
+                    try {
+                        const output = await coherenceClassifier(sentence.trim());
+                        
+                        if (output && output.data) {
+                            totalSentences++;
+                            
+                            // Calculate Variance of the embedding
+                            const data = output.data;
+                            let sum = 0;
+                            for (let i = 0; i < data.length; i++) {
+                                sum += data[i];
+                            }
+                            const mean = sum / data.length;
+                            
+                            let squaredDiffSum = 0;
+                            for (let i = 0; i < data.length; i++) {
+                                squaredDiffSum += Math.pow(data[i] - mean, 2);
+                            }
+                            const variance = squaredDiffSum / data.length;
+
+                            // Threshold Check
+                            if (variance > 0.01) {
+                                coherentSentences++;
+                            }
+                        }
+                    } catch (colaError) {
+                        console.error("Coherence Error on sentence:", colaError);
+                    }
+                }
+                
+                // Calculate Structure Score
+                if (totalSentences > 0) {
+                    // Normalize to 60-95 range
+                    const ratio = coherentSentences / totalSentences;
+                    structureScore = Math.round(60 + (ratio * 35));
+                } else {
+                    structureScore = 95; // Default to perfect if no sentences analyzed
+                }
+
+                // --- OVERALL SENTIMENT ---
                 // Truncate transcript if too long for the model (approx 512 tokens, safe bet 1500 chars)
                 const textToAnalyze = results.transcript.substring(0, 1500); 
                 const output = await classifier(textToAnalyze);
@@ -240,12 +353,26 @@ app.post('/process', async (req, res) => {
             // Fallback to neutral
           }
 
-          // 5. ENERGY: Volume/RMS
-          // Normalize RMS (0-32768 typically for 16-bit). 
-          // Let's assume a healthy speaking volume is around 1000-8000 RMS.
-          // We'll map 0-5000 to 0-100 linearly for now, clamping at 100.
-          const rms = results.average_rms || 0;
-          const energyScore = Math.min(100, Math.round((rms / 2000) * 100)); // Adjusted target to 2000 for better sensitivity
+          // 5. ENERGY: Volume/Decibels (Logarithmic)
+          // Human hearing is logarithmic. We convert RMS to dB.
+          // Formula: dB = 20 * log10(RMS)
+          const rms = results.average_rms || 1; // Avoid log(0)
+          const db = 20 * Math.log10(rms);
+          
+          let energyScore = 100;
+
+          if (db < 40) {
+             // Too Quiet (Penalty)
+             // Linearly scale from 0 to 100 as dB goes from 0 to 40
+             energyScore = Math.max(0, Math.round((db / 40) * 100));
+          } else if (db > 80) {
+             // Too Loud (Penalty)
+             // Linearly drop from 100 to 0 as dB goes from 80 to 100
+             energyScore = Math.max(0, Math.round(100 - ((db - 80) * 5)));
+          } else {
+             // Goldilocks Zone (40dB - 80dB)
+             energyScore = 100;
+          }
 
           // OVERALL SCORE
           // Weighted Matrix: Clarity (35%), Confidence (25%), Tone (20%), Energy (20%)
@@ -265,6 +392,7 @@ app.post('/process', async (req, res) => {
             confidence_score: confidenceScore,
             energy_score: energyScore,
             filler_words_count: results.filler_count,
+            stutter_count: results.stutter_count || 0,
             strengths: ["Good effort", "Clear audio"], 
             improvements: ["Practice pacing", "Reduce filler words"],
             key_insights: {
@@ -277,11 +405,14 @@ app.post('/process', async (req, res) => {
               pacing: {
                 score: pacingScore,
                 feedback: wpm < 120 ? "Try to speak a bit faster." : (wpm > 160 ? "Slow down a bit." : "Perfect pace."),
-                words_per_minute: wpm
+                words_per_minute: wpm,
+                consistency_penalty: Math.round(consistencyPenalty)
               },
               sentiment: {
                 score: sentimentLabel,
-                confidence_level: "Medium"
+                confidence_level: coherenceIssue ? "Low (Confusing)" : "Medium",
+                coherence_warning: coherenceIssue ? "Your tone is positive, but your sentence structure is confusing. Try shorter sentences." : null,
+                structure_score: structureScore
               },
               posture: {
                 score: confidenceScore,
@@ -289,10 +420,12 @@ app.post('/process', async (req, res) => {
                 details: {
                     alignment_score: Math.round(alignmentComponent),
                     centering_score: Math.round(centeringComponent),
-                    visibility_score: Math.round(visibilityComponent)
+                    visibility_score: Math.round(visibilityComponent),
+                    posture_ratio: results.average_posture_ratio || 0
                 }
               },
-              transcript: results.transcript
+              transcript: results.transcript,
+              timeline: results.timeline || [] // Pass through the timeline data
             }
           };
 

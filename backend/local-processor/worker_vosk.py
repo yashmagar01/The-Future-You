@@ -3,6 +3,8 @@ import os
 import json
 import subprocess
 import wave
+import math
+import audioop
 from vosk import Model, KaldiRecognizer
 
 def extract_audio(video_path, audio_path):
@@ -42,11 +44,21 @@ def analyze_audio(audio_path, model_path):
     transcript = ""
     filler_count = 0
     fillers = {"um", "uh", "like", "you know", "sort of", "kind of", "actually", "basically"}
+    
+    rms_values = []
 
     while True:
         data = wf.readframes(4000)
         if len(data) == 0:
             break
+        
+        # Calculate RMS for energy analysis
+        try:
+            rms = audioop.rms(data, wf.getsampwidth())
+            rms_values.append(rms)
+        except Exception:
+            pass
+
         if rec.AcceptWaveform(data):
             # part_result = json.loads(rec.Result())
             # transcript += part_result.get("text", "") + " "
@@ -57,6 +69,11 @@ def analyze_audio(audio_path, model_path):
             
     wf.close()  # Close file handle to release lock
 
+    # Calculate average energy (RMS)
+    avg_rms = 0
+    if rms_values:
+        avg_rms = sum(rms_values) / len(rms_values)
+
     final_result = json.loads(rec.FinalResult())
     transcript = final_result.get("text", "")
     
@@ -66,29 +83,11 @@ def analyze_audio(audio_path, model_path):
         if word.lower() in fillers:
             filler_count += 1
             
-    # Sentiment analysis
-    sentiment_score = 0.0 # Neutral default
-    try:
-        from textblob import TextBlob
-        blob = TextBlob(transcript)
-        sentiment_score = blob.sentiment.polarity # -1.0 to 1.0
-    except ImportError:
-        print("TextBlob not found. Using stub sentiment score.", file=sys.stderr)
-        # Simple fallback lexicon
-        positive = {"good", "great", "excellent", "happy", "confident", "sure", "believe"}
-        negative = {"bad", "terrible", "sad", "unsure", "doubt", "worry", "afraid"}
-        score = 0
-        for word in transcript.split():
-            w = word.lower()
-            if w in positive: score += 1
-            if w in negative: score -= 1
-        # Normalize roughly to -1 to 1
-        sentiment_score = max(min(score / 10.0, 1.0), -1.0)
-    except Exception as e:
-        print(f"Sentiment analysis failed: {e}", file=sys.stderr)
-
     # Posture analysis
     posture_score = 0.5 # Default
+    eye_contact_score = 0.5 # Default
+    centering_score = 0.5 # Default
+    
     try:
         import cv2
         import mediapipe as mp
@@ -106,6 +105,9 @@ def analyze_audio(audio_path, model_path):
         
         # Analyze 1 frame per second
         scores = []
+        shoulder_slopes = []
+        centering_offsets = []
+
         for i in range(0, int(duration)):
             cap.set(cv2.CAP_PROP_POS_MSEC, i * 1000)
             ret, frame = cap.read()
@@ -115,39 +117,90 @@ def analyze_audio(audio_path, model_path):
             results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             
             if results.pose_landmarks:
-                # Simple heuristic: Check if nose and shoulders are visible
                 landmarks = results.pose_landmarks.landmark
                 nose = landmarks[mp_pose.PoseLandmark.NOSE]
                 left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
                 right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER]
                 
-                # Check visibility
+                # Check visibility of key points
                 if (nose.visibility > 0.5 and 
                     left_shoulder.visibility > 0.5 and 
                     right_shoulder.visibility > 0.5):
-                    scores.append(1.0) # Good posture (visible)
+                    
+                    # --- NEW SPINE GEOMETRY LOGIC ---
+                    shoulder_mid_x = (left_shoulder.x + right_shoulder.x) / 2
+                    shoulder_mid_y = (left_shoulder.y + right_shoulder.y) / 2
+
+                    # Calculate vertical neck length (absolute distance)
+                    neck_length = abs(nose.y - shoulder_mid_y)
+
+                    # Calculate shoulder tilt (absolute difference in height)
+                    shoulder_tilt = abs(left_shoulder.y - right_shoulder.y)
+
+                    # Scoring Logic (Calibration: Neck > 0.15 is usually good, Tilt < 0.05 is level)
+                    frame_score = 0
+                    if neck_length > 0.15: 
+                        frame_score += 0.7
+                    else: 
+                        frame_score += 0.3 # Slouch penalty
+
+                    if shoulder_tilt < 0.05: 
+                        frame_score += 0.3 # Level shoulders bonus
+                    
+                    scores.append(frame_score)
+                    
+                    # Store metrics for averaging
+                    shoulder_slopes.append(shoulder_tilt) # Using tilt as slope metric
+                    
+                    # Calculate centering (nose x position relative to center 0.5)
+                    offset = abs(nose.x - 0.5)
+                    centering_offsets.append(offset)
+
                 else:
-                    scores.append(0.5) # Partial visibility
+                    scores.append(0.0) # Not fully visible
             else:
                 scores.append(0.0) # No pose detected
                 
         cap.release()
         if scores:
             posture_score = sum(scores) / len(scores)
+        
+        if shoulder_slopes:
+            # Lower slope is better. 0 is perfect. 
+            # Average slope.
+            avg_slope = sum(shoulder_slopes) / len(shoulder_slopes)
+            # Map slope to score. If slope > 0.2 (approx 11 degrees), score drops.
+            # Let's just return the raw metric for the server to handle or a normalized one.
+            # Let's return the raw average slope.
+            pass
+
+        if centering_offsets:
+            # Lower offset is better. 0 is perfect.
+            avg_offset = sum(centering_offsets) / len(centering_offsets)
+            pass
             
     except ImportError:
         print("MediaPipe or OpenCV not found. Using stub posture score.", file=sys.stderr)
         posture_score = 0.8
+        avg_slope = 0.05
+        avg_offset = 0.1
     except Exception as e:
         print(f"Posture analysis failed: {e}", file=sys.stderr)
         posture_score = 0.5
+        avg_slope = 0.1
+        avg_offset = 0.2
+
+    # Ensure variables exist if try block failed or loops didn't run
+    if 'avg_slope' not in locals(): avg_slope = 0.1
+    if 'avg_offset' not in locals(): avg_offset = 0.1
 
     return {
         "transcript": transcript,
         "filler_count": filler_count,
-        "sentiment_score": sentiment_score,
         "posture_score": posture_score,
-        "posture_score": posture_score,
+        "average_shoulder_slope": avg_slope,
+        "average_centering_offset": avg_offset,
+        "average_rms": avg_rms,
         "duration": audio_duration
     }
 

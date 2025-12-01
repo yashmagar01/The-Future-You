@@ -1,5 +1,7 @@
 import React from 'react';
 import { CheckCircle, AlertCircle, Mic, Activity, User, FileText, Zap } from 'lucide-react';
+import PacingGraph from './PacingGraph';
+import StructureAnalysis from './StructureAnalysis';
 
 // --- Types based on the "Golden JSON" Schema ---
 
@@ -31,6 +33,8 @@ export interface AnalysisMetrics {
   pacing?: PacingMetrics;
   sentiment?: SentimentMetrics;
   posture?: PostureMetrics;
+  structure_score?: number;
+  timeline?: { time: string; wpm: number }[];
 }
 
 export interface AnalysisData {
@@ -66,7 +70,16 @@ const DEFAULT_ANALYSIS: AnalysisData = {
     posture: { 
       score: 90,
       issues_detected: []
-    }
+    },
+    structure_score: 75,
+    timeline: [
+      { time: "0-5s", wpm: 120 },
+      { time: "5-10s", wpm: 145 },
+      { time: "10-15s", wpm: 135 },
+      { time: "15-20s", wpm: 155 },
+      { time: "20-25s", wpm: 110 },
+      { time: "25-30s", wpm: 140 },
+    ]
   },
   transcript_summary: "You discussed your goals for the year with a clear focus on personal growth."
 };
@@ -260,7 +273,20 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
             </div>
           )}
         </ScoreCard>
+        </ScoreCard>
+
+        {/* Structure Analysis Card */}
+        <div className="h-full">
+           <StructureAnalysis score={metrics.structure_score || 0} />
+        </div>
       </div>
+
+      {/* Pacing Graph Section */}
+      {metrics.timeline && metrics.timeline.length > 0 && (
+        <div className="w-full">
+          <PacingGraph data={metrics.timeline} />
+        </div>
+      )}
 
       {/* Additional Insights Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

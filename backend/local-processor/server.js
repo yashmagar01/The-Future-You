@@ -418,9 +418,9 @@ app.post('/process', async (req, res) => {
                 score: confidenceScore,
                 issues_detected: [],
                 details: {
-                    alignment_score: Math.round(alignmentComponent),
-                    centering_score: Math.round(centeringComponent),
-                    visibility_score: Math.round(visibilityComponent),
+                    alignment_score: Math.round(alignmentScore),
+                    centering_score: Math.round(centeringScore),
+                    visibility_score: Math.round(visibilityRatio * 100),
                     posture_ratio: results.average_posture_ratio || 0
                 }
               },

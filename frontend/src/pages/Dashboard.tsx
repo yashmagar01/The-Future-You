@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -211,7 +213,27 @@ const Dashboard = () => {
                 {new Date(latestRecording?.created_at || "").toLocaleDateString()}
               </Badge>
             </div>
-            <AnalysisResults analysis={analysisData} />
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Analysis Ready</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Your recording from {new Date(latestRecording?.created_at || "").toLocaleDateString()} has been processed.
+                  </p>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right hidden sm:block">
+                    <div className="text-2xl font-bold text-primary">{analysisData.overall_score}</div>
+                    <div className="text-xs text-muted-foreground">Overall Score</div>
+                  </div>
+                  <Button asChild>
+                    <Link to={`/analysis/${latestRecording?.id}`}>
+                      View Full Report
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 

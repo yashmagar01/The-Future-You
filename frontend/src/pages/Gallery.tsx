@@ -174,7 +174,7 @@ const Gallery = () => {
                         className="h-12 w-12 rounded-full bg-white text-primary hover:bg-white/90 hover:scale-110 transition-all duration-300 shadow-xl"
                         asChild
                       >
-                        <Link to={`/results/${recording.id}`}>
+                        <Link to={`/analysis/${recording.id}`}>
                           <Play className="h-5 w-5 fill-current ml-0.5" />
                         </Link>
                       </Button>
@@ -250,7 +250,7 @@ const Gallery = () => {
                         className="flex-1 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300"
                         asChild
                       >
-                        <Link to={`/results/${recording.id}`}>
+                        <Link to={`/analysis/${recording.id}`}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Analysis
                         </Link>

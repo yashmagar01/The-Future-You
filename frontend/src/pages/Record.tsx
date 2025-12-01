@@ -208,12 +208,12 @@ const Record = () => {
 
       toast({
         title: "Upload successful!",
-        description: "AI analysis started. You can check the status in your dashboard.",
+        description: "AI analysis started. Redirecting to analysis...",
       });
 
-      // Navigate to dashboard
+      // Navigate to analysis page
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(`/analysis/${recordingData.id}`);
       }, 1500);
 
     } catch (error) {
@@ -337,12 +337,12 @@ const Record = () => {
 
       toast({
         title: "Upload successful!",
-        description: "AI analysis started. You can check the status in your dashboard.",
+        description: "AI analysis started. Redirecting to analysis...",
       });
 
-      // Navigate to dashboard
+      // Navigate to analysis page
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(`/analysis/${recordingData.id}`);
       }, 1500);
 
     } catch (error) {

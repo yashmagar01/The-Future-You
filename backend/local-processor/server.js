@@ -363,12 +363,12 @@ app.post('/process', async (req, res) => {
 
           if (db < 40) {
              // Too Quiet (Penalty)
-             // Linearly scale from 0 to 100 as dB goes from 0 to 40
-             energyScore = Math.max(0, Math.round((db / 40) * 100));
+             // New Formula: Score = Math.max(0, (db / 40) * 50)
+             energyScore = Math.max(0, Math.round((db / 40) * 50));
           } else if (db > 80) {
              // Too Loud (Penalty)
-             // Linearly drop from 100 to 0 as dB goes from 80 to 100
-             energyScore = Math.max(0, Math.round(100 - ((db - 80) * 5)));
+             // New Formula: Score = Math.max(0, 100 - ((db - 80) * 2))
+             energyScore = Math.max(0, Math.round(100 - ((db - 80) * 2)));
           } else {
              // Goldilocks Zone (40dB - 80dB)
              energyScore = 100;

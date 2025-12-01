@@ -4,7 +4,7 @@ import json
 import subprocess
 import wave
 import math
-import audioop
+import numpy as np
 from vosk import Model, KaldiRecognizer
 
 def extract_audio(video_path, audio_path):
@@ -54,8 +54,12 @@ def analyze_audio(audio_path, model_path):
         
         # Calculate RMS for energy analysis
         try:
-            rms = audioop.rms(data, wf.getsampwidth())
-            rms_values.append(rms)
+            # Convert bytes to numpy array of int16
+            samples = np.frombuffer(data, dtype=np.int16)
+            # Calculate RMS: sqrt(mean(samples^2))
+            if len(samples) > 0:
+                rms = np.sqrt(np.mean(samples.astype(np.float64)**2))
+                rms_values.append(rms)
         except Exception:
             pass
 
@@ -91,7 +95,6 @@ def analyze_audio(audio_path, model_path):
     try:
         import cv2
         import mediapipe as mp
-        import numpy as np
         
         print("Running posture analysis with MediaPipe...", file=sys.stderr)
         

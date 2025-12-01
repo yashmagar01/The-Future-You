@@ -1,7 +1,6 @@
 vosk==0.3.45
 numpy>=2.0.0
 opencv-python-headless>=4.8.0
-mediapipe>=0.10.0
 textblob==0.17.1
 requests>=2.31.0
 ffmpeg-python==0.2.0

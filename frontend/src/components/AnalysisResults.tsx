@@ -3,7 +3,6 @@ import { CheckCircle, AlertCircle, Mic, Activity, User, FileText, Zap, TrendingU
 import PacingGraph from './PacingGraph';
 import StructureAnalysis from './StructureAnalysis';
 import MetricCard, { DetailItem } from './MetricCard';
-import TranscriptViewer from './TranscriptViewer';
 import ConfidenceGauge from './ConfidenceGauge';
 import SentimentGraph from './SentimentGraph';
 import AICoach from './AICoach';
@@ -121,23 +120,6 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
 
   const gradientColors = getGradientColors(overall_score);
 
-  // --- Mock Data for Glass Cockpit ---
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Mock Transcript
-  const mockTranscript = [
-    { time: 0, text: "Alright, uh, today I'd like to talk to you about how to build an MVP or a Minimum Viable Product." },
-    { time: 5, text: "So if you haven't seen this before, this is a meme that we love to talk about when trying to help founders with their MVP." },
-    { time: 12, text: "It's called the Midwitt Meme. The person who is the Jedi, the super intelligent, the founder who's doing all the best things and knows all the best things," },
-    { time: 20, text: "and the idiot, the first time founder, the founder who has no idea what's going on." },
-    { time: 25, text: "Many times, these two founders will actually come to the right decision before the founder who is really smart and is trying to work really hard and do everything right." },
-    { time: 35, text: "And so, in this situation with the MVP, the best advice is to actually launch something quickly and iterate." },
-    { time: 42, text: "Get a product into the hands of your customers and then learn whether it helps them or doesn't and then iterate it and improve it over time." },
-    { time: 50, text: "The wrong answer is to do a hundred surveys and 600 user interviews and contact every single one of the competitors and spend a year fundraising and hire 100 people and all these other things that you can distract yourself with that it might appear like other smart things." },
-    { time: 65, text: "But in reality, they really don't highlight the most important point about an MVP, which is you'd only really start learning when you put a product in front of a customer." },
-  ];
-
   // Mock Sentiment Data
   const mockSentimentData = [
     { time: '0:00', score: 30, label: 'Neutral' },
@@ -163,22 +145,6 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
     { id: '3', text: "Maintain eye contact during the transition.", timestamp: 12, completed: true },
   ];
 
-  // Simulate video playing
-  useEffect(() => {
-    let interval: any;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => (prev >= 70 ? 0 : prev + 1));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying]);
-
-  const handleSeek = (time: number) => {
-    setCurrentTime(time);
-    setIsPlaying(true);
-  };
-
   // Trigger confetti for high scores
   useEffect(() => {
     if (overall_score >= 80 && !confettiTriggered.current) {
@@ -196,69 +162,16 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       
-      {/* SECTION 1: HIGH-LEVEL METRICS */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Confidence Score (Hero) */}
-        <div className="md:col-span-4 lg:col-span-4">
+      {/* SECTION 1: OVERALL PERFORMANCE & KEY TAKEAWAYS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Confidence Score */}
+        <div className="lg:col-span-5">
           <ConfidenceGauge score={overall_score} />
         </div>
 
-        {/* Core Metrics Grid */}
-        <div className="md:col-span-8 lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <MetricCard
-            icon={<Mic className="w-5 h-5" />}
-            title="Clarity"
-            score={metrics.clarity.score}
-            status={getMetricStatus(metrics.clarity.score)}
-            details={[
-              { label: 'WPM', value: metrics.clarity.wpm, unit: 'words/min' },
-              { label: 'Fillers', value: metrics.clarity.filler_word_count, good: metrics.clarity.filler_word_count < 5 }
-            ]}
-          />
-          <MetricCard
-            icon={<Activity className="w-5 h-5" />}
-            title="Pacing"
-            score={metrics.pacing?.score || 0}
-            status={getMetricStatus(metrics.pacing?.score || 0)}
-            details={[
-              { label: 'Pace', value: 'Steady', good: true }, // Mock for now, derive from real data later
-            ]}
-          />
-          <MetricCard
-            icon={<User className="w-5 h-5" />}
-            title="Posture"
-            score={metrics.posture?.score || 0}
-            status={getMetricStatus(metrics.posture?.score || 0)}
-            details={[
-              { label: 'Eye Contact', value: 'Good', good: true }, // Mock
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* SECTION 2: SENTIMENT & EMOTIONAL TONE */}
-      <div className="grid grid-cols-1 gap-6">
-        <SentimentGraph data={mockSentimentData} />
-      </div>
-
-      {/* SECTION 3: TRANSCRIPT & DETAILED ANALYSIS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Transcript (Left/Top) */}
+        {/* Key Takeaways */}
         <div className="lg:col-span-7">
-          <TranscriptViewer 
-            transcript={mockTranscript} 
-            currentTime={currentTime} 
-            onSeek={handleSeek} 
-          />
-        </div>
-
-        {/* Detailed Breakdowns (Right/Bottom) */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Structure Analysis */}
-          <StructureAnalysis score={metrics.structure_score || 0} />
-          
-          {/* Key Takeaways (Mock for now, replace with AICoach data later) */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 h-full">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-amber-500" />
               Key Takeaways
@@ -273,6 +186,44 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* SECTION 2: CORE METRICS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetricCard
+          icon={<Mic className="w-5 h-5" />}
+          title="Clarity"
+          score={metrics.clarity.score}
+          status={getMetricStatus(metrics.clarity.score)}
+          details={[
+            { label: 'WPM', value: metrics.clarity.wpm, unit: 'words/min' },
+            { label: 'Fillers', value: metrics.clarity.filler_word_count, good: metrics.clarity.filler_word_count < 5 }
+          ]}
+        />
+        <MetricCard
+          icon={<Activity className="w-5 h-5" />}
+          title="Pacing"
+          score={metrics.pacing?.score || 0}
+          status={getMetricStatus(metrics.pacing?.score || 0)}
+          details={[
+            { label: 'Pace', value: 'Steady', good: true },
+          ]}
+        />
+        <MetricCard
+          icon={<User className="w-5 h-5" />}
+          title="Posture"
+          score={metrics.posture?.score || 0}
+          status={getMetricStatus(metrics.posture?.score || 0)}
+          details={[
+            { label: 'Eye Contact', value: 'Good', good: true },
+          ]}
+        />
+      </div>
+
+      {/* SECTION 3: SENTIMENT & STRUCTURE */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SentimentGraph data={mockSentimentData} />
+        <StructureAnalysis score={metrics.structure_score || 0} />
       </div>
 
     </div>

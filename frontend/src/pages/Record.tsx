@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
 import { ScriptDisplay } from "@/components/ScriptDisplay";
+import { DebugOnboardingReset } from "@/components/DebugOnboardingReset";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -464,6 +465,7 @@ const Record = () => {
           {user && <ScriptDisplay userId={user.id} />}
         </div>
       </div>
+      <DebugOnboardingReset />
     </Layout>
   );
 };

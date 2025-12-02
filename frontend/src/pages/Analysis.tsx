@@ -1,18 +1,35 @@
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecording } from '@/hooks/useRecordings';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/Layout';
 import AnalysisResults, { AnalysisData, AnalysisMetrics } from '@/components/AnalysisResults';
+import TranscriptViewer from '@/components/TranscriptViewer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+// Mock Transcript (Moved from AnalysisResults)
+const mockTranscript = [
+  { time: 0, text: "Alright, uh, today I'd like to talk to you about how to build an MVP or a Minimum Viable Product." },
+  { time: 5, text: "So if you haven't seen this before, this is a meme that we love to talk about when trying to help founders with their MVP." },
+  { time: 12, text: "It's called the Midwitt Meme. The person who is the Jedi, the super intelligent, the founder who's doing all the best things and knows all the best things," },
+  { time: 20, text: "and the idiot, the first time founder, the founder who has no idea what's going on." },
+  { time: 25, text: "Many times, these two founders will actually come to the right decision before the founder who is really smart and is trying to work really hard and do everything right." },
+  { time: 35, text: "And so, in this situation with the MVP, the best advice is to actually launch something quickly and iterate." },
+  { time: 42, text: "Get a product into the hands of your customers and then learn whether it helps them or doesn't and then iterate it and improve it over time." },
+  { time: 50, text: "The wrong answer is to do a hundred surveys and 600 user interviews and contact every single one of the competitors and spend a year fundraising and hire 100 people and all these other things that you can distract yourself with that it might appear like other smart things." },
+  { time: 65, text: "But in reality, they really don't highlight the most important point about an MVP, which is you'd only really start learning when you put a product in front of a customer." },
+];
+
 const Analysis = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: recording, isLoading, error } = useRecording(id || '');
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Determine back navigation context
   const referrer = document.referrer;
@@ -154,6 +171,9 @@ const Analysis = () => {
                           controls 
                           className="w-full h-full object-cover"
                           preload="metadata"
+                          onPlay={() => setIsPlaying(true)}
+                          onPause={() => setIsPlaying(false)}
+                          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
                         >
                           <source src={publicUrl || ''} type="video/mp4" />
                           <source src={publicUrl || ''} type="video/webm" />
@@ -171,6 +191,21 @@ const Analysis = () => {
                       <p className="text-sm text-gray-500">{recording.description}</p>
                     )}
                   </div>
+
+                  {/* Transcript Viewer (Moved here) */}
+                  <TranscriptViewer 
+                    transcript={mockTranscript} 
+                    currentTime={currentTime} 
+                    onSeek={(time) => {
+                      setCurrentTime(time);
+                      // In a real app, we'd seek the video element here
+                      const video = document.querySelector('video');
+                      if (video) {
+                        video.currentTime = time;
+                        video.play();
+                      }
+                    }} 
+                  />
                 </div>
 
                 {/* Right Column: Analysis Results (65%) */}

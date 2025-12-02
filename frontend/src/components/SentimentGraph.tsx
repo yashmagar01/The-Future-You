@@ -6,11 +6,35 @@ interface SentimentData {
   time: string;
   score: number; // 0 to 100
   label: string;
+  phrase?: string;
 }
 
 interface SentimentGraphProps {
   data: SentimentData[];
 }
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white border border-gray-200 p-3 rounded-xl shadow-lg max-w-[200px]">
+        <p className="text-sm font-bold text-gray-900 mb-1">{data.time}</p>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+          <p className="text-sm text-teal-700 font-medium">
+            {data.label} ({data.score})
+          </p>
+        </div>
+        {data.phrase && (
+          <p className="text-xs text-gray-500 italic border-t border-gray-100 pt-2">
+            "{data.phrase}"
+          </p>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
 
 const SentimentGraph: React.FC<SentimentGraphProps> = ({ data }) => {
   return (
@@ -53,19 +77,7 @@ const SentimentGraph: React.FC<SentimentGraphProps> = ({ data }) => {
               hide 
               domain={[0, 100]}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #e5e7eb', 
-                borderRadius: '8px', 
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                color: '#1f2937',
-                fontSize: '12px',
-                fontWeight: 600
-              }}
-              itemStyle={{ color: '#0d9488' }}
-              cursor={{ stroke: '#14b8a6', strokeWidth: 2, strokeDasharray: '4 4' }}
-            />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#14b8a6', strokeWidth: 2, strokeDasharray: '4 4' }} />
             <ReferenceLine y={50} stroke="#e5e7eb" strokeDasharray="3 3" label={{ value: 'Neutral', position: 'insideLeft', fill: '#9ca3af', fontSize: 10 }} />
             <Area 
               type="monotone" 

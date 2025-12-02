@@ -41,6 +41,28 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
     return fillers.includes(word.toLowerCase().replace(/[^a-z]/g, ''));
   };
 
+  // Helper to render text with highlighted filler words
+  const renderTextWithHighlights = (text: string) => {
+    const words = text.split(' ');
+    return words.map((word, index) => {
+      const isFiller = isFillerWord(word);
+      if (isFiller) {
+        return (
+          <React.Fragment key={index}>
+            <span 
+              className="bg-amber-100 text-amber-800 px-1 rounded mx-0.5 font-medium border border-amber-200/50"
+              title="Filler word"
+            >
+              {word}
+            </span>
+            {' '}
+          </React.Fragment>
+        );
+      }
+      return <React.Fragment key={index}>{word} </React.Fragment>;
+    });
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px] overflow-hidden">
       <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
@@ -73,32 +95,23 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
               }`}
             >
               <div className="flex gap-4 items-start">
-                {/* Timestamp */}
-                <button
-                  onClick={() => onSeek(segment.time)}
-                  className={`text-xs font-mono mt-1 px-2 py-0.5 rounded transition-colors ${
-                    isActive 
-                      ? 'bg-blue-100 text-blue-700 font-bold' 
-                      : 'text-gray-400 bg-gray-100 group-hover:bg-gray-200 group-hover:text-gray-600'
-                  }`}
-                >
-                  {Math.floor(segment.time / 60)}:{(segment.time % 60).toString().padStart(2, '0')}
-                </button>
+                {/* Timestamp Column */}
+                <div className="flex-shrink-0 w-12 pt-1">
+                  <button
+                    onClick={() => onSeek(segment.time)}
+                    className={`text-xs font-mono px-2 py-0.5 rounded transition-colors w-full text-center ${
+                      isActive 
+                        ? 'bg-blue-100 text-blue-700 font-bold' 
+                        : 'text-gray-400 bg-gray-100 group-hover:bg-gray-200 group-hover:text-gray-600'
+                    }`}
+                  >
+                    {Math.floor(segment.time / 60)}:{(segment.time % 60).toString().padStart(2, '0')}
+                  </button>
+                </div>
 
                 {/* Text Content */}
                 <p className={`text-base leading-relaxed flex-1 ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
-                  {segment.text.split(' ').map((word, wIdx) => (
-                    <span key={wIdx}>
-                      {isFillerWord(word) ? (
-                        <span className="inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 text-sm font-medium" title="Filler word detected">
-                          {word}
-                        </span>
-                      ) : (
-                        word
-                      )}
-                      {' '}
-                    </span>
-                  ))}
+                  {renderTextWithHighlights(segment.text)}
                 </p>
               </div>
             </div>

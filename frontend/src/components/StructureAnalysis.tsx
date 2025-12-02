@@ -16,7 +16,7 @@ const StructureAnalysis: React.FC<StructureAnalysisProps> = ({
   previousScore,
   details = {}
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   // Determine zone and color
   let zone = 'Rambling';

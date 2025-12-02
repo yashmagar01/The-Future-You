@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecording } from '@/hooks/useRecordings';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +30,8 @@ const Analysis = () => {
   const { data: recording, isLoading, error } = useRecording(id || '');
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Determine back navigation context
   const referrer = document.referrer;
@@ -168,6 +170,7 @@ const Analysis = () => {
 
                       return (
                         <video 
+                          ref={videoRef}
                           controls 
                           className="w-full h-full object-cover"
                           preload="metadata"
@@ -198,11 +201,9 @@ const Analysis = () => {
                     currentTime={currentTime} 
                     onSeek={(time) => {
                       setCurrentTime(time);
-                      // In a real app, we'd seek the video element here
-                      const video = document.querySelector('video');
-                      if (video) {
-                        video.currentTime = time;
-                        video.play();
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = time;
+                        videoRef.current.play();
                       }
                     }} 
                   />
@@ -210,7 +211,16 @@ const Analysis = () => {
 
                 {/* Right Column: Analysis Results (65%) */}
                 <div className="lg:col-span-8">
-                  <AnalysisResults analysis={analysisData} />
+                  <AnalysisResults 
+                    analysis={analysisData} 
+                    onSeek={(time) => {
+                      setCurrentTime(time);
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = time;
+                        videoRef.current.play();
+                      }
+                    }}
+                  />
                 </div>
               </div>
 

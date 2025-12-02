@@ -52,6 +52,7 @@ export interface AnalysisData {
 
 interface AnalysisResultsProps {
   analysis?: AnalysisData;
+  onSeek?: (time: number) => void;
 }
 
 // --- Default Mock Data ---
@@ -105,7 +106,7 @@ const getMetricStatus = (score: number): 'excellent' | 'good' | 'average' | 'nee
   return 'needs-work';
 };
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS, onSeek }) => {
   const { overall_score, metrics, transcript_summary } = analysis;
   const [displayScore, setDisplayScore] = useState(0);
   const confettiTriggered = useRef(false);
@@ -122,14 +123,14 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
 
   // Mock Sentiment Data
   const mockSentimentData = [
-    { time: '0:00', score: 30, label: 'Neutral' },
-    { time: '0:10', score: 45, label: 'Positive' },
-    { time: '0:20', score: 60, label: 'Positive' },
-    { time: '0:30', score: 80, label: 'High Energy' },
-    { time: '0:40', score: 50, label: 'Neutral' },
-    { time: '0:50', score: 20, label: 'Concern' },
-    { time: '1:00', score: 40, label: 'Neutral' },
-    { time: '1:10', score: 70, label: 'Positive' },
+    { time: '0:00', score: 30, label: 'Neutral', phrase: "Alright, uh, today..." },
+    { time: '0:10', score: 45, label: 'Positive', phrase: "meme that we love" },
+    { time: '0:20', score: 60, label: 'Positive', phrase: "super intelligent" },
+    { time: '0:30', score: 80, label: 'High Energy', phrase: "really smart" },
+    { time: '0:40', score: 50, label: 'Neutral', phrase: "launch something quickly" },
+    { time: '0:50', score: 20, label: 'Concern', phrase: "wrong answer is to do" },
+    { time: '1:00', score: 40, label: 'Neutral', phrase: "distract yourself" },
+    { time: '1:10', score: 70, label: 'Positive', phrase: "start learning" },
   ];
 
   // Mock AI Coach Data
@@ -224,6 +225,54 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SentimentGraph data={mockSentimentData} />
         <StructureAnalysis score={metrics.structure_score || 0} />
+      </div>
+
+      {/* SECTION 4: ACTIONABLE FIXES (New) */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
+            <div className="bg-red-100 p-2 rounded-lg">
+              <Zap className="w-5 h-5 text-red-600" />
+            </div>
+            Actionable Fixes
+          </h3>
+          <span className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
+            {mockActionItems.filter(i => !i.completed).length} Priority Items
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {mockActionItems.map((item) => (
+            <div 
+              key={item.id} 
+              className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all duration-200 rounded-xl p-4 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-white px-2 py-1 rounded border border-gray-100">
+                    Fix #{item.id}
+                  </span>
+                  {item.completed ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-amber-500" />
+                  )}
+                </div>
+                <p className="text-gray-800 font-medium text-sm leading-relaxed mb-4">
+                  "{item.text}"
+                </p>
+              </div>
+              
+              <button
+                onClick={() => onSeek && onSeek(item.timestamp)}
+                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 py-2 rounded-lg transition-colors"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                Jump to {Math.floor(item.timestamp / 60)}:{(item.timestamp % 60).toString().padStart(2, '0')}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
     </div>

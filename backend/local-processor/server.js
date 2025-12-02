@@ -478,82 +478,52 @@ app.post('/process', async (req, res) => {
 // SCRIPT GENERATION LOGIC (Local Templates)
 // ==========================================
 
-const generateTemplates = (profileData) => {
+const generatePersonalizedTemplate = (profileData) => {
   // 1. DATA MAPPING (Frontend -> Script Variables)
   const name = profileData.full_name?.split(' ')[0] || "Friend";
   
-  // Map Experience Level -> Role
-  // Handle both capitalized (old data) and lowercase (new onboarding) values
-  const roleMap = {
-    "Beginner": "Learner",
-    "beginner": "Learner",
-    "Intermediate": "Professional",
-    "intermediate": "Professional",
-    "Advanced": "Leader",
-    "advanced": "Leader"
-  };
-  // Fallback to "Communicator" if undefined
-  const role = roleMap[profileData.experience_level] || "Communicator";
-
-  // Map Primary Goal -> Focus Area
-  const focusMap = {
-    "clarity": "Articulation",
-    "decisions": "Decisiveness",
-    "growth": "Confidence"
-  };
-  // Fallback to "Communication" if undefined
-  const focus = focusMap[profileData.primary_goal] || "Communication";
+  // New Personalized Fields with Defaults
+  const context = profileData.user_context || "improving my communication skills";
+  const audience = profileData.target_audience || "my future self";
+  const painPoint = profileData.pain_point || "speaking with clarity";
+  const confidence = profileData.confidence_level || 5;
 
   // 2. THE TEMPLATES
 
-  // --- SHORT SCRIPT (3 Minutes) ---
-  const short = `Hi, my name is ${name}, and this is my daily check-in.
+  // --- SHORT SCRIPT (1-2 Minutes) ---
+  const short = `Hi, I'm ${name}. Today I am practicing for my ${context}.
+  
+My goal is to speak clearly to ${audience} and overcome my struggle with ${pain_point}.
 
-Today, I am dedicating these few minutes to my personal growth as a ${role}. I know that to be effective in my field, I need to master ${focus}. It is not just about the words I say, but how I say them.
+I know that confidence is a skill, not a trait. Right now, I am rating my confidence at a ${confidence} out of 10, but by the end of this practice, I aim to be one point higher.
 
-Right now, I am checking in with my body and my voice. Am I slouching? Am I speaking too fast? I am taking this moment to slow down. I breathe in... and I breathe out.
+I am focusing on being present. I am focusing on my breathing. I am ready to deliver my message.`;
 
-My goal for today is simple: To be 1% better at ${focus} than I was yesterday. I know I will face distractions. I know there will be moments of stress. But in those moments, I will remember this feeling of calm. I will remember that I have the capacity to handle whatever comes my way.
+  // --- MEDIUM SCRIPT (3 Minutes) ---
+  const medium = `Hello, I am ${name}. I am taking this time to prepare for ${context}.
 
-I am not chasing perfection; I am chasing consistency. By recording this video, I am proving to myself that I show up. I am building the discipline required to be a great ${role}.
+I know that when I speak to ${audience}, I often struggle with ${pain_point}. But today, I am rewriting that story. I am not defined by my past mistakes. I am defined by my willingness to practice.
 
-I am ready for the day. I am clear, I am focused, and I am capable.`;
+I am visualizing success. I see myself standing tall. I hear my voice projecting with strength. I feel the connection with ${audience}.
 
-  // --- MEDIUM SCRIPT (5 Minutes) ---
-  const medium = `Hello, I am ${name}. Welcome to my 5-minute practice session.
+If I start to feel nervous or notice ${pain_point} creeping in, I will pause. I will breathe. I will remember that I have something valuable to say.
 
-Today I want to talk about the concept of 'Capacity.' As a ${role}, I often feel the pressure to know everything, to be everywhere, and to solve every problem instantly. But when I reflect on my journey to improve my ${focus}, I realize that real strength isn't about speed. It is about capacity.
+My current confidence level is ${confidence}, but I am building the capacity to handle more. I am ready.`;
 
-What does it mean to have capacity? It means having the emotional stability to pause before I react. It means having the mental clarity to listen before I speak.
+  // --- LONG SCRIPT (5 Minutes) ---
+  const long = `This is a message to myself, ${name}. I am recording this to document my journey in mastering ${context}.
 
-I admit, sometimes I struggle with ${focus}. There are times when I doubt my voice or my decisions. But I also know that these struggles are not signs of weakness—they are the growing pains of becoming a better version of myself.
+Why does this matter? Because communicating effectively with ${audience} is key to my growth. I admit that ${pain_point} has held me back in the past. It has made me doubt myself. It has made me play small.
 
-Think about the challenges I faced this week. There were moments of friction. Maybe I didn't speak up when I should have. Maybe I spoke too quickly. That is okay. That is data. Today, I am rewriting that narrative.
+But today, I am choosing to play big.
 
-I am choosing to view ${focus} not as a hurdle, but as a skill I am actively building, brick by brick. Every time I record one of these videos, I am laying another brick.
+I am analyzing my patterns. When do I feel ${pain_point} the most? Is it when I am rushed? Is it when I feel judged? I acknowledge these triggers, but I do not let them control me.
 
-I commit to being a ${role} who leads with empathy and clarity. I commit to listening more deeply. I commit to speaking with intention.
+I am reminding myself of my strengths. I have unique insights. I have valuable experience. ${audience} needs to hear what I have to say.
 
-If I stumble today, I will not judge myself. I will simply correct course and keep moving. This is a marathon, not a sprint. And I am in this for the long run.`;
+I am setting an intention. For the next few minutes, I will speak with the authority of someone who knows their worth. I will not rush. I will not apologize for taking up space.
 
-  // --- LONG SCRIPT (10 Minutes) ---
-  const long = `This is a message to my future self. My name is ${name}, and I am recording this to document who I am today, and who I am becoming.
-
-I am currently navigating my path as a ${role}. It is a journey filled with highs and lows. Today, my primary focus is on ${focus}. I chose this because I know it is the key to unlocking the next level of my potential.
-
-Let’s talk about why this matters. In a world that is constantly noisy, the ability to communicate with ${focus} is a superpower. It is the difference between being heard and being ignored. It is the difference between having an idea and leading a movement.
-
-I want to reflect on my standards. What creates a great ${role}? Is it just technical skill? No. It is the ability to connect. It is the ability to transfer an emotion or an idea from my mind to someone else’s without distortion. That is why I am here, looking at this camera, practicing this skill.
-
-I admit that sometimes the journey feels slow. Sometimes I look at others and feel like I am falling behind. I see people who seem to have natural charisma, or who speak without ever stumbling. But I remind myself that comparison is the thief of joy. I do not know their story; I only know mine.
-
-And my story is one of persistence. It is the story of someone who chooses to do the hard work when no one is watching. The person I was a year ago might have given up. But the person I am today stays in the room.
-
-I want to visualize where I will be one year from now. If I stick to this practice—if I keep showing up every day to work on my ${focus}—I will be unrecognizable. I will walk into rooms with a different energy. I will speak with a different weight. I will be the kind of ${role} that others look to for guidance, not because I am the loudest, but because I am the most grounded.
-
-To the ${name} of the future: I hope you never lost this hunger. I hope you remembered that confidence is earned, not given. I hope you are using your ${focus} to help others, to lift them up, and to solve problems that matter.
-
-I promise to keep working today, so that you can succeed tomorrow. I am signing off now, with a renewed sense of purpose.`;
+I am starting at a confidence level of ${confidence}, but I am aiming for a 10. I am capable. I am prepared. I am ready to lead.`;
 
   return { 
     variations: { short, medium, long } 
@@ -570,7 +540,10 @@ app.post('/generate-script', (req, res) => {
       return res.status(400).json({ error: "Missing profileData" });
     }
 
-    const scripts = generateTemplates(profileData);
+    console.log("Generating personalized script for:", profileData.full_name);
+    console.log("Context:", profileData.user_context);
+
+    const scripts = generatePersonalizedTemplate(profileData);
     res.json(scripts);
 
   } catch (error) {

@@ -49,10 +49,22 @@ export function ScriptDisplay({ userId }: { userId: string }) {
             if (error) throw error;
 
             const onboardingData = data?.onboarding_data as unknown as OnboardingData | null;
-            // Merge full_name into the data we use
+            
+            // Extract personalized fields with fallbacks
+            // This ensures backward compatibility for users who haven't completed the new onboarding
+            const userContext = onboardingData?.user_context || onboardingData?.primary_goal || "improving my communication skills";
+            const targetAudience = onboardingData?.target_audience || "my future self";
+            const painPoint = onboardingData?.pain_point || "speaking with clarity";
+            const confidenceLevel = onboardingData?.confidence_level || 5;
+
+            // Merge full_name and new fields into the data we use
             const fullProfileData = {
                 ...onboardingData,
-                full_name: data.full_name
+                full_name: data.full_name,
+                user_context: userContext,
+                target_audience: targetAudience,
+                pain_point: painPoint,
+                confidence_level: confidenceLevel
             };
             
             setProfileData(fullProfileData);

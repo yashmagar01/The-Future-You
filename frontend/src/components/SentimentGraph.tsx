@@ -1,14 +1,3 @@
-import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-
-interface SentimentData {
-  time: string;
-  score: number; // -1 to 1 or 0 to 100
-  label: string;
-}
-
-interface SentimentGraphProps {
-  data: SentimentData[];
 }
 
 const SentimentGraph: React.FC<SentimentGraphProps> = ({ data }) => {

@@ -194,112 +194,87 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
   }, [overall_score]);
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 md:p-8 font-sans text-gray-900">
-      <div className="max-w-[1800px] mx-auto grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-        
-        {/* LEFT COLUMN: THE STAGE (40%) */}
-        <div className="xl:col-span-5 flex flex-col gap-6 sticky top-8">
-          {/* Video Player Container */}
-          <div className="bg-black rounded-2xl overflow-hidden shadow-2xl shadow-blue-900/20 aspect-video relative group border border-gray-800">
-            {/* Placeholder for Video */}
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-              <span className="text-gray-500">Video Player Placeholder</span>
-            </div>
-            
-            {/* Custom Controls Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              {/* Heatmap Timeline */}
-              <div className="h-1 bg-gray-600 rounded-full mb-4 relative cursor-pointer" onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                handleSeek(percent * 70);
-              }}>
-                <div 
-                  className="absolute top-0 left-0 h-full bg-blue-500 rounded-full" 
-                  style={{ width: `${(currentTime / 70) * 100}%` }}
-                />
-                {/* Heatmap spots (mock) */}
-                <div className="absolute top-0 left-[30%] w-[10%] h-full bg-yellow-500/50 blur-[1px]" />
-                <div className="absolute top-0 left-[70%] w-[15%] h-full bg-red-500/50 blur-[1px]" />
-              </div>
-
-              <div className="flex justify-between items-center text-white">
-                <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-blue-400">
-                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                </button>
-                <span className="text-xs font-mono">
-                  {Math.floor(currentTime / 60)}:{(currentTime % 60).toString().padStart(2, '0')} / 1:10
-                </span>
-                <div className="flex gap-3">
-                  <Volume2 size={18} />
-                  <Maximize2 size={18} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Synced Transcript */}
-          <div className="flex-1 overflow-hidden">
-            <TranscriptViewer 
-              transcript={mockTranscript} 
-              currentTime={currentTime} 
-              onSeek={handleSeek} 
-            />
-          </div>
-        </div>
-
-        {/* MIDDLE COLUMN: THE METRICS LAB (35%) */}
-        <div className="xl:col-span-4 flex flex-col gap-6">
-          {/* Hero Card: Confidence */}
+    <div className="space-y-8 animate-in fade-in duration-500">
+      
+      {/* SECTION 1: HIGH-LEVEL METRICS */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Confidence Score (Hero) */}
+        <div className="md:col-span-4 lg:col-span-4">
           <ConfidenceGauge score={overall_score} />
-
-          {/* Pace & Tone Chart */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-800">Speaking Pace</h3>
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Target: 130-150 WPM</span>
-            </div>
-            <PacingGraph data={metrics.timeline || []} />
-          </div>
-
-          {/* Sentiment Wave */}
-          <SentimentGraph data={mockSentimentData} />
-
-          {/* Metric Cards Grid (Compact) */}
-          <div className="grid grid-cols-2 gap-4">
-             <MetricCard
-              icon={<Mic size={18} />}
-              title="Clarity"
-              score={metrics.clarity.score}
-              status={getMetricStatus(metrics.clarity.score)}
-              details={[]}
-            />
-             <MetricCard
-              icon={<User size={18} />}
-              title="Posture"
-              score={metrics.posture?.score || 0}
-              status={getMetricStatus(metrics.posture?.score || 0)}
-              details={[]}
-            />
-          </div>
         </div>
 
-        {/* RIGHT COLUMN: THE AI COACH (25%) */}
-        <div className="xl:col-span-3 flex flex-col gap-6 sticky top-8">
-          <AICoach 
-            takeaways={mockTakeaways} 
-            actionItems={mockActionItems} 
+        {/* Core Metrics Grid */}
+        <div className="md:col-span-8 lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <MetricCard
+            icon={<Mic className="w-5 h-5" />}
+            title="Clarity"
+            score={metrics.clarity.score}
+            status={getMetricStatus(metrics.clarity.score)}
+            details={[
+              { label: 'WPM', value: metrics.clarity.wpm, unit: 'words/min' },
+              { label: 'Fillers', value: metrics.clarity.filler_word_count, good: metrics.clarity.filler_word_count < 5 }
+            ]}
+          />
+          <MetricCard
+            icon={<Activity className="w-5 h-5" />}
+            title="Pacing"
+            score={metrics.pacing?.score || 0}
+            status={getMetricStatus(metrics.pacing?.score || 0)}
+            details={[
+              { label: 'Pace', value: 'Steady', good: true }, // Mock for now, derive from real data later
+            ]}
+          />
+          <MetricCard
+            icon={<User className="w-5 h-5" />}
+            title="Posture"
+            score={metrics.posture?.score || 0}
+            status={getMetricStatus(metrics.posture?.score || 0)}
+            details={[
+              { label: 'Eye Contact', value: 'Good', good: true }, // Mock
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* SECTION 2: SENTIMENT & EMOTIONAL TONE */}
+      <div className="grid grid-cols-1 gap-6">
+        <SentimentGraph data={mockSentimentData} />
+      </div>
+
+      {/* SECTION 3: TRANSCRIPT & DETAILED ANALYSIS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Transcript (Left/Top) */}
+        <div className="lg:col-span-7">
+          <TranscriptViewer 
+            transcript={mockTranscript} 
+            currentTime={currentTime} 
             onSeek={handleSeek} 
           />
-          
-          {/* Structure Analysis (Compact) */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <h3 className="font-semibold text-gray-800 mb-4">Structure</h3>
-            <StructureAnalysis score={metrics.structure_score || 0} />
-          </div>
         </div>
 
+        {/* Detailed Breakdowns (Right/Bottom) */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Structure Analysis */}
+          <StructureAnalysis score={metrics.structure_score || 0} />
+          
+          {/* Key Takeaways (Mock for now, replace with AICoach data later) */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-500" />
+              Key Takeaways
+            </h3>
+            <ul className="space-y-3">
+              {mockTakeaways.map((takeaway, idx) => (
+                <li key={idx} className="flex gap-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                  <span className="text-teal-500 font-bold">•</span>
+                  {takeaway}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
+
     </div>
   );
 };

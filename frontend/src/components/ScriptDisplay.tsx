@@ -252,13 +252,16 @@ export function ScriptDisplay({ userId }: { userId: string }) {
                                 script[type as keyof Script] || 
                                 script[type.charAt(0).toUpperCase() + type.slice(1) as keyof Script];
                             
+                            // Ensure content is a string, not an object
+                            const contentString = typeof content === 'string' ? content : null;
+                            
                             return (
                                 <TabsContent key={type} value={type} className="h-full m-0 p-0">
                                     <ScrollArea className="h-[400px] p-6">
                                         <div className="prose prose-sm dark:prose-invert max-w-none">
-                                            {content ? (
+                                            {contentString ? (
                                                 <div className="whitespace-pre-wrap font-medium leading-relaxed text-lg">
-                                                    {content as string}
+                                                    {contentString}
                                                 </div>
                                             ) : (
                                                 <div className="text-muted-foreground italic">
@@ -269,13 +272,13 @@ export function ScriptDisplay({ userId }: { userId: string }) {
                                             )}
                                         </div>
                                     </ScrollArea>
-                                    {content && (
+                                    {contentString && (
                                         <div className="absolute bottom-4 right-4">
                                             <Button
                                                 size="sm"
                                                 variant="secondary"
                                                 className="shadow-lg backdrop-blur-md bg-background/80 hover:bg-background/90"
-                                                onClick={() => copyToClipboard(content as string)}
+                                                onClick={() => copyToClipboard(contentString)}
                                             >
                                                 {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                                                 {copied ? 'Copied' : 'Copy Text'}

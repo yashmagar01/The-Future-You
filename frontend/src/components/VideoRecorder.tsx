@@ -19,12 +19,14 @@ interface VideoRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
   onUploadFile: (file: File) => void;
   maxDuration?: number; // in seconds
+  children?: React.ReactNode;
 }
 
 export const VideoRecorder = ({
   onRecordingComplete,
   onUploadFile,
-  maxDuration = 600 // 10 minutes default
+  maxDuration = 600, // 10 minutes default
+  children
 }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -505,6 +507,9 @@ export const VideoRecorder = ({
                 />
               </div>
             )}
+            
+            {/* Teleprompter Overlay Slot */}
+            {children}
           </div>
 
           <div className="flex flex-col gap-6">

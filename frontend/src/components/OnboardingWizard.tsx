@@ -60,7 +60,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
         accent: '',
         deepStruggle: '',
 
-        // Legacy defaults
+        // Legacy defaults (kept for type safety but unused in new flow)
         experienceLevel: 'intermediate',
         primaryGoal: 'growth',
         targetAudience: '',
@@ -95,6 +95,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             }
         ];
 
+        // Path A: Standard (Ghost Mode)
         if (data.userTier === 'standard') {
             return [
                 ...commonSteps,
@@ -105,20 +106,27 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                     icon: MessageSquare,
                 },
                 {
+                    id: 'audience',
+                    title: 'Who are you speaking to?',
+                    subtitle: 'Tailor the experience to your audience.',
+                    icon: Users,
+                },
+                {
                     id: 'pain_point',
-                    title: 'What is your biggest struggle?',
+                    title: 'What is your struggle?',
                     subtitle: 'We will help you overcome this specific challenge.',
                     icon: AlertCircle,
                 },
                 {
                     id: 'confidence',
-                    title: 'How confident do you feel speaking?',
+                    title: 'How confident do you feel?',
                     subtitle: 'Be honest. This is your baseline.',
                     icon: Zap,
                 }
             ];
         }
 
+        // Path B: Beta (Vault Mode)
         if (data.userTier === 'beta') {
             return [
                 ...commonSteps,
@@ -126,13 +134,13 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                     id: 'consent',
                     title: 'The Inner Circle Agreement',
                     subtitle: 'To build the world\'s best AI coach, we need real data.',
-                    icon: Users,
+                    icon: Database,
                 },
                 {
-                    id: 'timeline',
-                    title: 'When is your big moment?',
-                    subtitle: 'Helps us understand the urgency of your practice.',
-                    icon: Target,
+                    id: 'deep_struggle',
+                    title: 'In your own words...',
+                    subtitle: 'Describe the specific moment you lose confidence.',
+                    icon: PenTool,
                 },
                 {
                     id: 'accent',
@@ -141,10 +149,16 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                     icon: Mic,
                 },
                 {
-                    id: 'deep_struggle',
-                    title: 'In your own words...',
-                    subtitle: 'Describe the specific moment you lose confidence.',
-                    icon: PenTool,
+                    id: 'timeline',
+                    title: 'When is your big moment?',
+                    subtitle: 'Helps us understand the urgency of your practice.',
+                    icon: Target,
+                },
+                {
+                    id: 'confidence',
+                    title: 'How confident do you feel?',
+                    subtitle: 'Be honest. This is your baseline.',
+                    icon: Zap,
                 }
             ];
         }
@@ -183,6 +197,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             const onboardingPayload: any = {
                 tier: data.userTier,
                 completed_at: new Date().toISOString(),
+                confidence_level: data.confidenceLevel, // Shared closing step
                 // Legacy fields
                 experience_level: data.experienceLevel,
                 primary_goal: data.primaryGoal,
@@ -191,13 +206,24 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
 
             if (data.userTier === 'standard') {
                 onboardingPayload.user_context = data.userContext;
+                onboardingPayload.target_audience = data.targetAudience;
                 onboardingPayload.pain_point = data.painPoint;
-                onboardingPayload.confidence_level = data.confidenceLevel;
             } else if (data.userTier === 'beta') {
                 onboardingPayload.data_consent = data.betaConsent;
                 onboardingPayload.timeline = data.timeline;
                 onboardingPayload.accent = data.accent;
                 onboardingPayload.deep_struggle = data.deepStruggle;
+                
+                // MAPPING FOR SERVER.JS COMPATIBILITY
+                // 1. Map 'deep_struggle' to 'pain_point'
+                onboardingPayload.pain_point = data.deepStruggle;
+                
+                // 2. Map 'accent' to 'user_context' (or append)
+                // Since Beta doesn't ask for context, we infer it.
+                onboardingPayload.user_context = `General Practice (Accent: ${data.accent})`;
+                
+                // 3. Default 'target_audience'
+                onboardingPayload.target_audience = "my audience";
             }
 
             // Use upsert to ensure profile exists
@@ -386,6 +412,23 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         ))}
                     </RadioGroup>
                 );
+            case 'audience':
+                return (
+                    <div className="space-y-6 py-2">
+                        <div className="space-y-4">
+                            <Label htmlFor="targetAudience" className="text-lg font-medium">Who are you speaking to?</Label>
+                            <Input
+                                id="targetAudience"
+                                placeholder="e.g. My Boss, Investors, A large crowd..."
+                                value={data.targetAudience}
+                                onChange={(e) => setData({ ...data, targetAudience: e.target.value })}
+                                className="h-14 text-lg px-6 bg-background/50 border-primary/20 focus:border-primary transition-all"
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Enter' && data.targetAudience && handleNext()}
+                            />
+                        </div>
+                    </div>
+                );
             case 'pain_point':
                 return (
                     <RadioGroup
@@ -417,34 +460,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         ))}
                     </RadioGroup>
                 );
-            case 'confidence':
-                return (
-                    <div className="space-y-8 py-4 px-2">
-                        <div className="text-center space-y-2">
-                            <div className="text-6xl font-bold text-primary">{data.confidenceLevel}</div>
-                            <p className="text-muted-foreground">
-                                {data.confidenceLevel <= 3 ? "I feel very anxious" : 
-                                 data.confidenceLevel <= 6 ? "I'm somewhat comfortable" : 
-                                 data.confidenceLevel <= 8 ? "I feel pretty good" : "I'm unstoppable"}
-                            </p>
-                        </div>
-                        
-                        <Slider
-                            value={[data.confidenceLevel]}
-                            onValueChange={(val) => setData({ ...data, confidenceLevel: val[0] })}
-                            max={10}
-                            min={1}
-                            step={1}
-                            className="py-4"
-                        />
-                        
-                        <div className="flex justify-between text-xs text-muted-foreground px-1">
-                            <span>Terrified (1)</span>
-                            <span>Confident (10)</span>
-                        </div>
-                    </div>
-                );
-
+            
             // Beta Path Steps
             case 'consent':
                 return (
@@ -473,6 +489,42 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                             >
                                 I agree to let Yash AI use my anonymized voice data for training models.
                             </Label>
+                        </div>
+                    </div>
+                );
+            case 'deep_struggle':
+                return (
+                    <div className="space-y-6 py-2">
+                        <div className="space-y-4">
+                            <Label htmlFor="deepStruggle" className="text-lg font-medium">Describe the moment you lose confidence</Label>
+                            <Textarea
+                                id="deepStruggle"
+                                placeholder="I freeze when people look at me..."
+                                value={data.deepStruggle}
+                                onChange={(e) => setData({ ...data, deepStruggle: e.target.value })}
+                                className="min-h-[150px] text-lg p-4 bg-background/50 border-primary/20 focus:border-primary transition-all resize-none"
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                );
+            case 'accent':
+                return (
+                    <div className="space-y-6 py-2">
+                        <div className="space-y-4">
+                            <Label htmlFor="accent" className="text-lg font-medium">Primary Language / Accent</Label>
+                            <Input
+                                id="accent"
+                                placeholder="e.g. Indian English, Hindi, US English..."
+                                value={data.accent}
+                                onChange={(e) => setData({ ...data, accent: e.target.value })}
+                                className="h-14 text-lg px-6 bg-background/50 border-primary/20 focus:border-primary transition-all"
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Enter' && data.accent && handleNext()}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Being specific helps us select the right speech recognition model for you.
+                            </p>
                         </div>
                     </div>
                 );
@@ -506,39 +558,32 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         ))}
                     </RadioGroup>
                 );
-            case 'accent':
+
+            // Shared Closing Step
+            case 'confidence':
                 return (
-                    <div className="space-y-6 py-2">
-                        <div className="space-y-4">
-                            <Label htmlFor="accent" className="text-lg font-medium">Primary Language / Accent</Label>
-                            <Input
-                                id="accent"
-                                placeholder="e.g. Indian English, Hindi, US English..."
-                                value={data.accent}
-                                onChange={(e) => setData({ ...data, accent: e.target.value })}
-                                className="h-14 text-lg px-6 bg-background/50 border-primary/20 focus:border-primary transition-all"
-                                autoFocus
-                                onKeyDown={(e) => e.key === 'Enter' && data.accent && handleNext()}
-                            />
-                            <p className="text-sm text-muted-foreground">
-                                Being specific helps us select the right speech recognition model for you.
+                    <div className="space-y-8 py-4 px-2">
+                        <div className="text-center space-y-2">
+                            <div className="text-6xl font-bold text-primary">{data.confidenceLevel}</div>
+                            <p className="text-muted-foreground">
+                                {data.confidenceLevel <= 3 ? "I feel very anxious" : 
+                                 data.confidenceLevel <= 6 ? "I'm somewhat comfortable" : 
+                                 data.confidenceLevel <= 8 ? "I feel pretty good" : "I'm unstoppable"}
                             </p>
                         </div>
-                    </div>
-                );
-            case 'deep_struggle':
-                return (
-                    <div className="space-y-6 py-2">
-                        <div className="space-y-4">
-                            <Label htmlFor="deepStruggle" className="text-lg font-medium">Describe the moment you lose confidence</Label>
-                            <Textarea
-                                id="deepStruggle"
-                                placeholder="I freeze when people look at me..."
-                                value={data.deepStruggle}
-                                onChange={(e) => setData({ ...data, deepStruggle: e.target.value })}
-                                className="min-h-[150px] text-lg p-4 bg-background/50 border-primary/20 focus:border-primary transition-all resize-none"
-                                autoFocus
-                            />
+                        
+                        <Slider
+                            value={[data.confidenceLevel]}
+                            onValueChange={(val) => setData({ ...data, confidenceLevel: val[0] })}
+                            max={10}
+                            min={1}
+                            step={1}
+                            className="py-4"
+                        />
+                        
+                        <div className="flex justify-between text-xs text-muted-foreground px-1">
+                            <span>Terrified (1)</span>
+                            <span>Confident (10)</span>
                         </div>
                     </div>
                 );
@@ -557,14 +602,17 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             
             // Standard
             case 'context': return !!data.userContext;
+            case 'audience': return data.targetAudience.trim().length > 0;
             case 'pain_point': return !!data.painPoint;
-            case 'confidence': return true;
             
             // Beta
             case 'consent': return data.betaConsent;
-            case 'timeline': return !!data.timeline;
-            case 'accent': return data.accent.trim().length > 0;
             case 'deep_struggle': return data.deepStruggle.trim().length > 0;
+            case 'accent': return data.accent.trim().length > 0;
+            case 'timeline': return !!data.timeline;
+            
+            // Shared
+            case 'confidence': return true;
             
             default: return false;
         }

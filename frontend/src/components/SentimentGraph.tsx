@@ -38,7 +38,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 const SentimentGraph: React.FC<SentimentGraphProps> = ({ data }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 relative overflow-hidden">
+    <div className="bg-[#faf7ff] rounded-2xl border border-[rgba(139,92,246,0.12)] shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 relative overflow-hidden">
+      {/* Top Accent Line */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-[#8b5cf6]"></div>
+
       <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">

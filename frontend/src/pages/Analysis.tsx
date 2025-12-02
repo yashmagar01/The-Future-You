@@ -58,7 +58,7 @@ const Analysis = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50/50 pb-20">
+      <div className="min-h-screen bg-[#f8f7f5] pb-20">
         {/* Header / Nav Area */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-7xl">
@@ -225,12 +225,19 @@ const Analysis = () => {
               </div>
 
               {/* Footer Actions */}
-              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40">
+              <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 z-40">
                 <div className="container mx-auto max-w-7xl flex justify-between items-center">
-                  <Button variant="outline" onClick={() => navigate('/gallery')} className="text-gray-600">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/gallery')} 
+                    className="text-gray-600 border-2 border-[#1db584] hover:bg-[#1db584]/5 hover:text-gray-900 transition-all duration-200"
+                  >
                     Back to Gallery
                   </Button>
-                  <Button onClick={() => navigate('/record')} className="bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-900/20">
+                  <Button 
+                    onClick={() => navigate('/record')} 
+                    className="bg-gradient-to-br from-[#1db584] to-[#15a368] hover:from-[#16b578] hover:to-[#12935d] text-white shadow-[0_8px_20px_rgba(29,181,132,0.3)] hover:shadow-[0_10px_25px_rgba(29,181,132,0.4)] transition-all duration-200 border-none"
+                  >
                     <Upload className="h-4 w-4 mr-2" />
                     Record Another Session
                   </Button>

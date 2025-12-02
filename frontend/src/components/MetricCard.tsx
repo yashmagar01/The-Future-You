@@ -87,36 +87,6 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <Tooltip.Provider>
-      <article
-        className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-md border border-gray-100 flex flex-col h-full transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer group"
-        onClick={() => expandedContent && setIsExpanded(!isExpanded)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={isExpanded}
-        aria-label={`${title} metric card, score ${score} out of ${maxScore}`}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 ${colors.bgLight} rounded-lg ${colors.text} transition-transform group-hover:scale-110`}>
-              {icon}
-            </div>
-            <h3 className="font-semibold text-gray-800 text-lg">{title}</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-4xl font-bold ${colors.text} transition-all`}>
-              {score}
-            </span>
-          </div>
-        </div>
-
-        {/* Status Badge */}
-        <div className="mb-4">
-          <span className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wide ${colors.badge}`}>
-            {getStatusLabel(status)}
-          </span>
-        </div>
-
         {/* Progress Bar */}
         <div className="w-full bg-gray-100 rounded-full h-3 mb-6 overflow-hidden">
           <div

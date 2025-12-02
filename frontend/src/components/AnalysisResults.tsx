@@ -172,15 +172,15 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
 
         {/* Key Takeaways */}
         <div className="lg:col-span-7">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 h-full">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-500" />
+          <div className="bg-[#f7fdf9] rounded-2xl border border-[rgba(16,185,129,0.12)] border-l-4 border-l-[#10b981] shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-8 h-full">
+            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2 text-lg">
+              <Zap className="w-5 h-5 text-[#10b981]" />
               Key Takeaways
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {mockTakeaways.map((takeaway, idx) => (
-                <li key={idx} className="flex gap-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                  <span className="text-teal-500 font-bold">•</span>
+                <li key={idx} className="flex gap-3 text-base text-gray-700 bg-white/60 p-3 rounded-lg border border-[#10b981]/10">
+                  <span className="text-[#10b981] font-bold">•</span>
                   {takeaway}
                 </li>
               ))}
@@ -228,44 +228,44 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
       </div>
 
       {/* SECTION 4: ACTIONABLE FIXES (New) */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
-            <div className="bg-red-100 p-2 rounded-lg">
-              <Zap className="w-5 h-5 text-red-600" />
+      <div className="bg-[#fef2f2] rounded-2xl border border-[rgba(239,68,68,0.15)] shadow-[0_4px_24px_rgba(0,0,0,0.05)] p-8">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="font-bold text-gray-900 flex items-center gap-3 text-xl">
+            <div className="bg-[rgba(239,68,68,0.1)] p-2 rounded-lg">
+              <Zap className="w-6 h-6 text-red-600" />
             </div>
             Actionable Fixes
           </h3>
-          <span className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
+          <span className="text-sm text-red-700 font-bold bg-white px-4 py-1.5 rounded-full border border-red-100 shadow-sm">
             {mockActionItems.filter(i => !i.completed).length} Priority Items
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockActionItems.map((item) => (
             <div 
               key={item.id} 
-              className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all duration-200 rounded-xl p-4 flex flex-col justify-between"
+              className="group bg-white hover:bg-[#fff5f5] border border-[rgba(239,68,68,0.1)] hover:border-[rgba(239,68,68,0.3)] shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-5 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-white px-2 py-1 rounded border border-gray-100">
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-red-400 bg-red-50 px-2 py-1 rounded">
                     Fix #{item.id}
                   </span>
                   {item.completed ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : (
-                    <AlertCircle className="w-5 h-5 text-amber-500" />
+                    <AlertCircle className="w-5 h-5 text-red-500" />
                   )}
                 </div>
-                <p className="text-gray-800 font-medium text-sm leading-relaxed mb-4">
+                <p className="text-gray-900 font-medium text-base leading-relaxed mb-6">
                   "{item.text}"
                 </p>
               </div>
               
               <button
                 onClick={() => onSeek && onSeek(item.timestamp)}
-                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 py-2 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 py-3 rounded-lg transition-colors"
               >
                 <Play className="w-3 h-3 fill-current" />
                 Jump to {Math.floor(item.timestamp / 60)}:{(item.timestamp % 60).toString().padStart(2, '0')}

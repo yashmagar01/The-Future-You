@@ -12,29 +12,6 @@ const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({ score }) => {
   // Determine social proof text based on score
   const getSocialProof = (s: number) => {
     if (s >= 90) return "Top 5% of speakers";
-    if (s >= 80) return "Top 15% of speakers";
-    if (s >= 70) return "Better than average";
-    return "Room for growth";
-  };
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col items-center justify-center h-full relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-emerald-500" />
-      
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center justify-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-500" />
-          Confidence Score
-        </h3>
-        <p className="text-sm text-gray-500">Overall Performance</p>
-      </div>
-      
-      <div className="h-[200px] w-full relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart 
-            cx="50%" 
-            cy="50%" 
-            innerRadius="70%" 
             outerRadius="100%" 
             barSize={20} 
             data={data} 

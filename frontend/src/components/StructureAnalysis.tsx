@@ -73,30 +73,6 @@ const StructureAnalysis: React.FC<StructureAnalysisProps> = ({
   const change = previousScore ? score - previousScore : 0;
   const changePercent = previousScore ? ((change / previousScore) * 100).toFixed(1) : '0';
 
-  // Circular progress calculations
-  const radius = 70;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col h-full justify-between hover:shadow-lg transition-shadow duration-300">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <Brain className="w-6 h-6 text-purple-500" />
-          Thought Structure
-        </h3>
-        {icon}
-      </div>
-
-      {/* Circular Progress Indicator */}
-      <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
-        {/* Circle */}
-        <div className="relative w-48 h-48 flex-shrink-0">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
-            {/* Background circle */}
-            <circle
-              cx="80"
               cy="80"
               r={radius}
               stroke="#e5e7eb"

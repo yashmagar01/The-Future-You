@@ -143,25 +143,6 @@ const StructureAnalysis: React.FC<StructureAnalysisProps> = ({
               <span className="text-gray-400">vs last session</span>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Expandable Details */}
-      <div className="border-t border-gray-100 pt-4">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <Brain className="w-4 h-4" />
-            Detailed Analysis
-          </span>
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-
-        {expanded && (
-          <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            {/* Metrics Breakdown */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Avg Sentence Length</span>

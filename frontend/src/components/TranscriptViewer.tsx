@@ -50,7 +50,7 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
         return (
           <React.Fragment key={index}>
             <span 
-              className="bg-amber-100 text-amber-800 px-1 rounded mx-0.5 font-medium border border-amber-200/50"
+              className="bg-[rgba(251,191,36,0.2)] text-[#92400e] px-1 rounded mx-0.5 font-medium border border-amber-200/30"
               title="Filler word"
             >
               {word}
@@ -64,20 +64,20 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px] overflow-hidden">
-      <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+    <div className="bg-[#fafbfc] rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px] overflow-hidden">
+      <div className="p-4 border-b border-gray-100 bg-[#f5f7fa] flex justify-between items-center">
         <h3 className="font-bold text-gray-800 flex items-center gap-2">
           <Clock className="w-4 h-4 text-gray-500" />
           Transcript
         </h3>
-        <span className="text-xs font-medium text-gray-500 bg-gray-200/50 px-2 py-1 rounded-full">
+        <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-2 py-1 rounded-full shadow-sm">
           Auto-scroll enabled
         </span>
       </div>
       
       <div 
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
+        className="flex-1 overflow-y-auto p-0 space-y-0 scroll-smooth"
       >
         {transcript.map((segment, idx) => {
           // Determine if this segment is active based on time
@@ -88,21 +88,21 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
             <div 
               key={idx}
               ref={isActive ? activeRef : null}
-              className={`group transition-all duration-300 rounded-xl p-4 border-l-4 ${
+              className={`group transition-all duration-300 p-4 border-b border-gray-50 ${
                 isActive 
-                  ? 'bg-blue-50/50 border-blue-500 shadow-sm' 
-                  : 'hover:bg-gray-50 border-transparent hover:border-gray-200'
+                  ? 'bg-white shadow-sm z-10 relative' 
+                  : 'hover:bg-white/50'
               }`}
             >
               <div className="flex gap-4 items-start">
                 {/* Timestamp Column */}
-                <div className="flex-shrink-0 w-12 pt-1">
+                <div className="flex-shrink-0 w-14 pt-1 bg-[#f5f7fa] rounded px-1 py-0.5 text-center border border-gray-100">
                   <button
                     onClick={() => onSeek(segment.time)}
-                    className={`text-xs font-mono px-2 py-0.5 rounded transition-colors w-full text-center ${
+                    className={`text-xs font-mono transition-colors w-full text-center ${
                       isActive 
-                        ? 'bg-blue-100 text-blue-700 font-bold' 
-                        : 'text-gray-400 bg-gray-100 group-hover:bg-gray-200 group-hover:text-gray-600'
+                        ? 'text-blue-700 font-bold' 
+                        : 'text-gray-400 group-hover:text-gray-600'
                     }`}
                   >
                     {Math.floor(segment.time / 60)}:{(segment.time % 60).toString().padStart(2, '0')}

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Check, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
-// Types
 export interface DetailItem {
   label: string;
   value: string | number;
@@ -22,7 +21,6 @@ export interface MetricCardProps {
   onDrillDown?: () => void;
 }
 
-// Helper to get color classes based on status
 const getStatusColors = (status: MetricCardProps['status']) => {
   const colorMap = {
     excellent: {
@@ -71,6 +69,13 @@ const getStatusLabel = (status: MetricCardProps['status']) => {
   return labelMap[status];
 };
 
+const getScoreColor = (score: number) => {
+  if (score >= 90) return 'text-green-600';
+  if (score >= 75) return 'text-blue-600';
+  if (score >= 60) return 'text-amber-600';
+  return 'text-red-600';
+};
+
 const MetricCard: React.FC<MetricCardProps> = ({
   icon,
   title,
@@ -85,20 +90,82 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const colors = getStatusColors(status);
   const percentage = (score / maxScore) * 100;
 
+  const getStatusStyles = (status: 'excellent' | 'good' | 'average' | 'needs-work') => {
+    switch (status) {
+      case 'excellent':
+        return {
+          bg: 'bg-[#f0fdf4]',
+          border: 'border-[rgba(16,185,129,0.12)]',
+          accent: 'bg-[#10b981]',
+          text: 'text-green-700'
+        };
+      case 'good':
+        return {
+          bg: 'bg-[#f0fdf4]',
+          border: 'border-[rgba(16,185,129,0.12)]',
+          accent: 'bg-[#10b981]',
+          text: 'text-green-700'
+        };
+      case 'average':
+        return {
+          bg: 'bg-[#fffbeb]',
+          border: 'border-[rgba(245,158,11,0.12)]',
+          accent: 'bg-[#f59e0b]',
+          text: 'text-amber-700'
+        };
+      case 'needs-work':
+        return {
+          bg: 'bg-[#fef8f7]',
+          border: 'border-[rgba(239,68,68,0.12)]',
+          accent: 'bg-[#ef4444]',
+          text: 'text-red-700'
+        };
+      default:
+        return {
+          bg: 'bg-white',
+          border: 'border-gray-100',
+          accent: 'bg-gray-400',
+          text: 'text-gray-700'
+        };
+    }
+  };
+
+  const styles = getStatusStyles(status);
+
   return (
     <Tooltip.Provider>
-        {/* Progress Bar */}
+      <div className={`rounded-2xl border ${styles.border} shadow-[0_2px_12px_rgba(0,0,0,0.04)] ${styles.bg} p-6 relative overflow-hidden transition-all duration-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]`}>
+        <div className={`absolute top-0 left-0 w-full h-[2px] ${styles.accent}`}></div>
+
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg bg-white shadow-sm border border-gray-100 ${styles.text}`}>
+              {icon}
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-800 text-lg">{title}</h3>
+              <span className={`text-xs font-bold uppercase tracking-wider ${styles.text} opacity-80`}>
+                {status.replace('-', ' ')}
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className={`text-3xl font-black ${getScoreColor(score)}`}>
+              {score}
+            </span>
+            <span className="text-xs text-gray-400 font-medium block uppercase tracking-wide">Score</span>
+          </div>
+        </div>
+
         <div className="w-full bg-gray-100 rounded-full h-3 mb-6 overflow-hidden">
           <div
             className={`h-full bg-gradient-to-r ${colors.gradient} rounded-full transition-all duration-1500 ease-out-cubic relative`}
             style={{ width: `${percentage}%` }}
           >
-            {/* Shimmer effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
           </div>
         </div>
 
-        {/* Details */}
         <div className="mt-auto space-y-3">
           {details.map((detail, idx) => (
             <Tooltip.Root key={idx} delayDuration={300}>
@@ -136,7 +203,6 @@ const MetricCard: React.FC<MetricCardProps> = ({
           ))}
         </div>
 
-        {/* Expand/Collapse Button */}
         {expandedContent && (
           <button
             className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
@@ -150,14 +216,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </button>
         )}
 
-        {/* Expanded Content */}
         {isExpanded && expandedContent && (
           <div className="mt-4 pt-4 border-t border-gray-100 animate-in slide-in-from-top-2 fade-in duration-300">
             {expandedContent}
           </div>
         )}
 
-        {/* Drill Down Action */}
         {onDrillDown && (
           <button
             className={`mt-4 w-full py-2 rounded-lg text-sm font-medium transition-colors ${colors.bgLight} ${colors.text} hover:${colors.bg} hover:text-white`}
@@ -169,7 +233,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
             View Full Report
           </button>
         )}
-      </article>
+      </div>
     </Tooltip.Provider>
   );
 };

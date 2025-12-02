@@ -7,11 +7,35 @@ interface ConfidenceGaugeProps {
 }
 
 const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({ score }) => {
-  const data = [{ name: 'Confidence', value: score, fill: '#10b981' }]; // Brand green
+  const data = [{ name: 'Confidence', value: score, fill: '#10b981' }];
 
-  // Determine social proof text based on score
   const getSocialProof = (s: number) => {
     if (s >= 90) return "Top 5% of speakers";
+    if (s >= 80) return "Top 15% of speakers";
+    if (s >= 70) return "Better than average";
+    return "Room for growth";
+  };
+
+  return (
+    <div className="bg-gradient-to-b from-[#fafbfc] to-[#f5f6f8] rounded-2xl border border-[rgba(71,126,255,0.15)] shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-8 h-full flex flex-col justify-between relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-500 opacity-20"></div>
+      
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-yellow-500" />
+            Confidence Score
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">Overall Performance</p>
+        </div>
+      </div>
+      
+      <div className="h-[200px] w-full relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadialBarChart 
+            cx="50%" 
+            cy="50%" 
+            innerRadius="70%" 
             outerRadius="100%" 
             barSize={20} 
             data={data} 
@@ -28,7 +52,6 @@ const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({ score }) => {
           </RadialBarChart>
         </ResponsiveContainer>
         
-        {/* Center Text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
           <span className="text-5xl font-black text-gray-900 tracking-tight">{score}</span>
           <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">/ 100</span>

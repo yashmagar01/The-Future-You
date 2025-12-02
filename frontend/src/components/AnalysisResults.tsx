@@ -194,13 +194,13 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
   }, [overall_score]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-3rem)]">
+    <div className="min-h-screen bg-gray-50/50 p-4 md:p-8 font-sans text-gray-900">
+      <div className="max-w-[1800px] mx-auto grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         
         {/* LEFT COLUMN: THE STAGE (40%) */}
-        <div className="lg:col-span-5 flex flex-col gap-6 h-full overflow-hidden">
+        <div className="xl:col-span-5 flex flex-col gap-6 sticky top-8">
           {/* Video Player Container */}
-          <div className="bg-black rounded-xl overflow-hidden shadow-lg aspect-video relative group">
+          <div className="bg-black rounded-2xl overflow-hidden shadow-2xl shadow-blue-900/20 aspect-video relative group border border-gray-800">
             {/* Placeholder for Video */}
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
               <span className="text-gray-500">Video Player Placeholder</span>
@@ -249,7 +249,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
         </div>
 
         {/* MIDDLE COLUMN: THE METRICS LAB (35%) */}
-        <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 custom-scrollbar">
+        <div className="xl:col-span-4 flex flex-col gap-6">
           {/* Hero Card: Confidence */}
           <ConfidenceGauge score={overall_score} />
 
@@ -285,7 +285,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
         </div>
 
         {/* RIGHT COLUMN: THE AI COACH (25%) */}
-        <div className="lg:col-span-3 flex flex-col gap-6 h-full overflow-y-auto pl-2">
+        <div className="xl:col-span-3 flex flex-col gap-6 sticky top-8">
           <AICoach 
             takeaways={mockTakeaways} 
             actionItems={mockActionItems} 

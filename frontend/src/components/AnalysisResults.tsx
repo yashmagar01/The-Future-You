@@ -98,18 +98,6 @@ const getScoreColor = (score: number) => {
   return "text-red-500";
 };
 
-const getScoreBg = (score: number) => {
-  if (score >= 80) return "bg-green-50 border-green-200";
-  if (score >= 50) return "bg-yellow-50 border-yellow-200";
-  return "bg-red-50 border-red-200";
-};
-
-const getProgressColor = (score: number) => {
-  if (score >= 80) return "bg-green-500";
-  if (score >= 50) return "bg-yellow-500";
-  return "bg-red-500";
-};
-
 // Helper to determine status for MetricCard
 const getMetricStatus = (score: number): 'excellent' | 'good' | 'average' | 'needs-work' => {
   if (score >= 80) return 'excellent';
@@ -118,52 +106,196 @@ const getMetricStatus = (score: number): 'excellent' | 'good' | 'average' | 'nee
   return 'needs-work';
 };
 
-// --- Components ---
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS }) => {
+  const { overall_score, metrics, transcript_summary } = analysis;
+  const [displayScore, setDisplayScore] = useState(0);
+  const confettiTriggered = useRef(false);
 
-const ScoreCard = ({ title, score, icon: Icon, children }: { title: string, score: number, icon: any, children?: React.ReactNode }) => (
-  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
-    <div className="flex justify-between items-start mb-4">
-      <div className="flex items-center gap-2">
-        <div className="p-2 bg-gray-50 rounded-lg text-gray-600">
-          <Icon size={20} />
-        </div>
-        <h3 className="font-semibold text-gray-700">{title}</h3>
-      </div>
-      <span className={`text-xl font-bold ${getScoreColor(score)}`}>{score}</span>
-    </div>
-    
-    {/* Progress Bar */}
-    <div className="w-full bg-gray-100 rounded-full h-2 mb-4">
-      <div 
-        className={`h-2 rounded-full transition-all duration-1000 ${getProgressColor(score)}`} 
-        style={{ width: `${score}%` }}
-      />
-    </div>
+  // Helper to get gradient colors based on score
+  const getGradientColors = (score: number) => {
+    if (score >= 80) return { start: '#10b981', end: '#059669' }; // Green
+    if (score >= 60) return { start: '#3b82f6', end: '#2563eb' }; // Blue
+    if (score >= 40) return { start: '#f59e0b', end: '#d97706' }; // Amber
+    return { start: '#ef4444', end: '#dc2626' }; // Red
+  };
 
-          <div className="flex items-center gap-4">
-            <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-medium">
-              {metrics.sentiment?.score || "Neutral"}
+  const gradientColors = getGradientColors(overall_score);
+
+  // --- Mock Data for Glass Cockpit ---
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Mock Transcript
+  const mockTranscript = [
+    { time: 0, text: "Alright, uh, today I'd like to talk to you about how to build an MVP or a Minimum Viable Product." },
+    { time: 5, text: "So if you haven't seen this before, this is a meme that we love to talk about when trying to help founders with their MVP." },
+    { time: 12, text: "It's called the Midwitt Meme. The person who is the Jedi, the super intelligent, the founder who's doing all the best things and knows all the best things," },
+    { time: 20, text: "and the idiot, the first time founder, the founder who has no idea what's going on." },
+    { time: 25, text: "Many times, these two founders will actually come to the right decision before the founder who is really smart and is trying to work really hard and do everything right." },
+    { time: 35, text: "And so, in this situation with the MVP, the best advice is to actually launch something quickly and iterate." },
+    { time: 42, text: "Get a product into the hands of your customers and then learn whether it helps them or doesn't and then iterate it and improve it over time." },
+    { time: 50, text: "The wrong answer is to do a hundred surveys and 600 user interviews and contact every single one of the competitors and spend a year fundraising and hire 100 people and all these other things that you can distract yourself with that it might appear like other smart things." },
+    { time: 65, text: "But in reality, they really don't highlight the most important point about an MVP, which is you'd only really start learning when you put a product in front of a customer." },
+  ];
+
+  // Mock Sentiment Data
+  const mockSentimentData = [
+    { time: '0:00', score: 30, label: 'Neutral' },
+    { time: '0:10', score: 45, label: 'Positive' },
+    { time: '0:20', score: 60, label: 'Positive' },
+    { time: '0:30', score: 80, label: 'High Energy' },
+    { time: '0:40', score: 50, label: 'Neutral' },
+    { time: '0:50', score: 20, label: 'Concern' },
+    { time: '1:00', score: 40, label: 'Neutral' },
+    { time: '1:10', score: 70, label: 'Positive' },
+  ];
+
+  // Mock AI Coach Data
+  const mockTakeaways = [
+    "You started strong with a clear hook about the 'Midwitt Meme'.",
+    "Great use of contrast between the 'Jedi' and the 'Idiot' founders.",
+    "The conclusion about 'launching quickly' was delivered with high conviction."
+  ];
+
+  const mockActionItems = [
+    { id: '1', text: "Replace 'actually' with a pause for emphasis.", timestamp: 35, completed: false },
+    { id: '2', text: "Slow down when explaining the 'wrong answer' list.", timestamp: 50, completed: false },
+    { id: '3', text: "Maintain eye contact during the transition.", timestamp: 12, completed: true },
+  ];
+
+  // Simulate video playing
+  useEffect(() => {
+    let interval: any;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentTime(prev => (prev >= 70 ? 0 : prev + 1));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  const handleSeek = (time: number) => {
+    setCurrentTime(time);
+    setIsPlaying(true);
+  };
+
+  // Trigger confetti for high scores
+  useEffect(() => {
+    if (overall_score >= 80 && !confettiTriggered.current) {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#8b5cf6'],
+        ticks: 300,
+      });
+      confettiTriggered.current = true;
+    }
+  }, [overall_score]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-3rem)]">
+        
+        {/* LEFT COLUMN: THE STAGE (40%) */}
+        <div className="lg:col-span-5 flex flex-col gap-6 h-full overflow-hidden">
+          {/* Video Player Container */}
+          <div className="bg-black rounded-xl overflow-hidden shadow-lg aspect-video relative group">
+            {/* Placeholder for Video */}
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+              <span className="text-gray-500">Video Player Placeholder</span>
             </div>
-            {metrics.sentiment?.confidence_level && (
-              <span className="text-sm text-gray-500">
-                Confidence: {metrics.sentiment.confidence_level}
-              </span>
-            )}
+            
+            {/* Custom Controls Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Heatmap Timeline */}
+              <div className="h-1 bg-gray-600 rounded-full mb-4 relative cursor-pointer" onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                handleSeek(percent * 70);
+              }}>
+                <div 
+                  className="absolute top-0 left-0 h-full bg-blue-500 rounded-full" 
+                  style={{ width: `${(currentTime / 70) * 100}%` }}
+                />
+                {/* Heatmap spots (mock) */}
+                <div className="absolute top-0 left-[30%] w-[10%] h-full bg-yellow-500/50 blur-[1px]" />
+                <div className="absolute top-0 left-[70%] w-[15%] h-full bg-red-500/50 blur-[1px]" />
+              </div>
+
+              <div className="flex justify-between items-center text-white">
+                <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-blue-400">
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+                <span className="text-xs font-mono">
+                  {Math.floor(currentTime / 60)}:{(currentTime % 60).toString().padStart(2, '0')} / 1:10
+                </span>
+                <div className="flex gap-3">
+                  <Volume2 size={18} />
+                  <Maximize2 size={18} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Synced Transcript */}
+          <div className="flex-1 overflow-hidden">
+            <TranscriptViewer 
+              transcript={mockTranscript} 
+              currentTime={currentTime} 
+              onSeek={handleSeek} 
+            />
           </div>
         </div>
 
-        {/* Transcript */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-gray-100 col-span-1 md:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-              <FileText size={20} />
+        {/* MIDDLE COLUMN: THE METRICS LAB (35%) */}
+        <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 custom-scrollbar">
+          {/* Hero Card: Confidence */}
+          <ConfidenceGauge score={overall_score} />
+
+          {/* Pace & Tone Chart */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-gray-800">Speaking Pace</h3>
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Target: 130-150 WPM</span>
             </div>
-            <h3 className="font-semibold text-gray-700">Transcript</h3>
+            <PacingGraph data={metrics.timeline || []} />
           </div>
-          <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-            <p className="text-gray-700 text-sm leading-loose whitespace-pre-wrap capitalize">
-              {transcript_summary || "No transcript available for this session."}
-            </p>
+
+          {/* Sentiment Wave */}
+          <SentimentGraph data={mockSentimentData} />
+
+          {/* Metric Cards Grid (Compact) */}
+          <div className="grid grid-cols-2 gap-4">
+             <MetricCard
+              icon={<Mic size={18} />}
+              title="Clarity"
+              score={metrics.clarity.score}
+              status={getMetricStatus(metrics.clarity.score)}
+              details={[]}
+            />
+             <MetricCard
+              icon={<User size={18} />}
+              title="Posture"
+              score={metrics.posture?.score || 0}
+              status={getMetricStatus(metrics.posture?.score || 0)}
+              details={[]}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: THE AI COACH (25%) */}
+        <div className="lg:col-span-3 flex flex-col gap-6 h-full overflow-y-auto pl-2">
+          <AICoach 
+            takeaways={mockTakeaways} 
+            actionItems={mockActionItems} 
+            onSeek={handleSeek} 
+          />
+          
+          {/* Structure Analysis (Compact) */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <h3 className="font-semibold text-gray-800 mb-4">Structure</h3>
+            <StructureAnalysis score={metrics.structure_score || 0} />
           </div>
         </div>
 

@@ -4,16 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronRight, ChevronLeft, Check, Sparkles, Mic, PenTool, Brain, Target, Zap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Sparkles, Mic, PenTool, Brain, Target, Zap, Users, MessageSquare, AlertCircle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 interface OnboardingData {
     fullName: string;
-    reflectionStyle: 'voice' | 'text' | 'both';
     experienceLevel: string;
     primaryGoal: string;
+    // New Fields
+    userContext: string;
+    targetAudience: string;
+    painPoint: string;
+    confidenceLevel: number;
+    // Legacy fields (kept for type safety but unused)
+    reflectionStyle: 'voice' | 'text' | 'both';
     focusAreas: string[];
     reflectionFrequency: string;
     notificationsEnabled: boolean;
@@ -33,27 +40,27 @@ const STEPS = [
         icon: null,
     },
     {
-        id: 'style',
-        title: 'How do you prefer to reflect?',
-        subtitle: 'Choose the medium that feels most natural to you.',
-        icon: PenTool,
+        id: 'context',
+        title: 'What is your main focus right now?',
+        subtitle: 'This helps us generate relevant practice scripts.',
+        icon: MessageSquare,
     },
     {
-        id: 'experience',
-        title: 'Have you practiced self-reflection before?',
-        subtitle: 'This helps us tailor the guidance level.',
-        icon: Brain,
+        id: 'audience',
+        title: 'Who are you usually speaking to?',
+        subtitle: 'Tailor your practice to your real-world audience.',
+        icon: Users,
     },
     {
-        id: 'goals',
-        title: 'What is your primary goal?',
-        subtitle: 'Choose the one that resonates most with you right now.',
-        icon: Target,
+        id: 'pain_point',
+        title: 'What is your biggest struggle?',
+        subtitle: 'We will help you overcome this specific challenge.',
+        icon: AlertCircle,
     },
     {
-        id: 'frequency',
-        title: 'How often do you want to reflect?',
-        subtitle: 'Consistency is key to seeing results.',
+        id: 'confidence',
+        title: 'How confident do you feel speaking?',
+        subtitle: 'Be honest. This is your baseline.',
         icon: Zap,
     }
 ];
@@ -63,11 +70,16 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
     const [direction, setDirection] = useState(0);
     const [data, setData] = useState<OnboardingData>({
         fullName: '',
+        experienceLevel: 'intermediate', // Default
+        primaryGoal: 'growth', // Default
+        userContext: '',
+        targetAudience: '',
+        painPoint: '',
+        confidenceLevel: 5,
+        // Legacy defaults
         reflectionStyle: 'both',
-        experienceLevel: '',
-        primaryGoal: '',
         focusAreas: [],
-        reflectionFrequency: '',
+        reflectionFrequency: 'daily',
         notificationsEnabled: true,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,7 +110,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                 throw new Error("No active session");
             }
 
-            // Use upsert to ensure profile exists (fixes loop if profile was missing)
+            // Use upsert to ensure profile exists
             const { error } = await supabase
                 .from('profiles')
                 .upsert({
@@ -106,12 +118,15 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                     email: session.user.email || '',
                     full_name: data.fullName,
                     onboarding_data: {
-                        reflection_style: data.reflectionStyle,
+                        // New Fields
+                        user_context: data.userContext,
+                        target_audience: data.targetAudience,
+                        pain_point: data.painPoint,
+                        confidence_level: data.confidenceLevel,
+                        // Legacy Mappings (for backward compatibility if needed)
                         experience_level: data.experienceLevel,
                         primary_goal: data.primaryGoal,
-                        focus_areas: data.focusAreas,
-                        reflection_frequency: data.reflectionFrequency,
-                        notifications_enabled: data.notificationsEnabled,
+                        reflection_style: data.reflectionStyle,
                         completed_at: new Date().toISOString()
                     },
                     updated_at: new Date().toISOString()
@@ -187,97 +202,24 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         </div>
                     </div>
                 );
-            case 2: // Style
+            case 2: // User Context
                 return (
                     <RadioGroup
-                        value={data.reflectionStyle}
-                        onValueChange={(val: any) => setData({ ...data, reflectionStyle: val })}
-                        className="grid gap-4 pt-2"
-                    >
-                        {[
-                            { value: 'voice', label: 'Voice Only', icon: Mic, desc: 'Talk through your thoughts' },
-                            { value: 'text', label: 'Text Only', icon: PenTool, desc: 'Write it down' },
-                            { value: 'both', label: 'Both', icon: Sparkles, desc: 'Flexibility to choose' },
-                        ].map((option) => (
-                            <Label
-                                key={option.value}
-                                className={cn(
-                                    "flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
-                                    data.reflectionStyle === option.value
-                                        ? "border-primary bg-primary/5"
-                                        : "border-muted bg-card hover:border-primary/50"
-                                )}
-                            >
-                                <RadioGroupItem value={option.value} className="sr-only" />
-                                <div className="flex items-center gap-4">
-                                    <div className={cn(
-                                        "p-2 rounded-lg",
-                                        data.reflectionStyle === option.value ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                                    )}>
-                                        <option.icon className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-base">{option.label}</div>
-                                        <div className="text-sm text-muted-foreground">{option.desc}</div>
-                                    </div>
-                                </div>
-                                {data.reflectionStyle === option.value && (
-                                    <Check className="w-5 h-5 text-primary" />
-                                )}
-                            </Label>
-                        ))}
-                    </RadioGroup>
-                );
-            case 3: // Experience
-                return (
-                    <RadioGroup
-                        value={data.experienceLevel}
-                        onValueChange={(val) => setData({ ...data, experienceLevel: val })}
+                        value={data.userContext}
+                        onValueChange={(val) => setData({ ...data, userContext: val })}
                         className="grid gap-3 pt-2"
                     >
                         {[
-                            { value: 'beginner', label: "I'm new to this", desc: "Never reflected consistently" },
-                            { value: 'intermediate', label: "I reflect occasionally", desc: "Once in a while" },
-                            { value: 'advanced', label: "It's a regular habit", desc: "Daily or weekly practice" },
-                        ].map((option) => (
-                            <Label
-                                key={option.value}
-                                className={cn(
-                                    "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
-                                    data.experienceLevel === option.value
-                                        ? "border-primary bg-primary/5"
-                                        : "border-muted bg-card hover:border-primary/50"
-                                )}
-                            >
-                                <RadioGroupItem value={option.value} className="sr-only" />
-                                <div className="flex-1">
-                                    <div className="font-medium text-base">{option.label}</div>
-                                    <div className="text-sm text-muted-foreground">{option.desc}</div>
-                                </div>
-                                {data.experienceLevel === option.value && (
-                                    <Check className="w-5 h-5 text-primary" />
-                                )}
-                            </Label>
-                        ))}
-                    </RadioGroup>
-                );
-            case 4: // Goals
-                return (
-                    <RadioGroup
-                        value={data.primaryGoal}
-                        onValueChange={(val) => setData({ ...data, primaryGoal: val })}
-                        className="grid gap-3 pt-2"
-                    >
-                        {[
-                            { value: 'clarity', label: "Gain mental clarity", icon: Brain },
-                            { value: 'growth', label: "Track personal growth", icon: Target },
-                            { value: 'decisions', label: "Make better decisions", icon: Zap },
+                            { value: 'Job Interview', label: "Job Interview Prep", icon: Target },
+                            { value: 'Public Speaking', label: "Public Speaking / Presentation", icon: Mic },
+                            { value: 'Difficult Conversation', label: "Difficult Conversation", icon: MessageSquare },
+                            { value: 'Personal Growth', label: "General Personal Growth", icon: Brain },
                         ].map((option) => (
                             <Label
                                 key={option.value}
                                 className={cn(
                                     "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
-                                    data.primaryGoal === option.value
+                                    data.userContext === option.value
                                         ? "border-primary bg-primary/5"
                                         : "border-muted bg-card hover:border-primary/50"
                                 )}
@@ -285,47 +227,106 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                                 <RadioGroupItem value={option.value} className="sr-only" />
                                 <div className={cn(
                                     "p-2 rounded-lg",
-                                    data.primaryGoal === option.value ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                    data.userContext === option.value ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                                 )}>
                                     <option.icon className="w-5 h-5" />
                                 </div>
                                 <div className="font-medium text-base">{option.label}</div>
-                                {data.primaryGoal === option.value && (
+                                {data.userContext === option.value && (
                                     <Check className="w-5 h-5 text-primary ml-auto" />
                                 )}
                             </Label>
                         ))}
                     </RadioGroup>
                 );
-            case 5: // Frequency
+            case 3: // Target Audience
                 return (
                     <RadioGroup
-                        value={data.reflectionFrequency}
-                        onValueChange={(val) => setData({ ...data, reflectionFrequency: val })}
-                        className="grid grid-cols-3 gap-4 pt-4"
+                        value={data.targetAudience}
+                        onValueChange={(val) => setData({ ...data, targetAudience: val })}
+                        className="grid gap-3 pt-2"
                     >
                         {[
-                            { value: 'daily', label: "Daily" },
-                            { value: 'weekly', label: "Weekly" },
-                            { value: 'monthly', label: "Monthly" },
+                            { value: 'Hiring Manager', label: "Hiring Manager / Recruiter" },
+                            { value: 'My Team', label: "My Team / Colleagues" },
+                            { value: 'Large Audience', label: "Large Audience (Stage)" },
+                            { value: 'Myself', label: "Just Myself (Journaling)" },
                         ].map((option) => (
                             <Label
                                 key={option.value}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5 aspect-square text-center",
-                                    data.reflectionFrequency === option.value
+                                    "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
+                                    data.targetAudience === option.value
                                         ? "border-primary bg-primary/5"
                                         : "border-muted bg-card hover:border-primary/50"
                                 )}
                             >
                                 <RadioGroupItem value={option.value} className="sr-only" />
-                                <div className="font-semibold text-lg mb-1">{option.label}</div>
-                                {data.reflectionFrequency === option.value && (
-                                    <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                                <div className="font-medium text-base ml-2">{option.label}</div>
+                                {data.targetAudience === option.value && (
+                                    <Check className="w-5 h-5 text-primary ml-auto" />
                                 )}
                             </Label>
                         ))}
                     </RadioGroup>
+                );
+            case 4: // Pain Point
+                return (
+                    <RadioGroup
+                        value={data.painPoint}
+                        onValueChange={(val) => setData({ ...data, painPoint: val })}
+                        className="grid gap-3 pt-2"
+                    >
+                        {[
+                            { value: 'rambling', label: "I tend to ramble" },
+                            { value: 'filler words', label: "I use too many filler words" },
+                            { value: 'nervousness', label: "I get nervous and freeze up" },
+                            { value: 'monotone', label: "My voice sounds flat/monotone" },
+                        ].map((option) => (
+                            <Label
+                                key={option.value}
+                                className={cn(
+                                    "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
+                                    data.painPoint === option.value
+                                        ? "border-primary bg-primary/5"
+                                        : "border-muted bg-card hover:border-primary/50"
+                                )}
+                            >
+                                <RadioGroupItem value={option.value} className="sr-only" />
+                                <div className="font-medium text-base ml-2">{option.label}</div>
+                                {data.painPoint === option.value && (
+                                    <Check className="w-5 h-5 text-primary ml-auto" />
+                                )}
+                            </Label>
+                        ))}
+                    </RadioGroup>
+                );
+            case 5: // Confidence Level
+                return (
+                    <div className="space-y-8 py-4 px-2">
+                        <div className="text-center space-y-2">
+                            <div className="text-6xl font-bold text-primary">{data.confidenceLevel}</div>
+                            <p className="text-muted-foreground">
+                                {data.confidenceLevel <= 3 ? "I feel very anxious" : 
+                                 data.confidenceLevel <= 6 ? "I'm somewhat comfortable" : 
+                                 data.confidenceLevel <= 8 ? "I feel pretty good" : "I'm unstoppable"}
+                            </p>
+                        </div>
+                        
+                        <Slider
+                            value={[data.confidenceLevel]}
+                            onValueChange={(val) => setData({ ...data, confidenceLevel: val[0] })}
+                            max={10}
+                            min={1}
+                            step={1}
+                            className="py-4"
+                        />
+                        
+                        <div className="flex justify-between text-xs text-muted-foreground px-1">
+                            <span>Terrified (1)</span>
+                            <span>Confident (10)</span>
+                        </div>
+                    </div>
                 );
             default:
                 return null;
@@ -336,10 +337,10 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
         switch (currentStep) {
             case 0: return true;
             case 1: return data.fullName.trim().length > 0;
-            case 2: return !!data.reflectionStyle;
-            case 3: return !!data.experienceLevel;
-            case 4: return !!data.primaryGoal;
-            case 5: return !!data.reflectionFrequency;
+            case 2: return !!data.userContext;
+            case 3: return !!data.targetAudience;
+            case 4: return !!data.painPoint;
+            case 5: return true; // Slider always has a value
             default: return false;
         }
     };

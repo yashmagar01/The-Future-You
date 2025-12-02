@@ -122,8 +122,7 @@ const PacingGraph: React.FC<PacingGraphProps> = ({ data }) => {
           <CartesianGrid 
             strokeDasharray="3 3" 
             vertical={false} 
-            stroke="#e5e7eb" 
-            strokeOpacity={0.5}
+            stroke="rgba(0,0,0,0.05)" 
           />
           
           {/* Axes */}

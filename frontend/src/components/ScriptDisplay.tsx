@@ -50,12 +50,45 @@ export function ScriptDisplay({ userId }: { userId: string }) {
 
             const onboardingData = data?.onboarding_data as unknown as OnboardingData | null;
             
-            // Extract personalized fields with fallbacks
-            // This ensures backward compatibility for users who haven't completed the new onboarding
-            const userContext = onboardingData?.user_context || onboardingData?.primary_goal || "improving my communication skills";
-            const targetAudience = onboardingData?.target_audience || "my future self";
-            const painPoint = onboardingData?.pain_point || "speaking with clarity";
-            const confidenceLevel = onboardingData?.confidence_level || 5;
+            // Default values
+            let userContext = "improving my communication skills";
+            let targetAudience = "my future self";
+            let painPoint = "speaking with clarity";
+            let confidenceLevel = 5;
+
+            if (onboardingData) {
+                confidenceLevel = onboardingData.confidence_level || 5;
+                const tier = onboardingData.tier;
+
+                if (tier === 'beta') {
+                    // Beta Path Mapping
+                    // 1. Map 'deep_struggle' to 'pain_point' if available, otherwise fallback to existing pain_point
+                    painPoint = onboardingData.deep_struggle || onboardingData.pain_point || painPoint;
+                    
+                    // 2. Append accent to user_context if not already there
+                    // If DB already has it normalized, this might be redundant but safe.
+                    // We check if user_context is just the default or empty, then construct it.
+                    if (onboardingData.accent) {
+                        const baseContext = onboardingData.user_context || "General Practice";
+                        if (!baseContext.includes(onboardingData.accent)) {
+                            userContext = `${baseContext} (Accent: ${onboardingData.accent})`;
+                        } else {
+                            userContext = baseContext;
+                        }
+                    } else {
+                        userContext = onboardingData.user_context || "General Practice";
+                    }
+
+                    // 3. Default target audience for Beta
+                    targetAudience = onboardingData.target_audience || "my audience";
+
+                } else {
+                    // Standard / Legacy Path Mapping
+                    userContext = onboardingData.user_context || onboardingData.primary_goal || userContext;
+                    targetAudience = onboardingData.target_audience || targetAudience;
+                    painPoint = onboardingData.pain_point || painPoint;
+                }
+            }
 
             // Merge full_name and new fields into the data we use
             const fullProfileData = {

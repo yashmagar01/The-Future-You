@@ -5,78 +5,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronRight, ChevronLeft, Check, Sparkles, Mic, PenTool, Brain, Target, Zap, Users, MessageSquare, AlertCircle } from 'lucide-react';
+import { 
+    ChevronRight, ChevronLeft, Check, Sparkles, Mic, 
+    MessageSquare, AlertCircle, Zap, Ghost, Vault, Database,
+    Target, Brain, Users, PenTool
+} from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 interface OnboardingData {
     fullName: string;
-    experienceLevel: string;
-    primaryGoal: string;
-    // New Fields
+    // Core Branching
+    userTier: 'standard' | 'beta' | null;
+    
+    // Standard Path
     userContext: string;
-    targetAudience: string;
     painPoint: string;
     confidenceLevel: number;
-    // Legacy fields (kept for type safety but unused)
+    
+    // Beta Path
+    betaConsent: boolean;
+    timeline: string;
+    accent: string;
+    deepStruggle: string;
+
+    // Legacy / Defaults
+    experienceLevel: string;
+    primaryGoal: string;
+    targetAudience: string; // Kept for type safety, though unused in new Standard flow
     reflectionStyle: 'voice' | 'text' | 'both';
     focusAreas: string[];
     reflectionFrequency: string;
     notificationsEnabled: boolean;
 }
 
-const STEPS = [
-    {
-        id: 'intro',
-        title: 'Welcome to The Future You',
-        subtitle: "Your journey to self-mastery begins here.",
-        icon: Sparkles,
-    },
-    {
-        id: 'name',
-        title: 'What should we call you?',
-        subtitle: 'Your name will be used to personalize your reflections.',
-        icon: null,
-    },
-    {
-        id: 'context',
-        title: 'What is your main focus right now?',
-        subtitle: 'This helps us generate relevant practice scripts.',
-        icon: MessageSquare,
-    },
-    {
-        id: 'audience',
-        title: 'Who are you usually speaking to?',
-        subtitle: 'Tailor your practice to your real-world audience.',
-        icon: Users,
-    },
-    {
-        id: 'pain_point',
-        title: 'What is your biggest struggle?',
-        subtitle: 'We will help you overcome this specific challenge.',
-        icon: AlertCircle,
-    },
-    {
-        id: 'confidence',
-        title: 'How confident do you feel speaking?',
-        subtitle: 'Be honest. This is your baseline.',
-        icon: Zap,
-    }
-];
-
 export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [direction, setDirection] = useState(0);
     const [data, setData] = useState<OnboardingData>({
         fullName: '',
-        experienceLevel: 'intermediate', // Default
-        primaryGoal: 'growth', // Default
+        userTier: null,
+        
+        // Standard defaults
         userContext: '',
-        targetAudience: '',
         painPoint: '',
         confidenceLevel: 5,
+        
+        // Beta defaults
+        betaConsent: false,
+        timeline: '',
+        accent: '',
+        deepStruggle: '',
+
         // Legacy defaults
+        experienceLevel: 'intermediate',
+        primaryGoal: 'growth',
+        targetAudience: '',
         reflectionStyle: 'both',
         focusAreas: [],
         reflectionFrequency: 'daily',
@@ -85,8 +72,90 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
 
+    // Dynamic Steps Configuration
+    const getSteps = () => {
+        const commonSteps = [
+            {
+                id: 'intro',
+                title: 'Welcome to The Future You',
+                subtitle: "Your journey to self-mastery begins here.",
+                icon: Sparkles,
+            },
+            {
+                id: 'name',
+                title: 'What should we call you?',
+                subtitle: 'Your name will be used to personalize your reflections.',
+                icon: null,
+            },
+            {
+                id: 'fork',
+                title: 'How do you want to practice?',
+                subtitle: 'Choose the path that fits your goals.',
+                icon: Target,
+            }
+        ];
+
+        if (data.userTier === 'standard') {
+            return [
+                ...commonSteps,
+                {
+                    id: 'context',
+                    title: 'What is your main focus?',
+                    subtitle: 'This helps us generate relevant practice scripts.',
+                    icon: MessageSquare,
+                },
+                {
+                    id: 'pain_point',
+                    title: 'What is your biggest struggle?',
+                    subtitle: 'We will help you overcome this specific challenge.',
+                    icon: AlertCircle,
+                },
+                {
+                    id: 'confidence',
+                    title: 'How confident do you feel speaking?',
+                    subtitle: 'Be honest. This is your baseline.',
+                    icon: Zap,
+                }
+            ];
+        }
+
+        if (data.userTier === 'beta') {
+            return [
+                ...commonSteps,
+                {
+                    id: 'consent',
+                    title: 'The Inner Circle Agreement',
+                    subtitle: 'To build the world\'s best AI coach, we need real data.',
+                    icon: Users,
+                },
+                {
+                    id: 'timeline',
+                    title: 'When is your big moment?',
+                    subtitle: 'Helps us understand the urgency of your practice.',
+                    icon: Target,
+                },
+                {
+                    id: 'accent',
+                    title: 'Help us understand your voice.',
+                    subtitle: 'Essential for tweaking our AI model accuracy.',
+                    icon: Mic,
+                },
+                {
+                    id: 'deep_struggle',
+                    title: 'In your own words...',
+                    subtitle: 'Describe the specific moment you lose confidence.',
+                    icon: PenTool,
+                }
+            ];
+        }
+
+        return commonSteps;
+    };
+
+    const steps = getSteps();
+
     const handleNext = () => {
-        if (currentStep < STEPS.length - 1) {
+        if (currentStep < steps.length - 1) {
             setDirection(1);
             setCurrentStep(prev => prev + 1);
         } else {
@@ -110,6 +179,27 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                 throw new Error("No active session");
             }
 
+            // Prepare the JSONB object based on tier
+            const onboardingPayload: any = {
+                tier: data.userTier,
+                completed_at: new Date().toISOString(),
+                // Legacy fields
+                experience_level: data.experienceLevel,
+                primary_goal: data.primaryGoal,
+                reflection_style: data.reflectionStyle,
+            };
+
+            if (data.userTier === 'standard') {
+                onboardingPayload.user_context = data.userContext;
+                onboardingPayload.pain_point = data.painPoint;
+                onboardingPayload.confidence_level = data.confidenceLevel;
+            } else if (data.userTier === 'beta') {
+                onboardingPayload.data_consent = data.betaConsent;
+                onboardingPayload.timeline = data.timeline;
+                onboardingPayload.accent = data.accent;
+                onboardingPayload.deep_struggle = data.deepStruggle;
+            }
+
             // Use upsert to ensure profile exists
             const { error } = await supabase
                 .from('profiles')
@@ -117,18 +207,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                     id: session.user.id,
                     email: session.user.email || '',
                     full_name: data.fullName,
-                    onboarding_data: {
-                        // New Fields
-                        user_context: data.userContext,
-                        target_audience: data.targetAudience,
-                        pain_point: data.painPoint,
-                        confidence_level: data.confidenceLevel,
-                        // Legacy Mappings (for backward compatibility if needed)
-                        experience_level: data.experienceLevel,
-                        primary_goal: data.primaryGoal,
-                        reflection_style: data.reflectionStyle,
-                        completed_at: new Date().toISOString()
-                    },
+                    onboarding_data: onboardingPayload,
                     updated_at: new Date().toISOString()
                 });
 
@@ -169,8 +248,10 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
     };
 
     const renderStepContent = () => {
-        switch (currentStep) {
-            case 0: // Intro
+        const stepId = steps[currentStep].id;
+
+        switch (stepId) {
+            case 'intro':
                 return (
                     <div className="text-center space-y-6 py-4">
                         <div className="relative w-24 h-24 mx-auto mb-6">
@@ -185,7 +266,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         </p>
                     </div>
                 );
-            case 1: // Name
+            case 'name':
                 return (
                     <div className="space-y-6 py-2">
                         <div className="space-y-4">
@@ -202,7 +283,73 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         </div>
                     </div>
                 );
-            case 2: // User Context
+            case 'fork':
+                return (
+                    <div className="grid gap-4 pt-2">
+                        <div 
+                            onClick={() => setData({ ...data, userTier: 'standard' })}
+                            className={cn(
+                                "cursor-pointer relative overflow-hidden rounded-xl border-2 p-6 transition-all hover:bg-accent/5",
+                                data.userTier === 'standard' 
+                                    ? "border-primary bg-primary/5" 
+                                    : "border-muted bg-card hover:border-primary/50"
+                            )}
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className={cn(
+                                    "p-3 rounded-lg",
+                                    data.userTier === 'standard' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                )}>
+                                    <Ghost className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-semibold text-lg">Ghost Mode (Standard)</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Analyze and vanish. Your video is deleted immediately after processing. Perfect for quick checks.
+                                    </p>
+                                </div>
+                                {data.userTier === 'standard' && (
+                                    <div className="absolute top-4 right-4">
+                                        <Check className="w-5 h-5 text-primary" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div 
+                            onClick={() => setData({ ...data, userTier: 'beta' })}
+                            className={cn(
+                                "cursor-pointer relative overflow-hidden rounded-xl border-2 p-6 transition-all hover:bg-accent/5",
+                                data.userTier === 'beta' 
+                                    ? "border-primary bg-primary/5" 
+                                    : "border-muted bg-card hover:border-primary/50"
+                            )}
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className={cn(
+                                    "p-3 rounded-lg",
+                                    data.userTier === 'beta' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                )}>
+                                    <Vault className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-semibold text-lg">Vault Mode (Beta)</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Join the Committee. We save your audio to track progress. You help train our AI.
+                                    </p>
+                                </div>
+                                {data.userTier === 'beta' && (
+                                    <div className="absolute top-4 right-4">
+                                        <Check className="w-5 h-5 text-primary" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            
+            // Standard Path Steps
+            case 'context':
                 return (
                     <RadioGroup
                         value={data.userContext}
@@ -239,38 +386,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         ))}
                     </RadioGroup>
                 );
-            case 3: // Target Audience
-                return (
-                    <RadioGroup
-                        value={data.targetAudience}
-                        onValueChange={(val) => setData({ ...data, targetAudience: val })}
-                        className="grid gap-3 pt-2"
-                    >
-                        {[
-                            { value: 'Hiring Manager', label: "Hiring Manager / Recruiter" },
-                            { value: 'My Team', label: "My Team / Colleagues" },
-                            { value: 'Large Audience', label: "Large Audience (Stage)" },
-                            { value: 'Myself', label: "Just Myself (Journaling)" },
-                        ].map((option) => (
-                            <Label
-                                key={option.value}
-                                className={cn(
-                                    "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
-                                    data.targetAudience === option.value
-                                        ? "border-primary bg-primary/5"
-                                        : "border-muted bg-card hover:border-primary/50"
-                                )}
-                            >
-                                <RadioGroupItem value={option.value} className="sr-only" />
-                                <div className="font-medium text-base ml-2">{option.label}</div>
-                                {data.targetAudience === option.value && (
-                                    <Check className="w-5 h-5 text-primary ml-auto" />
-                                )}
-                            </Label>
-                        ))}
-                    </RadioGroup>
-                );
-            case 4: // Pain Point
+            case 'pain_point':
                 return (
                     <RadioGroup
                         value={data.painPoint}
@@ -301,7 +417,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         ))}
                     </RadioGroup>
                 );
-            case 5: // Confidence Level
+            case 'confidence':
                 return (
                     <div className="space-y-8 py-4 px-2">
                         <div className="text-center space-y-2">
@@ -328,19 +444,128 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                         </div>
                     </div>
                 );
+
+            // Beta Path Steps
+            case 'consent':
+                return (
+                    <div className="space-y-6 py-4">
+                        <div className="p-6 rounded-xl bg-primary/5 border border-primary/10 space-y-4">
+                            <div className="flex items-start gap-3">
+                                <Database className="w-6 h-6 text-primary mt-1" />
+                                <div className="space-y-1">
+                                    <h4 className="font-medium text-foreground">Data Usage Policy</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Your voice data will be anonymized and used solely for training our AI models to improve accuracy for accents and speech patterns. We will never sell your data.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3 p-4 rounded-lg border border-input hover:bg-accent/5 transition-colors">
+                            <Checkbox 
+                                id="consent" 
+                                checked={data.betaConsent}
+                                onCheckedChange={(checked) => setData({ ...data, betaConsent: checked as boolean })}
+                            />
+                            <Label 
+                                htmlFor="consent" 
+                                className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                                I agree to let Yash AI use my anonymized voice data for training models.
+                            </Label>
+                        </div>
+                    </div>
+                );
+            case 'timeline':
+                return (
+                    <RadioGroup
+                        value={data.timeline}
+                        onValueChange={(val) => setData({ ...data, timeline: val })}
+                        className="grid gap-3 pt-2"
+                    >
+                        {[
+                            { value: 'urgent', label: "This week (Urgent)" },
+                            { value: 'preparation', label: "In 1 month (Preparation)" },
+                            { value: 'continuous', label: "No specific date (Continuous Growth)" },
+                        ].map((option) => (
+                            <Label
+                                key={option.value}
+                                className={cn(
+                                    "flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
+                                    data.timeline === option.value
+                                        ? "border-primary bg-primary/5"
+                                        : "border-muted bg-card hover:border-primary/50"
+                                )}
+                            >
+                                <RadioGroupItem value={option.value} className="sr-only" />
+                                <div className="font-medium text-base ml-2">{option.label}</div>
+                                {data.timeline === option.value && (
+                                    <Check className="w-5 h-5 text-primary ml-auto" />
+                                )}
+                            </Label>
+                        ))}
+                    </RadioGroup>
+                );
+            case 'accent':
+                return (
+                    <div className="space-y-6 py-2">
+                        <div className="space-y-4">
+                            <Label htmlFor="accent" className="text-lg font-medium">Primary Language / Accent</Label>
+                            <Input
+                                id="accent"
+                                placeholder="e.g. Indian English, Hindi, US English..."
+                                value={data.accent}
+                                onChange={(e) => setData({ ...data, accent: e.target.value })}
+                                className="h-14 text-lg px-6 bg-background/50 border-primary/20 focus:border-primary transition-all"
+                                autoFocus
+                                onKeyDown={(e) => e.key === 'Enter' && data.accent && handleNext()}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Being specific helps us select the right speech recognition model for you.
+                            </p>
+                        </div>
+                    </div>
+                );
+            case 'deep_struggle':
+                return (
+                    <div className="space-y-6 py-2">
+                        <div className="space-y-4">
+                            <Label htmlFor="deepStruggle" className="text-lg font-medium">Describe the moment you lose confidence</Label>
+                            <Textarea
+                                id="deepStruggle"
+                                placeholder="I freeze when people look at me..."
+                                value={data.deepStruggle}
+                                onChange={(e) => setData({ ...data, deepStruggle: e.target.value })}
+                                className="min-h-[150px] text-lg p-4 bg-background/50 border-primary/20 focus:border-primary transition-all resize-none"
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                );
+
             default:
                 return null;
         }
     };
 
     const isStepValid = () => {
-        switch (currentStep) {
-            case 0: return true;
-            case 1: return data.fullName.trim().length > 0;
-            case 2: return !!data.userContext;
-            case 3: return !!data.targetAudience;
-            case 4: return !!data.painPoint;
-            case 5: return true; // Slider always has a value
+        const stepId = steps[currentStep].id;
+        switch (stepId) {
+            case 'intro': return true;
+            case 'name': return data.fullName.trim().length > 0;
+            case 'fork': return !!data.userTier;
+            
+            // Standard
+            case 'context': return !!data.userContext;
+            case 'pain_point': return !!data.painPoint;
+            case 'confidence': return true;
+            
+            // Beta
+            case 'consent': return data.betaConsent;
+            case 'timeline': return !!data.timeline;
+            case 'accent': return data.accent.trim().length > 0;
+            case 'deep_struggle': return data.deepStruggle.trim().length > 0;
+            
             default: return false;
         }
     };
@@ -350,14 +575,14 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             {/* Progress Bar */}
             <div className="mb-8">
                 <div className="flex justify-between text-sm font-medium text-muted-foreground mb-2">
-                    <span>Step {currentStep + 1} of {STEPS.length}</span>
-                    <span>{Math.round(((currentStep + 1) / STEPS.length) * 100)}%</span>
+                    <span>Step {currentStep + 1} of {steps.length}</span>
+                    <span>{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                     <motion.div
                         className="h-full bg-primary"
                         initial={{ width: 0 }}
-                        animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+                        animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
                         transition={{ duration: 0.5, ease: "easeInOut" }}
                     />
                 </div>
@@ -370,21 +595,21 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                 <div className="p-8 min-h-[400px] flex flex-col">
                     <div className="mb-8 text-center">
                         <motion.h2 
-                            key={STEPS[currentStep].title}
+                            key={steps[currentStep].title}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 mb-2"
                         >
-                            {STEPS[currentStep].title}
+                            {steps[currentStep].title}
                         </motion.h2>
                         <motion.p 
-                            key={STEPS[currentStep].subtitle}
+                            key={steps[currentStep].subtitle}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.1 }}
                             className="text-muted-foreground"
                         >
-                            {STEPS[currentStep].subtitle}
+                            {steps[currentStep].subtitle}
                         </motion.p>
                     </div>
 
@@ -429,7 +654,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                                     Saving...
                                 </div>
-                            ) : currentStep === STEPS.length - 1 ? (
+                            ) : currentStep === steps.length - 1 ? (
                                 <div className="flex items-center">
                                     Get Started
                                     <Sparkles className="w-4 h-4 ml-2" />

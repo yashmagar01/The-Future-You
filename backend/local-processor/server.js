@@ -475,75 +475,125 @@ app.post('/process', async (req, res) => {
 });
 
 // ==========================================
-// SCRIPT GENERATION LOGIC (Local Templates)
+// SCRIPT GENERATION LOGIC (Ollama AI)
 // ==========================================
 
-const generatePersonalizedTemplate = (profileData) => {
-  // 1. DATA MAPPING (Frontend -> Script Variables)
+// Fallback function in case AI fails
+const generateStaticFallback = (profileData) => {
   const name = profileData.full_name?.split(' ')[0] || "Friend";
-  
-  // New Personalized Fields with Defaults
   const context = profileData.user_context || "improving my communication skills";
   const audience = profileData.target_audience || "my future self";
   const painPoint = profileData.pain_point || "speaking with clarity";
   const confidence = profileData.confidence_level || 5;
 
-  // 2. THE TEMPLATES
-
-  // --- SHORT SCRIPT (1-2 Minutes) ---
-  const short = `Hi, I'm ${name}. Today I am practicing for my ${context}.
+  const short = `Hi, I'm ${name}. Today I am practicing for my ${context}. My goal is to speak clearly to ${audience} and overcome my struggle with ${painPoint}. I know that confidence is a skill, not a trait. Right now, I am rating my confidence at a ${confidence} out of 10, but by the end of this practice, I aim to be one point higher.`;
   
-My goal is to speak clearly to ${audience} and overcome my struggle with ${pain_point}.
+  const medium = `Hello, I am ${name}. I am taking this time to prepare for ${context}. I know that when I speak to ${audience}, I often struggle with ${painPoint}. But today, I am rewriting that story. I am not defined by my past mistakes. I am defined by my willingness to practice. I am visualizing success. I see myself standing tall.`;
+  
+  const long = `This is a message to myself, ${name}. I am recording this to document my journey in mastering ${context}. Why does this matter? Because communicating effectively with ${audience} is key to my growth. I admit that ${painPoint} has held me back in the past. It has made me doubt myself. But today, I am choosing to play big. I am reminding myself of my strengths. I have unique insights. I have valuable experience.`;
 
-I know that confidence is a skill, not a trait. Right now, I am rating my confidence at a ${confidence} out of 10, but by the end of this practice, I aim to be one point higher.
-
-I am focusing on being present. I am focusing on my breathing. I am ready to deliver my message.`;
-
-  // --- MEDIUM SCRIPT (3 Minutes) ---
-  const medium = `Hello, I am ${name}. I am taking this time to prepare for ${context}.
-
-I know that when I speak to ${audience}, I often struggle with ${pain_point}. But today, I am rewriting that story. I am not defined by my past mistakes. I am defined by my willingness to practice.
-
-I am visualizing success. I see myself standing tall. I hear my voice projecting with strength. I feel the connection with ${audience}.
-
-If I start to feel nervous or notice ${pain_point} creeping in, I will pause. I will breathe. I will remember that I have something valuable to say.
-
-My current confidence level is ${confidence}, but I am building the capacity to handle more. I am ready.`;
-
-  // --- LONG SCRIPT (5 Minutes) ---
-  const long = `This is a message to myself, ${name}. I am recording this to document my journey in mastering ${context}.
-
-Why does this matter? Because communicating effectively with ${audience} is key to my growth. I admit that ${pain_point} has held me back in the past. It has made me doubt myself. It has made me play small.
-
-But today, I am choosing to play big.
-
-I am analyzing my patterns. When do I feel ${pain_point} the most? Is it when I am rushed? Is it when I feel judged? I acknowledge these triggers, but I do not let them control me.
-
-I am reminding myself of my strengths. I have unique insights. I have valuable experience. ${audience} needs to hear what I have to say.
-
-I am setting an intention. For the next few minutes, I will speak with the authority of someone who knows their worth. I will not rush. I will not apologize for taking up space.
-
-I am starting at a confidence level of ${confidence}, but I am aiming for a 10. I am capable. I am prepared. I am ready to lead.`;
-
-  return { 
-    variations: { short, medium, long } 
-  };
+  return { variations: { short, medium, long } };
 };
 
+async function generateScriptWithOllama(profileData, attempt = 1) {
+  const name = profileData.full_name?.split(' ')[0] || "Friend";
+  const context = profileData.user_context || "improving my communication skills";
+  const audience = profileData.target_audience || "my future self";
+  const painPoint = profileData.pain_point || "speaking with clarity";
+  const confidence = profileData.confidence_level || 5;
+
+  // Construct the prompt
+  const systemPrompt = `You are a world-class communication coach designed to write "Teleprompter Scripts" for students. 
+  Your scripts are not just text; they are psychological priming tools. 
+  They must be rhythmic, easy to read aloud, and deeply empathetic.
+  
+  Tone:
+  - Direct but encouraging (like a sports coach).
+  - Use short sentences for breathability.
+  - Focus on "I" statements to help the user internalize the confidence.
+  
+  Structure Requirements:
+  1. Short Script (1 min): Focus on "State Change". Immediate grounding, breathing, and setting a simple intention.
+  2. Medium Script (3 min): Focus on "Visualization". Address the specific pain point directly. Reframe the struggle into a strength.
+  3. Long Script (5 min): Focus on "Mastery". Include specific performance cues in brackets like [PAUSE], [SMILE], [TAKE A DEEP BREATH]. Guide them through a mental rehearsal of the specific scenario.
+
+  CRITICAL: You must output ONLY valid JSON. No preamble. No markdown code blocks.`;
+
+  const userPrompt = `Student Profile:
+  - Name: ${name}
+  - Context/Scenario: ${context}
+  - Target Audience: ${audience}
+  - Specific Pain Point: ${painPoint}
+  - Current Confidence: ${confidence}/10
+
+  Generate the 3 scripts (Short, Medium, Long) based on this profile.
+  
+  Output Format:
+  {
+    "variations": {
+      "short": "...",
+      "medium": "...",
+      "long": "..."
+    }
+  }`;
+
+  try {
+    console.log(`[Ollama] Generating scripts for ${name} (Attempt ${attempt})...`);
+    
+    const response = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: "llama3.2",
+        prompt: `${systemPrompt}\n\n${userPrompt}`,
+        stream: false,
+        format: "json",
+        options: { temperature: 0.7 }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.response;
+
+    // Parse and Validate JSON
+    try {
+      const parsed = JSON.parse(generatedText);
+      if (!parsed.variations || !parsed.variations.short) {
+        throw new Error("Invalid JSON structure");
+      }
+      return parsed;
+    } catch (parseError) {
+      console.error("[Ollama] JSON Parse Error:", parseError);
+      if (attempt < 2) {
+        console.log("[Ollama] Retrying...");
+        return generateScriptWithOllama(profileData, attempt + 1);
+      } else {
+        throw new Error("Failed to generate valid JSON after retries.");
+      }
+    }
+
+  } catch (error) {
+    console.error("[Ollama] Generation Failed:", error);
+    console.log("[Ollama] Falling back to static templates.");
+    return generateStaticFallback(profileData);
+  }
+}
+
 // --- API ENDPOINT ---
-app.post('/generate-script', (req, res) => {
+app.post('/generate-script', async (req, res) => {
   try {
     const { profileData } = req.body;
     
-    // Validate Input
     if (!profileData) {
       return res.status(400).json({ error: "Missing profileData" });
     }
 
     console.log("Generating personalized script for:", profileData.full_name);
-    console.log("Context:", profileData.user_context);
-
-    const scripts = generatePersonalizedTemplate(profileData);
+    const scripts = await generateScriptWithOllama(profileData);
     res.json(scripts);
 
   } catch (error) {

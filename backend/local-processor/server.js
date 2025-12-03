@@ -540,6 +540,10 @@ async function generateScriptWithOllama(profileData, attempt = 1) {
   try {
     console.log(`[Ollama] Generating scripts for ${name} (Attempt ${attempt})...`);
     
+    // Create an AbortController with a 2-minute timeout (Ollama can be slow on first run)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000); // 2 minutes
+    
     const response = await fetch('http://localhost:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -549,8 +553,11 @@ async function generateScriptWithOllama(profileData, attempt = 1) {
         stream: false,
         format: "json",
         options: { temperature: 0.7 }
-      })
+      }),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeout); // Clear the timeout if request succeeds
 
     if (!response.ok) {
       throw new Error(`Ollama API Error: ${response.statusText}`);

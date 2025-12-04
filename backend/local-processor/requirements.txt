@@ -3,3 +3,5 @@ mediapipe
 opencv-python
 numpy
 requests
+# Optional: Vosk for transcription fallback (uncomment to install)
+# vosk

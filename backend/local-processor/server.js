@@ -1,4 +1,3 @@
-
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
@@ -70,41 +69,21 @@ app.get('/', (req, res) => {
   res.send('Local Processor is running!');
 });
 
-app.post('/process', async (req, res) => {
-  const { recording_id, video_path } = req.body;
+// ==========================================
+// BACKGROUND WORKER LOGIC
+// ==========================================
 
-  if (!recording_id || !video_path) {
-    return res.status(400).json({ error: 'Missing recording_id or video_path' });
-  }
-
-  console.log(`Received processing request for recording: ${recording_id}`);
+async function processRecording(recording_id, video_path) {
+  console.log(`Starting processing for recording: ${recording_id}`);
 
   try {
     // 1. Download video from Supabase
     console.log(`Downloading video from: ${video_path}`);
     
-    // DEBUG: List files in the folder to see what's there
-    const userId = video_path.split('/')[0];
-    console.log(`Debug: Listing files for user ${userId} in 'recordings' bucket...`);
-    const { data: listData, error: listError } = await supabase
-      .storage
-      .from('recordings')
-      .list(userId);
-    
-    if (listError) {
-      console.error('Debug: List error:', listError);
-    } else {
-      console.log('Debug: Files found:', listData.map(f => f.name));
-      // Check if our file is in the list
-      const fileName = video_path.split('/')[1];
-      const found = listData.find(f => f.name === fileName);
-      console.log(`Debug: Looking for '${fileName}', found:`, found ? 'YES' : 'NO');
-    }
-
     // Create a signed URL for downloading (valid for 60 seconds)
     const { data: signedUrlData, error: signedUrlError } = await supabase
       .storage
-      .from('recordings') // Correct bucket name
+      .from('recordings')
       .createSignedUrl(video_path, 60);
 
     if (signedUrlError) {
@@ -112,8 +91,7 @@ app.post('/process', async (req, res) => {
     }
 
     const videoUrl = signedUrlData.signedUrl;
-    console.log(`Debug: Generated Signed URL: ${videoUrl}`);
-    const localVideoPath = path.join(tmpDir, `${recording_id}.mp4`); // Assuming mp4, ideally get ext from path
+    const localVideoPath = path.join(tmpDir, `${recording_id}.mp4`);
 
     const response = await fetch(videoUrl);
     if (!response.ok) {
@@ -121,9 +99,6 @@ app.post('/process', async (req, res) => {
     }
     
     const fileStream = fs.createWriteStream(localVideoPath);
-    
-    // Node 18+ native fetch returns a Web Stream, which doesn't have .pipe()
-    // We need to convert it to a Node stream or use stream pipeline
     const { Readable } = require('stream');
     // @ts-ignore
     const nodeStream = Readable.fromWeb(response.body);
@@ -138,15 +113,11 @@ app.post('/process', async (req, res) => {
 
     // 2. Spawn Python worker
     console.log('Spawning Python worker...');
-    // Use 'python' or 'python3' depending on the environment. 
-    // On Windows, 'python' is standard. On Mac/Linux, 'python3' might be needed.
-    // We can try to detect or just default to 'python' which usually works if in PATH.
-    // If running in a venv, ensure the venv is active before starting the node server, 
-    // OR point to the venv python executable directly.
-    
     const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
-    const pythonProcess = spawn(pythonCommand, ['worker_vosk.py', localVideoPath, recording_id], {
-        shell: true // This helps on Windows to find the command in the path
+    
+    // UPDATED: Using worker_whisper.py
+    const pythonProcess = spawn(pythonCommand, ['worker_whisper.py', localVideoPath, recording_id], {
+        shell: true
     });
 
     let pythonData = '';
@@ -162,317 +133,221 @@ app.post('/process', async (req, res) => {
       pythonError += data.toString();
     });
 
-    pythonProcess.on('close', async (code) => {
-      console.log(`Python worker exited with code ${code}`);
-      
-      // Cleanup temp file
-      try {
-        if (fs.existsSync(localVideoPath)) {
-          fs.unlinkSync(localVideoPath);
-          console.log('Temp file cleaned up');
-        }
-      } catch (cleanupError) {
-        console.error('Failed to cleanup temp file:', cleanupError);
-      }
-
-      if (code === 0) {
-        // Success
-        try {
-          const results = JSON.parse(pythonData);
-          console.log('Analysis results:', results);
-
-          // Calculate derived metrics
-          const duration = results.duration || 1; // Default to 1s to avoid div by zero, but Python should provide accurate duration now
-          console.log(`Duration: ${duration}s`);
+    await new Promise((resolve, reject) => {
+        pythonProcess.on('close', async (code) => {
+          console.log(`Python worker exited with code ${code}`);
           
-          // Calculate WPM excluding filler words for accuracy
-          const allWords = results.transcript.split(' ').filter(w => w.trim().length > 0).length;
-          const fillerCount = results.filler_count || 0;
-          const effectiveWords = Math.max(1, allWords - fillerCount);
-          const wpm = Math.round(effectiveWords / (duration / 60));
-          
-          console.log(`WPM Calculation: ${allWords} total words - ${fillerCount} fillers = ${effectiveWords} effective words / ${(duration/60).toFixed(2)} min = ${wpm} WPM`);
-          
-          // --- SCORING ALGORITHMS (The Mathematics of Believability) ---
-
-          // 1. FLUENCY: Exponential Decay
-          // Formula: Score = 100 * e^(-0.15 * max(0, DFM - 1))
-          // DFM = Filler Count / Duration in Minutes
-          const durationMin = Math.max(duration / 60, 0.01); // Avoid div by zero
-          const dfm = results.filler_count / durationMin;
-          const fluencyScore = Math.round(100 * Math.exp(-0.15 * Math.max(0, dfm - 1)));
-
-          // 2. PACING: Gaussian Distribution
-          // Formula: Score = 100 * e^(-(wpm - 145)^2 / (2 * 50^2))
-          // Center = 145, Sigma = 50
-          const rawPacingScore = 100 * Math.exp(-Math.pow(wpm - 145, 2) / (2 * Math.pow(50, 2)));
-
-          // Consistency Penalty (Standard Deviation)
-          // The "Dramatic Pause" Update: Only penalize variance if the average speed is poor.
-          // If WPM is in the "Goldilocks Zone" (130-170), assume variance is stylistic.
-          let consistencyPenalty = results.wpm_std_dev || 0;
-          
-          if (wpm >= 130 && wpm <= 170) {
-              consistencyPenalty = 0; // Ignore penalty for good speakers
-          }
-
-          const pacingScore = Math.max(0, Math.round(rawPacingScore - consistencyPenalty));
-          
-          // Combined Clarity Score (Fluency + Pacing)
-          const clarityScore = Math.round((fluencyScore + pacingScore) / 2);
-
-          // 3. CONFIDENCE: Vector Geometry (Posture)
-          // New Logic: Visibility is a multiplier. If you aren't seen, you can't have good posture.
-          
-          // Visibility Ratio (0.0 to 1.0)
-          const visibilityRatio = results.posture_score || 0;
-
-          // Alignment Score (Slope) - Max 50 pts
-          // Slope 0 is perfect. Slope 0.2 is bad.
-          const slope = results.average_shoulder_slope || 0;
-          const alignmentScore = Math.max(0, 50 * (1 - (slope / 0.2)));
-
-          // Centering Score (Offset) - Max 50 pts
-          // Offset 0 is perfect. Offset 0.3 is bad.
-          const offset = results.average_centering_offset || 0;
-          const centeringScore = Math.max(0, 50 * (1 - (offset / 0.3)));
-
-          // Final Confidence Score = Visibility * (Alignment + Centering)
-          const confidenceScore = Math.round(visibilityRatio * (alignmentScore + centeringScore));
-
-          // 4. TONE: Sentiment Analysis (Transformers.js)
-          let toneScore = 60; // Default Neutral
-          let sentimentLabel = "Neutral";
-          let sentimentConfidence = 0;
-          let coherenceIssue = false;
-          let structureScore = 0; // New CoLA Score
-
+          // Cleanup temp file
           try {
-            if (results.transcript && results.transcript.trim().length > 0) {
-                const classifier = await getSentimentModel();
-                const coherenceClassifier = await getCoherenceModel();
-                
-                // --- COHERENCE CHECK (The "PhD" Feature) ---
-                // Split transcript into sentences (simple heuristic)
-                const sentences = results.transcript.match(/[^.!?]+[.!?]+/g) || [results.transcript];
-                let lowConfidenceCount = 0;
-                let consecutiveLowConfidence = 0;
-                
-                // CoLA Analysis Variables
-                let coherentSentences = 0;
-                let totalSentences = 0;
-                
-                // Analyze each sentence individually for coherence
-                for (const sentence of sentences) {
-                    if (sentence.trim().length < 10) continue; // Skip very short sentences
+            if (fs.existsSync(localVideoPath)) {
+              fs.unlinkSync(localVideoPath);
+            }
+          } catch (cleanupError) {
+            console.error('Failed to cleanup temp file:', cleanupError);
+          }
+
+          if (code === 0) {
+            try {
+              const results = JSON.parse(pythonData);
+              console.log('Analysis results parsed successfully.');
+
+              // Calculate derived metrics
+              const duration = results.duration || 1;
+              const allWords = results.transcript.split(' ').filter(w => w.trim().length > 0).length;
+              const fillerCount = results.filler_count || 0;
+              const effectiveWords = Math.max(1, allWords - fillerCount);
+              const wpm = Math.round(effectiveWords / (duration / 60));
+              
+              // --- SCORING ALGORITHMS ---
+              const durationMin = Math.max(duration / 60, 0.01);
+              const dfm = results.filler_count / durationMin;
+              const fluencyScore = Math.round(100 * Math.exp(-0.15 * Math.max(0, dfm - 1)));
+
+              const rawPacingScore = 100 * Math.exp(-Math.pow(wpm - 145, 2) / (2 * Math.pow(50, 2)));
+              let consistencyPenalty = results.wpm_std_dev || 0;
+              if (wpm >= 130 && wpm <= 170) consistencyPenalty = 0;
+              const pacingScore = Math.max(0, Math.round(rawPacingScore - consistencyPenalty));
+              
+              const clarityScore = Math.round((fluencyScore + pacingScore) / 2);
+
+              const visibilityRatio = results.posture_score || 0;
+              const slope = results.average_shoulder_slope || 0;
+              const alignmentScore = Math.max(0, 50 * (1 - (slope / 0.2)));
+              const offset = results.average_centering_offset || 0;
+              const centeringScore = Math.max(0, 50 * (1 - (offset / 0.3)));
+              const confidenceScore = Math.round(visibilityRatio * (alignmentScore + centeringScore));
+
+              // Tone Analysis
+              let toneScore = 60;
+              let sentimentLabel = "Neutral";
+              let structureScore = 0;
+              let coherenceIssue = false;
+
+              try {
+                if (results.transcript && results.transcript.trim().length > 0) {
+                    const classifier = await getSentimentModel();
+                    const coherenceClassifier = await getCoherenceModel();
                     
-                    // 1. Sentiment Consistency Check (Old Logic)
-                    const output = await classifier(sentence.trim());
-                    if (output && output.length > 0) {
-                        const score = output[0].score;
-                        if (score < 0.6) {
-                            consecutiveLowConfidence++;
-                        } else {
-                            consecutiveLowConfidence = 0;
-                        }
-                        
-                        if (consecutiveLowConfidence >= 3) {
-                            coherenceIssue = true;
-                        }
+                    // Coherence Check
+                    const sentences = results.transcript.match(/[^.!?]+[.!?]+/g) || [results.transcript];
+                    let coherentSentences = 0;
+                    let totalSentences = 0;
+                    
+                    for (const sentence of sentences) {
+                        if (sentence.trim().length < 10) continue;
+                        try {
+                            const output = await coherenceClassifier(sentence.trim());
+                            if (output && output.data) {
+                                totalSentences++;
+                                const data = output.data;
+                                let sum = 0;
+                                for (let i = 0; i < data.length; i++) sum += data[i];
+                                const mean = sum / data.length;
+                                let squaredDiffSum = 0;
+                                for (let i = 0; i < data.length; i++) squaredDiffSum += Math.pow(data[i] - mean, 2);
+                                const variance = squaredDiffSum / data.length;
+                                if (variance > 0.01) coherentSentences++;
+                            }
+                        } catch (e) {}
                     }
-
-                    // 2. CoLA Structure Check (New Logic - Tensor Variance)
-                    try {
-                        const output = await coherenceClassifier(sentence.trim());
-                        
-                        if (output && output.data) {
-                            totalSentences++;
-                            
-                            // Calculate Variance of the embedding
-                            const data = output.data;
-                            let sum = 0;
-                            for (let i = 0; i < data.length; i++) {
-                                sum += data[i];
-                            }
-                            const mean = sum / data.length;
-                            
-                            let squaredDiffSum = 0;
-                            for (let i = 0; i < data.length; i++) {
-                                squaredDiffSum += Math.pow(data[i] - mean, 2);
-                            }
-                            const variance = squaredDiffSum / data.length;
-
-                            // Threshold Check
-                            if (variance > 0.01) {
-                                coherentSentences++;
-                            }
-                        }
-                    } catch (colaError) {
-                        console.error("Coherence Error on sentence:", colaError);
-                    }
-                }
-                
-                // Calculate Structure Score
-                if (totalSentences > 0) {
-                    // Normalize to 60-95 range
-                    const ratio = coherentSentences / totalSentences;
-                    structureScore = Math.round(60 + (ratio * 35));
-                } else {
-                    structureScore = 95; // Default to perfect if no sentences analyzed
-                }
-
-                // --- OVERALL SENTIMENT ---
-                // Truncate transcript if too long for the model (approx 512 tokens, safe bet 1500 chars)
-                const textToAnalyze = results.transcript.substring(0, 1500); 
-                const output = await classifier(textToAnalyze);
-                // Output format: [{ label: 'POSITIVE', score: 0.99 }]
-                
-                if (output && output.length > 0) {
-                    const result = output[0];
-                    sentimentLabel = result.label; // 'POSITIVE' or 'NEGATIVE'
-                    sentimentConfidence = result.score;
-
-                    // Heuristic:
-                    // If POSITIVE: Tone = 70 + (score * 30)
-                    // If NEGATIVE: Tone = 40 + (score * 30)
-                    if (sentimentLabel === 'POSITIVE') {
-                        toneScore = Math.round(70 + (sentimentConfidence * 30));
+                    
+                    if (totalSentences > 0) {
+                        const ratio = coherentSentences / totalSentences;
+                        structureScore = Math.round(60 + (ratio * 35));
                     } else {
-                        toneScore = Math.round(40 + (sentimentConfidence * 30));
+                        structureScore = 95;
                     }
 
-                    // Nuance: If confidence < 0.6, pull towards 60
-                    if (sentimentConfidence < 0.6) {
-                        toneScore = Math.round((toneScore + 60) / 2);
-                        sentimentLabel = "Neutral"; // Override label if low confidence
+                    // Sentiment
+                    const textToAnalyze = results.transcript.substring(0, 1500); 
+                    const output = await classifier(textToAnalyze);
+                    if (output && output.length > 0) {
+                        const result = output[0];
+                        sentimentLabel = result.label;
+                        const sentimentConfidence = result.score;
+
+                        if (sentimentLabel === 'POSITIVE') {
+                            toneScore = Math.round(70 + (sentimentConfidence * 30));
+                        } else {
+                            toneScore = Math.round(40 + (sentimentConfidence * 30));
+                        }
+                        if (sentimentConfidence < 0.6) {
+                            toneScore = Math.round((toneScore + 60) / 2);
+                            sentimentLabel = "Neutral";
+                        }
                     }
                 }
+              } catch (sentimentError) {
+                console.error("Sentiment Analysis Failed:", sentimentError);
+              }
+
+              // Energy
+              const rms = results.average_rms || 1;
+              const db = 20 * Math.log10(rms);
+              let energyScore = 100;
+              if (db < 40) energyScore = Math.max(0, Math.round((db / 40) * 50));
+              else if (db > 80) energyScore = Math.max(0, Math.round(100 - ((db - 80) * 2)));
+
+              const overallScore = Math.round(
+                (clarityScore * 0.35) + (confidenceScore * 0.25) + (toneScore * 0.20) + (energyScore * 0.20)
+              );
+
+              const feedbackData = {
+                recording_id: recording_id,
+                overall_score: overallScore,
+                clarity_score: clarityScore,
+                pace_score: pacingScore,
+                tone_score: toneScore,
+                confidence_score: confidenceScore,
+                energy_score: energyScore,
+                filler_words_count: results.filler_count,
+                stutter_count: results.stutter_count || 0,
+                strengths: ["Good effort", "Clear audio"], 
+                improvements: ["Practice pacing", "Reduce filler words"],
+                key_insights: {
+                  clarity: { score: clarityScore, wpm: wpm, filler_word_count: results.filler_count, filler_words_detected: [] },
+                  pacing: { score: pacingScore, feedback: wpm < 120 ? "Too slow" : (wpm > 160 ? "Too fast" : "Perfect"), words_per_minute: wpm, consistency_penalty: Math.round(consistencyPenalty) },
+                  sentiment: { score: sentimentLabel, confidence_level: "Medium", structure_score: structureScore },
+                  posture: { score: confidenceScore, issues_detected: [], details: { alignment_score: Math.round(alignmentScore), centering_score: Math.round(centeringScore), visibility_score: Math.round(visibilityRatio * 100), posture_ratio: results.average_posture_ratio || 0 } },
+                  transcript: results.transcript,
+                  timeline: results.timeline || []
+                }
+              };
+
+              // Insert into Supabase
+              const { error: insertError } = await supabase.from('feedback').insert([feedbackData]);
+              if (insertError) throw new Error(`Supabase insert failed: ${insertError.message}`);
+              
+              // Update recording status
+              await supabase.from('recordings').update({ status: 'completed' }).eq('id', recording_id);
+              console.log('Processing completed successfully.');
+              resolve();
+
+            } catch (parseError) {
+              console.error('Error parsing results:', parseError);
+              await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
+              reject(parseError);
             }
-          } catch (sentimentError) {
-            console.error("Sentiment Analysis Failed:", sentimentError);
-            // Fallback to neutral
-          }
-
-          // 5. ENERGY: Volume/Decibels (Logarithmic)
-          // Human hearing is logarithmic. We convert RMS to dB.
-          // Formula: dB = 20 * log10(RMS)
-          const rms = results.average_rms || 1; // Avoid log(0)
-          const db = 20 * Math.log10(rms);
-          
-          let energyScore = 100;
-
-          if (db < 40) {
-             // Too Quiet (Penalty)
-             // New Formula: Score = Math.max(0, (db / 40) * 50)
-             energyScore = Math.max(0, Math.round((db / 40) * 50));
-          } else if (db > 80) {
-             // Too Loud (Penalty)
-             // New Formula: Score = Math.max(0, 100 - ((db - 80) * 2))
-             energyScore = Math.max(0, Math.round(100 - ((db - 80) * 2)));
           } else {
-             // Goldilocks Zone (40dB - 80dB)
-             energyScore = 100;
+            console.error('Worker failed with code:', code);
+            await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
+            reject(new Error(`Worker failed with code ${code}: ${pythonError}`));
           }
-
-          // OVERALL SCORE
-          // Weighted Matrix: Clarity (35%), Confidence (25%), Tone (20%), Energy (20%)
-          const overallScore = Math.round(
-            (clarityScore * 0.35) + 
-            (confidenceScore * 0.25) + 
-            (toneScore * 0.20) + 
-            (energyScore * 0.20)
-          );
-
-          const feedbackData = {
-            recording_id: recording_id,
-            overall_score: overallScore,
-            clarity_score: clarityScore,
-            pace_score: pacingScore,
-            tone_score: toneScore,
-            confidence_score: confidenceScore,
-            energy_score: energyScore,
-            filler_words_count: results.filler_count,
-            stutter_count: results.stutter_count || 0,
-            strengths: ["Good effort", "Clear audio"], 
-            improvements: ["Practice pacing", "Reduce filler words"],
-            key_insights: {
-              clarity: {
-                score: clarityScore,
-                wpm: wpm,
-                filler_word_count: results.filler_count,
-                filler_words_detected: [] 
-              },
-              pacing: {
-                score: pacingScore,
-                feedback: wpm < 120 ? "Try to speak a bit faster." : (wpm > 160 ? "Slow down a bit." : "Perfect pace."),
-                words_per_minute: wpm,
-                consistency_penalty: Math.round(consistencyPenalty)
-              },
-              sentiment: {
-                score: sentimentLabel,
-                confidence_level: coherenceIssue ? "Low (Confusing)" : "Medium",
-                coherence_warning: coherenceIssue ? "Your tone is positive, but your sentence structure is confusing. Try shorter sentences." : null,
-                structure_score: structureScore
-              },
-              posture: {
-                score: confidenceScore,
-                issues_detected: [],
-                details: {
-                    alignment_score: Math.round(alignmentScore),
-                    centering_score: Math.round(centeringScore),
-                    visibility_score: Math.round(visibilityRatio * 100),
-                    posture_ratio: results.average_posture_ratio || 0
-                }
-              },
-              transcript: results.transcript,
-              timeline: results.timeline || [] // Pass through the timeline data
-            }
-          };
-
-          // Insert into Supabase 'feedback' table
-          const { error: insertError } = await supabase
-            .from('feedback')
-            .insert([feedbackData]);
-
-          if (insertError) {
-            console.error('Supabase insert error:', insertError);
-            throw new Error(`Supabase insert failed: ${insertError.message}`);
-          }
-          
-          // Update recording status to completed
-          await supabase.from('recordings').update({ status: 'completed' }).eq('id', recording_id);
-
-          console.log('Results saved to Supabase');
-          res.json({ status: 'success', message: 'Processing complete', data: feedbackData });
-        } catch (parseError) {
-          console.error('Error parsing Python output or saving to DB:', parseError);
-          // Update status to failed
-          await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
-          res.status(500).json({ status: 'error', message: 'Failed to parse results', details: parseError.message });
-        }
-      } else {
-        console.error('Worker failed with code:', code);
-        console.error('Stderr:', pythonError);
-        
-        // Log to file
-        const logPath = path.join(__dirname, 'logs', `error-${recording_id}.log`);
-        fs.writeFileSync(logPath, `Exit Code: ${code}\\nStderr: ${pythonError}\\nStdout: ${pythonData}`);
-        
-        // Update status to failed
-        await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
-        
-        res.status(500).json({ status: 'error', message: 'Worker failed', details: pythonError });
-      }
+        });
     });
+
   } catch (error) {
     console.error('Processing error:', error);
-    // Update status to failed
-    if (recording_id) {
-        await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
-    }
-    res.status(500).json({ error: error.message });
+    await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
   }
-});
+}
+
+// Polling Loop
+let isProcessing = false;
+async function processQueue() {
+  if (isProcessing) return;
+  
+  try {
+    // Fetch next job
+    const { data: job, error } = await supabase
+      .from('recordings')
+      .select('id, video_url')
+      .eq('status', 'uploaded')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+        console.error('Error fetching job:', error);
+    }
+
+    if (job) {
+      isProcessing = true;
+      console.log(`Picking up job: ${job.id}`);
+      
+      // Mark as processing
+      await supabase.from('recordings').update({ status: 'processing' }).eq('id', job.id);
+      
+      // Process
+      await processRecording(job.id, job.video_url);
+      
+      isProcessing = false;
+      // Check immediately for next job
+      processQueue(); 
+    } else {
+        // No jobs, wait 5 seconds
+        setTimeout(processQueue, 5000);
+    }
+  } catch (err) {
+    console.error('Worker loop error:', err);
+    isProcessing = false;
+    setTimeout(processQueue, 5000);
+  }
+}
+
+// Start the worker
+console.log("Starting Background Worker...");
+processQueue();
 
 // ==========================================
 // SCRIPT GENERATION LOGIC (Ollama AI)

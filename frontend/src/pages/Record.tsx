@@ -15,8 +15,6 @@ import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { useCreateRecording } from "@/hooks/useRecordings";
 
 const Record = () => {
-  // API base URL with fallback to localhost
-  const API_BASE_URL = import.meta.env.VITE_LOCAL_PROCESSOR_URL || 'http://localhost:3001';
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -60,27 +58,48 @@ const Record = () => {
   }, [user]);
 
   // Helper to simulate processing progress
-  const simulateProcessing = (duration: number) => {
-    setProcessingProgress(0);
-    setStatusMessage("Initializing AI models...");
-    
-    const totalTime = duration * 1000 * 0.5; // Estimate processing as 50% of duration
-    const intervalTime = 100;
-    const steps = totalTime / intervalTime;
-    let currentStep = 0;
+  // Polling logic
+  const pollForStatus = (recordingId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('recordings')
+          .select('status')
+          .eq('id', recordingId)
+          .single();
 
-    const interval = setInterval(() => {
-      currentStep++;
-      const progress = Math.min(Math.round((currentStep / steps) * 100), 95); // Cap at 95% until done
-      setProcessingProgress(progress);
-      
-      if (progress > 20 && progress < 40) setStatusMessage("Transcribing speech...");
-      if (progress > 40 && progress < 70) setStatusMessage("Analyzing sentiment...");
-      if (progress > 70) setStatusMessage("Generating insights...");
-      
-    }, intervalTime);
+        if (error) {
+          console.error('Error polling status:', error);
+          return;
+        }
 
-    return () => clearInterval(interval);
+        if (data.status === 'processing') {
+          setStatusMessage("AI is analyzing your video...");
+          setProcessingProgress((prev) => Math.min(prev + 5, 90));
+        } else if (data.status === 'completed') {
+          setStatusMessage("Analysis complete!");
+          setProcessingProgress(100);
+          clearInterval(interval);
+          setTimeout(() => {
+            navigate(`/analysis/${recordingId}`);
+          }, 1000);
+        } else if (data.status === 'failed') {
+          setStatusMessage("Analysis failed.");
+          clearInterval(interval);
+          toast({
+            title: "Processing Failed",
+            description: "The AI could not analyze your video. Please try again.",
+            variant: "destructive",
+          });
+          setIsUploading(false);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Cleanup interval on component unmount is handled by the fact that we navigate away
+    // But ideally we should track this interval ID. For now, this is sufficient for the MVP flow.
   };
 
   const uploadFileWithProgress = async (file: File, path: string) => {
@@ -131,8 +150,6 @@ const Record = () => {
   const handleRecordingComplete = async (blob: Blob, duration: number) => {
     if (!user) return;
 
-    let stopProcessingSimulation: (() => void) | undefined;
-
     try {
       setIsUploading(true);
       setUploadProgress(0);
@@ -160,62 +177,15 @@ const Record = () => {
         video_url: fileName,
         duration_seconds: duration,
         file_size_bytes: blob.size,
-        status: 'processing',
+        status: 'uploaded', // Set to 'uploaded' for the backend worker
         title: `Recording ${new Date().toLocaleDateString()}`,
       });
 
       console.log('Database record created:', recordingData.id);
+      setStatusMessage("Waiting for AI processor...");
 
-      // Wait for Supabase Storage to fully persist the file
-      console.log('Waiting for storage sync...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Start processing simulation
-      stopProcessingSimulation = simulateProcessing(duration);
-
-      // 3. Trigger Backend AI Processing
-      try {
-        console.log('Triggering backend processing...');
-        const response = await fetch(`${API_BASE_URL}/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            recording_id: recordingData?.id,
-            video_path: fileName
-          })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Backend processing trigger failed:', errorText);
-          toast({
-            title: "Processing Warning",
-            description: "Upload succeeded but AI analysis may not start. Check backend logs.",
-            variant: "destructive",
-          });
-        } else {
-          console.log('Backend processing triggered successfully');
-          setProcessingProgress(100);
-          setStatusMessage("Analysis complete!");
-        }
-      } catch (processingError) {
-        console.error('Failed to trigger backend processing:', processingError);
-        toast({
-          title: "Backend Unavailable",
-          description: "Upload succeeded but backend is not running. Start backend to process video.",
-          variant: "destructive",
-        });
-      }
-
-      toast({
-        title: "Upload successful!",
-        description: "AI analysis started. Redirecting to analysis...",
-      });
-
-      // Navigate to analysis page
-      setTimeout(() => {
-        navigate(`/analysis/${recordingData.id}`);
-      }, 1500);
+      // 3. Start Polling for Status
+      pollForStatus(recordingData.id);
 
     } catch (error) {
       console.error('Upload failed:', error);
@@ -225,16 +195,12 @@ const Record = () => {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      if (stopProcessingSimulation) stopProcessingSimulation();
       setIsUploading(false);
     }
   };
 
   const handleFileUpload = async (file: File) => {
     if (!user) return;
-
-    let stopProcessingSimulation: (() => void) | undefined;
 
     try {
       setIsUploading(true);
@@ -286,7 +252,6 @@ const Record = () => {
       console.log(`File size: ${fileSizeMB} MB (within 50 MB limit)`);
 
       // 1. Upload Video to Supabase Storage
-      // Sanitize filename to remove special characters that might cause InvalidKey errors
       const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const fileName = `${user.id}/${Date.now()}-${sanitizedFileName}`;
       
@@ -302,62 +267,15 @@ const Record = () => {
         video_url: fileName,
         duration_seconds: duration,
         file_size_bytes: file.size,
-        status: 'processing',
+        status: 'uploaded',
         title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
       });
 
       console.log('Database record created:', recordingData.id);
+      setStatusMessage("Waiting for AI processor...");
 
-      // Wait for Supabase Storage to fully persist the file
-      console.log('Waiting for storage sync...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Start processing simulation
-      stopProcessingSimulation = simulateProcessing(duration);
-
-      // 3. Trigger Backend AI Processing
-      try {
-        console.log('Triggering backend processing...');
-        const response = await fetch(`${API_BASE_URL}/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            recording_id: recordingData?.id,
-            video_path: fileName
-          })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Backend processing trigger failed:', errorText);
-          toast({
-            title: "Processing Warning",
-            description: "Upload succeeded but AI analysis may not start. Check backend logs.",
-            variant: "destructive",
-          });
-        } else {
-          console.log('Backend processing triggered successfully');
-          setProcessingProgress(100);
-          setStatusMessage("Analysis complete!");
-        }
-      } catch (processingError) {
-        console.error('Failed to trigger backend processing:', processingError);
-        toast({
-          title: "Backend Unavailable",
-          description: "Upload succeeded but backend is not running. Start backend to process video.",
-          variant: "destructive",
-        });
-      }
-
-      toast({
-        title: "Upload successful!",
-        description: "AI analysis started. Redirecting to analysis...",
-      });
-
-      // Navigate to analysis page
-      setTimeout(() => {
-        navigate(`/analysis/${recordingData.id}`);
-      }, 1500);
+      // 3. Start Polling for Status
+      pollForStatus(recordingData.id);
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -367,8 +285,6 @@ const Record = () => {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      if (stopProcessingSimulation) stopProcessingSimulation();
       setIsUploading(false);
     }
   };

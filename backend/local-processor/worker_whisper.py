@@ -8,8 +8,8 @@ import numpy as np
 import re
 from faster_whisper import WhisperModel
 
-# Removed Vosk imports
-# from vosk import Model, KaldiRecognizer
+# Vosk imports removed
+
 
 def extract_audio(video_path, audio_path):
     """Extracts audio from video using ffmpeg."""

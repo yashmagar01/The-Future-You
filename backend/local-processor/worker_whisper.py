@@ -105,16 +105,79 @@ def analyze_audio(audio_path, model_path_unused):
     
     avg_rms = sum(rms_values) / len(rms_values) if rms_values else 0
 
-    # 4. Filler & Stutter Analysis
+    # 4. Context-Aware Filler & Stutter Analysis
     filler_count = 0
-    fillers = {"um", "uh", "like", "you know", "sort of", "kind of", "actually", "basically"}
+    filler_words_detected = []
+    
+    # Define fillers with context rules
+    # Format: (word/phrase, is_always_filler, context_check_fn)
+    def is_like_filler(words, idx):
+        """'Like' is a filler when NOT used for comparison (like X) or simile (looks like)"""
+        if idx == 0:
+            return True  # Starting sentence with 'like' is usually filler
+        prev_word = words[idx-1].lower() if idx > 0 else ""
+        next_word = words[idx+1].lower() if idx < len(words)-1 else ""
+        # Comparison patterns: "feel like", "looks like", "sounds like", "is like", "was like"
+        comparison_verbs = {"feel", "felt", "feels", "look", "looks", "looked", "sound", "sounds", 
+                          "seem", "seems", "seemed", "is", "was", "were", "am", "be", "been", 
+                          "taste", "tastes", "smell", "smells", "act", "acts"}
+        if prev_word in comparison_verbs:
+            return False  # "looks like" = legitimate
+        # Check for "like a" or "like the" patterns (similes)
+        if next_word in {"a", "an", "the", "this", "that", "my", "your", "his", "her"}:
+            return False  # "like a dog" = simile, not filler
+        return True  # Default: treat as filler
+    
+    def is_actually_filler(words, idx):
+        """'Actually' is filler when not emphasizing a correction"""
+        if idx == 0:
+            return True  # Starting with "actually" is often filler
+        prev_word = words[idx-1].lower() if idx > 0 else ""
+        # If preceded by "but", "well", "no" - it's emphasizing correction
+        if prev_word in {"but", "well", "no", "not", "however"}:
+            return False
+        return True
+    
+    def is_basically_filler(words, idx):
+        """'Basically' is filler unless explaining a concept"""
+        next_word = words[idx+1].lower() if idx < len(words)-1 else ""
+        # If followed by ",", it's likely filler
+        if next_word.startswith(",") or next_word == "":
+            return True
+        return False  # Give benefit of doubt for explanations
+    
+    # Always-filler words (no context needed)
+    always_fillers = {"um", "uh", "umm", "uhh", "er", "erm", "hmm"}
+    
+    # Phrase fillers (check as bigrams/trigrams)
+    phrase_fillers = {"you know", "sort of", "kind of", "i mean", "you see"}
     
     words_list = transcript.split()
-    for word in words_list:
-        # Clean punctuation
+    transcript_lower = transcript.lower()
+    
+    # Count phrase fillers first
+    for phrase in phrase_fillers:
+        count = transcript_lower.count(phrase)
+        filler_count += count
+        if count > 0:
+            filler_words_detected.extend([phrase] * count)
+    
+    # Count single-word fillers with context
+    for idx, word in enumerate(words_list):
         clean_word = re.sub(r'[^\w\s]', '', word).lower()
-        if clean_word in fillers:
+        
+        if clean_word in always_fillers:
             filler_count += 1
+            filler_words_detected.append(clean_word)
+        elif clean_word == "like" and is_like_filler(words_list, idx):
+            filler_count += 1
+            filler_words_detected.append("like")
+        elif clean_word == "actually" and is_actually_filler(words_list, idx):
+            filler_count += 1
+            filler_words_detected.append("actually")
+        elif clean_word == "basically" and is_basically_filler(words_list, idx):
+            filler_count += 1
+            filler_words_detected.append("basically")
             
     stutter_count = 0
     try:
@@ -288,6 +351,7 @@ def analyze_audio(audio_path, model_path_unused):
     return {
         "transcript": transcript,
         "filler_count": filler_count,
+        "filler_words_detected": filler_words_detected,  # List of detected fillers
         "stutter_count": stutter_count,
         "posture_score": posture_score,
         "average_shoulder_slope": avg_slope,

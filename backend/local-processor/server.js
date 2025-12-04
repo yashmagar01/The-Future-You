@@ -303,7 +303,7 @@ async function processRecording(recording_id, video_path) {
                 strengths: ["Good effort", "Clear audio"], 
                 improvements: ["Practice pacing", "Reduce filler words"],
                 key_insights: {
-                  clarity: { score: clarityScore, wpm: wpm, filler_word_count: results.filler_count, filler_words_detected: [] },
+                  clarity: { score: clarityScore, wpm: wpm, filler_word_count: results.filler_count, filler_words_detected: results.filler_words_detected || [] },
                   pacing: { score: pacingScore, feedback: wpm < 120 ? "Too slow" : (wpm > 160 ? "Too fast" : "Perfect"), words_per_minute: wpm, consistency_penalty: Math.round(consistencyPenalty) },
                   sentiment: { score: sentimentLabel, confidence_level: "Medium", structure_score: structureScore, emotions: detectedEmotions },
                   posture: { score: confidenceScore, issues_detected: [], details: { alignment_score: Math.round(alignmentScore), centering_score: Math.round(centeringScore), visibility_score: Math.round(visibilityRatio * 100), posture_ratio: results.average_posture_ratio || 0 } },

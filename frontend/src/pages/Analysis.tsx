@@ -11,18 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// Mock Transcript (Moved from AnalysisResults)
-const mockTranscript = [
-  { time: 0, text: "Alright, uh, today I'd like to talk to you about how to build an MVP or a Minimum Viable Product." },
-  { time: 5, text: "So if you haven't seen this before, this is a meme that we love to talk about when trying to help founders with their MVP." },
-  { time: 12, text: "It's called the Midwitt Meme. The person who is the Jedi, the super intelligent, the founder who's doing all the best things and knows all the best things," },
-  { time: 20, text: "and the idiot, the first time founder, the founder who has no idea what's going on." },
-  { time: 25, text: "Many times, these two founders will actually come to the right decision before the founder who is really smart and is trying to work really hard and do everything right." },
-  { time: 35, text: "And so, in this situation with the MVP, the best advice is to actually launch something quickly and iterate." },
-  { time: 42, text: "Get a product into the hands of your customers and then learn whether it helps them or doesn't and then iterate it and improve it over time." },
-  { time: 50, text: "The wrong answer is to do a hundred surveys and 600 user interviews and contact every single one of the competitors and spend a year fundraising and hire 100 people and all these other things that you can distract yourself with that it might appear like other smart things." },
-  { time: 65, text: "But in reality, they really don't highlight the most important point about an MVP, which is you'd only really start learning when you put a product in front of a customer." },
-];
+
 
 const Analysis = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +36,7 @@ const Analysis = () => {
     ? '/record' 
     : '/dashboard';
 
+
   // Transform feedback data to AnalysisData format
   const analysisData: AnalysisData | null = recording?.feedback ? {
     overall_score: recording.feedback.overall_score,
@@ -55,6 +45,33 @@ const Analysis = () => {
     video_id: recording.id,
     created_at: recording.created_at
   } : null;
+
+  // Build real transcript from database
+  const realTranscript: { time: number; text: string }[] = [];
+  
+  if (recording?.feedback?.key_insights) {
+    const insights = recording.feedback.key_insights as any;
+    const fullTranscript = insights?.transcript || "";
+    
+    // Split transcript into sentences and estimate timestamps
+    // This is a temporary solution until we store word timestamps
+    if (fullTranscript) {
+      const sentences = fullTranscript.match(/[^.!?]+[.!?]+/g) || [fullTranscript];
+      const avgDuration = (recording.duration_seconds || 60) / sentences.length;
+      
+      sentences.forEach((sentence: string, index: number) => {
+        realTranscript.push({
+          time: Math.floor(index * avgDuration),
+          text: sentence.trim()
+        });
+      });
+    }
+  }
+
+  // Use real transcript if available, otherwise fallback to mock (for backward compatibility)
+  const displayTranscript = realTranscript.length > 0 ? realTranscript : [
+    { time: 0, text: "No transcript available. This may be an older recording processed before transcript storage was implemented." }
+  ];
 
   return (
     <Layout>
@@ -195,9 +212,9 @@ const Analysis = () => {
                     )}
                   </div>
 
-                  {/* Transcript Viewer (Moved here) */}
+                  {/* Transcript Viewer*/}
                   <TranscriptViewer 
-                    transcript={mockTranscript} 
+                    transcript={displayTranscript} 
                     currentTime={currentTime} 
                     onSeek={(time) => {
                       setCurrentTime(time);

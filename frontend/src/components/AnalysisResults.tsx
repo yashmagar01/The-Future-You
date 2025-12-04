@@ -24,8 +24,10 @@ interface PacingMetrics {
 }
 
 interface SentimentMetrics {
-  score: string; // e.g., "Positive", "Confident"
+  score: string; // e.g., "Positive", "Confident", "Joy"
   confidence_level?: string;
+  structure_score?: number;
+  emotions?: { label: string; confidence: number }[];
 }
 
 interface PostureMetrics {
@@ -223,7 +225,11 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
 
       {/* SECTION 3: SENTIMENT & STRUCTURE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SentimentGraph data={mockSentimentData} />
+        <SentimentGraph 
+          data={mockSentimentData} 
+          dominantEmotion={metrics.sentiment?.score || 'Neutral'}
+          emotions={metrics.sentiment?.emotions || []}
+        />
         <StructureAnalysis score={metrics.structure_score || 0} />
       </div>
 

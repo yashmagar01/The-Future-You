@@ -6,16 +6,16 @@ const TechCards = () => {
     {
       icon: Mic,
       title: "Speech-to-Text",
-      description: "Browser-based ASR technology transcribes your speech offline with zero latency, ensuring your voice data stays on your device.",
-      tech: "Vosk Browser Model",
+      description: "OpenAI Whisper transcribes your speech with high accuracy, detecting filler words and providing word-level timestamps.",
+      tech: "OpenAI Whisper",
       color: "from-blue-500 to-blue-600",
       bgColor: "bg-blue-500/10"
     },
     {
       icon: Smile,
       title: "Emotion Detection",
-      description: "Local sentiment analysis identifies emotional states from your text, helping you understand the tone of your message.",
-      tech: "Transformers.js",
+      description: "Multi-label emotion classifier detects 11 emotions (joy, optimism, fear, etc.) for nuanced tone analysis.",
+      tech: "Transformers.js (11 emotions)",
       color: "from-purple-500 to-purple-600",
       bgColor: "bg-purple-500/10"
     },

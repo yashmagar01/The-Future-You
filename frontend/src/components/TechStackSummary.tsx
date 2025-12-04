@@ -10,17 +10,17 @@ export default function TechStackSummary() {
     {
       title: "Speech-to-Text",
       icon: <Mic className="h-5 w-5 text-primary" />,
-      tech: "Vosk (Offline)",
-      description: "Privacy-first, offline speech recognition using Vosk Node bindings. No audio leaves the device/server.",
-      details: "Replaces OpenAI Whisper API for zero-latency, cost-free transcription.",
+      tech: "OpenAI Whisper (faster-whisper)",
+      description: "State-of-the-art speech recognition using OpenAI's Whisper model via CTranslate2.",
+      details: "Base.en model with INT8 quantization. Word-level timestamps and filler word prompting.",
       status: "Local-First"
     },
     {
       title: "Emotion & Sentiment",
       icon: <Activity className="h-5 w-5 text-primary" />,
-      tech: "Transformers.js",
-      description: "Local sentiment analysis using HuggingFace Transformers.js running directly in the browser/worker.",
-      details: "Replaces Hume/Azure. Real-time emotion detection from text and audio features.",
+      tech: "Transformers.js (Multi-Emotion)",
+      description: "11-category emotion classifier: joy, love, optimism, trust, anticipation, surprise, sadness, fear, pessimism, disgust, anger.",
+      details: "Weighted scoring system provides nuanced tone analysis beyond simple positive/negative.",
       status: "Local-First"
     },
     {

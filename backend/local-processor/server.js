@@ -7,16 +7,17 @@ const {spawn } = require('child_process');
 const cors = require('cors');
 require('dotenv').config();
 
-// Singleton for Transformers.js pipeline
-let sentimentPipeline;
-async function getSentimentModel() {
-  if (!sentimentPipeline) {
-    console.log("Loading Sentiment Model (Xenova/distilbert-base-uncased-finetuned-sst-2-english)...");
+// Singleton for Transformers.js pipeline (Multi-emotion classifier)
+let emotionPipeline;
+async function getEmotionModel() {
+  if (!emotionPipeline) {
+    console.log("Loading Emotion Model (Xenova/twitter-roberta-base-emotion-multilabel-latest)...");
     const { pipeline } = await import('@xenova/transformers');
-    sentimentPipeline = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
-    console.log("Sentiment Model Loaded.");
+    // Multi-label emotion classifier: anger, anticipation, disgust, fear, joy, love, optimism, pessimism, sadness, surprise, trust
+    emotionPipeline = await pipeline('text-classification', 'Xenova/twitter-roberta-base-emotion-multilabel-latest', { top_k: null });
+    console.log("Emotion Model Loaded.");
   }
-  return sentimentPipeline;
+  return emotionPipeline;
 }
 
 // Singleton for CoLA (Coherence) Model
@@ -182,10 +183,11 @@ async function processRecording(recording_id, video_path) {
               let sentimentLabel = "Neutral";
               let structureScore = 0;
               let coherenceIssue = false;
+              let detectedEmotions = []; // Store all detected emotions for frontend
 
               try {
                 if (results.transcript && results.transcript.trim().length > 0) {
-                    const classifier = await getSentimentModel();
+                    const emotionClassifier = await getEmotionModel();
                     const coherenceClassifier = await getCoherenceModel();
                     
                     // Coherence Check
@@ -218,27 +220,63 @@ async function processRecording(recording_id, video_path) {
                         structureScore = 95;
                     }
 
-                    // Sentiment
+                    // Multi-Emotion Analysis (replaced binary sentiment)
                     const textToAnalyze = results.transcript.substring(0, 1500); 
-                    const output = await classifier(textToAnalyze);
-                    if (output && output.length > 0) {
-                        const result = output[0];
-                        sentimentLabel = result.label;
-                        const sentimentConfidence = result.score;
-
-                        if (sentimentLabel === 'POSITIVE') {
-                            toneScore = Math.round(70 + (sentimentConfidence * 30));
-                        } else {
-                            toneScore = Math.round(40 + (sentimentConfidence * 30));
+                    const emotionOutput = await emotionClassifier(textToAnalyze);
+                    
+                    if (emotionOutput && emotionOutput.length > 0) {
+                        // emotionOutput is an array of { label, score } sorted by score desc
+                        // Labels: anger, anticipation, disgust, fear, joy, love, optimism, pessimism, sadness, surprise, trust
+                        
+                        // Define weights: positive emotions boost score, negative emotions reduce it
+                        const emotionWeights = {
+                            'joy': 1.0,
+                            'love': 0.9,
+                            'optimism': 0.8,
+                            'trust': 0.7,
+                            'anticipation': 0.6,
+                            'surprise': 0.5, // neutral-ish
+                            'sadness': 0.3,
+                            'fear': 0.25,
+                            'pessimism': 0.2,
+                            'disgust': 0.15,
+                            'anger': 0.1
+                        };
+                        
+                        // Calculate weighted tone score
+                        let weightedSum = 0;
+                        let totalWeight = 0;
+                        // Using outer detectedEmotions variable
+                        
+                        for (const emotion of emotionOutput) {
+                            const weight = emotionWeights[emotion.label] || 0.5;
+                            // Only count emotions with confidence > 0.1
+                            if (emotion.score > 0.1) {
+                                detectedEmotions.push({ label: emotion.label, confidence: Math.round(emotion.score * 100) });
+                                weightedSum += emotion.score * weight;
+                                totalWeight += emotion.score;
+                            }
                         }
-                        if (sentimentConfidence < 0.6) {
-                            toneScore = Math.round((toneScore + 60) / 2);
-                            sentimentLabel = "Neutral";
+                        
+                        if (totalWeight > 0) {
+                            // Normalize to 0-1 range, then scale to 50-100 for tone score
+                            const normalizedScore = weightedSum / totalWeight;
+                            toneScore = Math.round(50 + (normalizedScore * 50));
+                        }
+                        
+                        // Pick dominant emotion as label
+                        const dominant = emotionOutput[0];
+                        sentimentLabel = dominant.label.charAt(0).toUpperCase() + dominant.label.slice(1);
+                        
+                        // Store all detected emotions for richer frontend display
+                        if (detectedEmotions.length > 0) {
+                            // Will be stored in key_insights.sentiment.emotions
+                            console.log(`Detected emotions: ${detectedEmotions.map(e => `${e.label}(${e.confidence}%)`).join(', ')}`);
                         }
                     }
                 }
               } catch (sentimentError) {
-                console.error("Sentiment Analysis Failed:", sentimentError);
+                console.error("Emotion Analysis Failed:", sentimentError);
               }
 
               // Energy
@@ -267,7 +305,7 @@ async function processRecording(recording_id, video_path) {
                 key_insights: {
                   clarity: { score: clarityScore, wpm: wpm, filler_word_count: results.filler_count, filler_words_detected: [] },
                   pacing: { score: pacingScore, feedback: wpm < 120 ? "Too slow" : (wpm > 160 ? "Too fast" : "Perfect"), words_per_minute: wpm, consistency_penalty: Math.round(consistencyPenalty) },
-                  sentiment: { score: sentimentLabel, confidence_level: "Medium", structure_score: structureScore },
+                  sentiment: { score: sentimentLabel, confidence_level: "Medium", structure_score: structureScore, emotions: detectedEmotions },
                   posture: { score: confidenceScore, issues_detected: [], details: { alignment_score: Math.round(alignmentScore), centering_score: Math.round(centeringScore), visibility_score: Math.round(visibilityRatio * 100), posture_ratio: results.average_posture_ratio || 0 } },
                   transcript: results.transcript,
                   timeline: results.timeline || []

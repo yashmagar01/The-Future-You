@@ -6,22 +6,7 @@ import wave
 import math
 import numpy as np
 import re
-
-# Try to import faster-whisper, flag if unavailable
-WHISPER_AVAILABLE = False
-try:
-    from faster_whisper import WhisperModel
-    WHISPER_AVAILABLE = True
-except ImportError:
-    print("Warning: faster-whisper not available, will use Vosk fallback", file=sys.stderr)
-
-# Try to import Vosk as fallback
-VOSK_AVAILABLE = False
-try:
-    from vosk import Model as VoskModel, KaldiRecognizer
-    VOSK_AVAILABLE = True
-except ImportError:
-    print("Warning: Vosk not available", file=sys.stderr)
+from faster_whisper import WhisperModel
 
 
 def extract_audio(video_path, audio_path):
@@ -38,125 +23,52 @@ def extract_audio(video_path, audio_path):
     subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def transcribe_with_whisper(audio_path):
-    """Primary transcription using faster-whisper. Returns (transcript, all_words) or raises."""
-    model = WhisperModel("base.en", device="cpu", compute_type="int8")
-    
-    prompt_text = "Umm, uh, like, I mean, sort of, you know..."
-    
-    segments, info = model.transcribe(
-        audio_path, 
-        beam_size=5, 
-        initial_prompt=prompt_text,
-        word_timestamps=True
-    )
-    
-    full_transcript = ""
-    all_words = []
-    
-    for segment in segments:
-        full_transcript += segment.text + " "
-        for word in segment.words:
-            all_words.append({
-                "word": word.word.strip(),
-                "start": word.start,
-                "end": word.end
-            })
-            
-    return full_transcript.strip(), all_words
-
-
-def transcribe_with_vosk(audio_path):
-    """Fallback transcription using Vosk. Returns (transcript, all_words)."""
-    # Try to find Vosk model
-    model_paths = [
-        os.path.join(os.path.dirname(__file__), "models", "vosk-model-small-en-us-0.15"),
-        os.path.join(os.environ.get("VOSK_MODEL_PATH", ""), "vosk-model-small-en-us-0.15"),
-        "vosk-model-small-en-us-0.15"
-    ]
-    
-    model_path = None
-    for path in model_paths:
-        if os.path.exists(path):
-            model_path = path
-            break
-    
-    if not model_path:
-        raise FileNotFoundError("Vosk model not found. Please download vosk-model-small-en-us-0.15")
-    
-    model = VoskModel(model_path)
-    
-    wf = wave.open(audio_path, "rb")
-    rec = KaldiRecognizer(model, wf.getframerate())
-    rec.SetWords(True)
-    
-    all_words = []
-    full_transcript = ""
-    
-    while True:
-        data = wf.readframes(4000)
-        if len(data) == 0:
-            break
-        rec.AcceptWaveform(data)
-    
-    final_result = json.loads(rec.FinalResult())
-    
-    if "result" in final_result:
-        for word_info in final_result["result"]:
-            all_words.append({
-                "word": word_info["word"],
-                "start": word_info["start"],
-                "end": word_info["end"]
-            })
-    
-    full_transcript = final_result.get("text", "")
-    wf.close()
-    
-    return full_transcript, all_words
-
-
 def analyze_audio(audio_path, model_path_unused):
-    """Transcribes audio using faster-whisper (with Vosk fallback) and performs analysis."""
+    """
+    Transcribes audio using faster-whisper (CTranslate2 port of OpenAI Whisper)
+    and performs comprehensive speech analysis.
     
-    # 1. Run Transcription with fallback
-    transcript = ""
-    all_words = []
-    transcription_method = "unknown"
+    faster-whisper is a reimplementation of OpenAI's Whisper using CTranslate2,
+    which is up to 4x faster than the original while using less memory.
+    """
     
-    # Try faster-whisper first
-    if WHISPER_AVAILABLE:
-        try:
-            transcript, all_words = transcribe_with_whisper(audio_path)
-            transcription_method = "faster-whisper"
-            print(f"Transcription successful using faster-whisper", file=sys.stderr)
-        except Exception as e:
-            print(f"Whisper failed: {e}. Trying Vosk fallback...", file=sys.stderr)
-    
-    # Fallback to Vosk if whisper failed or unavailable
-    if not transcript and VOSK_AVAILABLE:
-        try:
-            transcript, all_words = transcribe_with_vosk(audio_path)
-            transcription_method = "vosk"
-            print(f"Transcription successful using Vosk fallback", file=sys.stderr)
-        except Exception as e:
-            print(f"Vosk fallback also failed: {e}", file=sys.stderr)
-    
-    # If both failed, return error
-    if not transcript:
-        error_msg = "Transcription failed: "
-        if not WHISPER_AVAILABLE and not VOSK_AVAILABLE:
-            error_msg += "No transcription engines available. Install faster-whisper or vosk."
-        elif not WHISPER_AVAILABLE:
-            error_msg += "faster-whisper not installed, Vosk failed."
-        elif not VOSK_AVAILABLE:
-            error_msg += "faster-whisper failed, Vosk not available as fallback."
-        else:
-            error_msg += "Both faster-whisper and Vosk failed."
+    # 1. Run Whisper Transcription
+    # Using 'base.en' model - good balance of speed and accuracy for English
+    # Model downloads automatically on first use (~150MB)
+    try:
+        model = WhisperModel("base.en", device="cpu", compute_type="int8")
         
-        print(json.dumps({"error": error_msg}))
+        # Prompt helps Whisper recognize filler words accurately
+        prompt_text = "Umm, uh, like, I mean, sort of, you know..."
+        
+        segments, info = model.transcribe(
+            audio_path, 
+            beam_size=5, 
+            initial_prompt=prompt_text,
+            word_timestamps=True
+        )
+        
+        # Collect results
+        transcript = ""
+        all_words = []
+        
+        for segment in segments:
+            transcript += segment.text + " "
+            for word in segment.words:
+                all_words.append({
+                    "word": word.word.strip(),
+                    "start": word.start,
+                    "end": word.end
+                })
+                
+        transcript = transcript.strip()
+        print(f"Transcription successful using faster-whisper (base.en model)", file=sys.stderr)
+        
+    except Exception as e:
+        print(json.dumps({"error": f"Whisper transcription failed: {e}"}))
         sys.exit(1)
 
-    # 3. Signal Processing (RMS) & Timeline Generation
+    # 2. Signal Processing (RMS) & Timeline Generation
     wf = wave.open(audio_path, "rb")
     if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
         print(json.dumps({"error": "Audio file must be WAV format mono PCM."}))

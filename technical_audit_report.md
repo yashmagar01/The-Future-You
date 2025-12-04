@@ -39,23 +39,23 @@ orchestrated by a Node.js server that spawns a Python worker.
   ```ts
   // Email/Password login (lines 68‑73)
   const signIn = async (email: string, password: string) => {
-      const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-      });
-      return { error };
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
   };
 
   // Google OAuth (lines 76‑92)
   const signInWithGoogle = async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-              redirectTo: `${window.location.origin}/dashboard`,
-              queryParams: { access_type: "offline", prompt: "consent" },
-          },
-      });
-      return { error };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+        queryParams: { access_type: "offline", prompt: "consent" },
+      },
+    });
+    return { error };
   };
   ```
 - **Truth:** No backend verification of the JWT; the Node server trusts the
@@ -108,9 +108,10 @@ orchestrated by a Node.js server that spawns a Python worker.
 
 ### 2.1 Transcription Engine
 
-- **Library:** `faster-whisper` (CPU‑compatible, INT8 quantised).
+- **Library:** `faster-whisper` (CTranslate2 port of OpenAI Whisper,
+  CPU‑compatible, INT8 quantised).
 - **File:**
-  [`backend/local-processor/worker_vosk.py`](file:///c:/Users/Yash/OneDrive/Desktop/yash-reflections-mvp/backend/local-processor/worker_vosk.py#L27-L65)
+  [`backend/local-processor/worker_whisper.py`](file:///c:/Users/Yash/OneDrive/Desktop/yash-reflections-mvp/backend/local-processor/worker_whisper.py#L37-L65)
 - **Key Code:**
   ```python
   model = WhisperModel("base.en", device="cpu", compute_type="int8")
@@ -122,8 +123,10 @@ orchestrated by a Node.js server that spawns a Python worker.
       word_timestamps=True,
   )
   ```
-- **Truth:** The file name still mentions Vosk but the implementation uses
-  faster‑whisper. No fallback if transcription fails.
+- **Model:** `base.en` (~150MB, downloads automatically on first use)
+- **Features:** Word-level timestamps, filler word prompting, beam search
+  decoding
+- **Truth:** Uses faster-whisper exclusively. No fallback engine.
 
 ### 2.2 Speech Clarity & WPM
 
@@ -131,7 +134,7 @@ orchestrated by a Node.js server that spawns a Python worker.
 - **Formula:**
   ```js
   const allWords =
-      results.transcript.split(" ").filter((w) => w.trim().length > 0).length;
+    results.transcript.split(" ").filter((w) => w.trim().length > 0).length;
   const fillerCount = results.filler_count || 0;
   const effectiveWords = Math.max(1, allWords - fillerCount);
   const wpm = Math.round(effectiveWords / (duration / 60));
@@ -147,12 +150,12 @@ orchestrated by a Node.js server that spawns a Python worker.
 - **Pacing Score (Gaussian):**
   ```js
   const rawPacingScore = 100 *
-      Math.exp(-Math.pow(wpm - 145, 2) / (2 * Math.pow(50, 2)));
+    Math.exp(-Math.pow(wpm - 145, 2) / (2 * Math.pow(50, 2)));
   let consistencyPenalty = results.wpm_std_dev || 0;
   if (wpm >= 130 && wpm <= 170) consistencyPenalty = 0;
   const pacingScore = Math.max(
-      0,
-      Math.round(rawPacingScore - consistencyPenalty),
+    0,
+    Math.round(rawPacingScore - consistencyPenalty),
   );
   ```
 - **Combined Clarity:** `(fluencyScore + pacingScore) / 2`.
@@ -179,8 +182,8 @@ orchestrated by a Node.js server that spawns a Python worker.
   if (label === "POSITIVE") toneScore = Math.round(70 + score * 30);
   else toneScore = Math.round(40 + score * 30);
   if (score < 0.6) {
-      toneScore = Math.round((toneScore + 60) / 2);
-      label = "Neutral";
+    toneScore = Math.round((toneScore + 60) / 2);
+    label = "Neutral";
   }
   ```
 - **Formulas:**
@@ -220,7 +223,7 @@ orchestrated by a Node.js server that spawns a Python worker.
   const alignmentScore = Math.max(0, 50 * (1 - (slope / 0.2)));
   const centeringScore = Math.max(0, 50 * (1 - (offset / 0.3)));
   const confidenceScore = Math.round(
-      visibilityRatio * (alignmentScore + centeringScore),
+    visibilityRatio * (alignmentScore + centeringScore),
   );
   ```
 - **Truth:** Visibility multiplier can zero‑out the score if the face is not
@@ -236,7 +239,7 @@ orchestrated by a Node.js server that spawns a Python worker.
   let energyScore = 100;
   if (db < 40) energyScore = Math.max(0, Math.round((db / 40) * 50));
   else if (db > 80) {
-      energyScore = Math.max(0, Math.round(100 - ((db - 80) * 2)));
+    energyScore = Math.max(0, Math.round(100 - ((db - 80) * 2)));
   }
   ```
 - **Interpretation:** Linear scaling below 40 dB, linear penalty above 80 dB,

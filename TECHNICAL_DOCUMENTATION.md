@@ -31,9 +31,10 @@ analysis, posture evaluation, and performance scoring.
 
 **Tech Stack:**
 
-- 🎤 **Transcription:** Vosk (offline speech recognition)
-- 💭 **Sentiment:** TextBlob NLP library (with fallback lexicon)
-- 🧍 **Posture:** MediaPipe + OpenCV (with fallback stub)
+- 🎤 **Transcription:** faster-whisper (OpenAI Whisper via CTranslate2)
+- 💭 **Emotion:** Multi-label emotion classifier (11 emotions via
+  Transformers.js)
+- 🧍 **Posture:** MediaPipe + OpenCV
 - ⚙️ **Backend:** Node.js + Python Worker
 - 💾 **Database:** Supabase PostgreSQL
 
@@ -56,9 +57,9 @@ graph TD
     C --> D[Download Video]
     D --> E[Python Worker]
     E --> F[FFmpeg Audio Extract]
-    F --> G[Vosk Transcription]
+    F --> G[Whisper Transcription]
     G --> H[Filler Detection]
-    G --> I[Sentiment Analysis]
+    G --> I[Emotion Analysis]
     F --> J[Posture Analysis]
     H & I & J --> K[Return JSON]
     K --> C

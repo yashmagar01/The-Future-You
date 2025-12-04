@@ -1,7 +1,7 @@
+# AI Processing Dependencies for The Future You
+# Uses faster-whisper (CTranslate2 port of OpenAI Whisper) for transcription
 faster-whisper
 mediapipe
 opencv-python
 numpy
 requests
-# Optional: Vosk for transcription fallback (uncomment to install)
-# vosk

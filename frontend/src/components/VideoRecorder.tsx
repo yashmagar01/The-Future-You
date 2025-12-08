@@ -620,10 +620,9 @@ export const VideoRecorder = ({
                         <input
                           type="file"
                           accept="video/*"
-                          capture="user"
                           onChange={handleFileUpload}
                           className="hidden"
-                          aria-label="Upload or capture video"
+                          aria-label="Upload video"
                         />
                       </label>
                     </Button>

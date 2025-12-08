@@ -218,13 +218,29 @@ def analyze_audio(audio_path, model_path_unused):
         centering_offsets = []
         posture_ratios = []
         
+        import time
+        start_posture_time = time.time()
+        print(f"Starting posture analysis for {int(vid_duration)} seconds of video...", file=sys.stderr)
+
         # Analyze 1 frame per second
         for i in range(0, int(vid_duration)):
             cap.set(cv2.CAP_PROP_POS_MSEC, i * 1000)
             ret, frame = cap.read()
             if not ret:
                 break
-                
+            
+            # Optimization: Resize frame if too large (MediaPipe doesn't need 4K)
+            # Keeping aspect ratio, max height 640px
+            height, width = frame.shape[:2]
+            if height > 640:
+                scale = 640 / height
+                new_width = int(width * scale)
+                frame = cv2.resize(frame, (new_width, 640))
+            
+            # Log progress every 10 seconds
+            if i % 10 == 0:
+                 print(f"Posture Analysis: {i}/{int(vid_duration)} sec...", file=sys.stderr)
+
             results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             
             frame_posture = "Unknown"

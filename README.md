@@ -249,12 +249,6 @@ npm start
 
 ---
 
-## **📜 License**
-
-MIT
-
----
-
 ## **👤 Author**
 
 **Yash Magar**

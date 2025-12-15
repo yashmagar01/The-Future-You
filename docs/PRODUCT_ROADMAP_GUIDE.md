@@ -68,23 +68,12 @@ export interface Milestone {
 
 ### 2.2 Component (`src/components/home/ProductRoadmap.tsx`)
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    COMPONENT FEATURES                               │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  📱 Mobile View                                                     │
-│     └── Vertical collapsible accordion timeline                    │
-│                                                                     │
-│  🖥️ Desktop View                                                    │
-│     └── Horizontal timeline with gradient connector line           │
-│                                                                     │
-│  👤 Role-Based                                                      │
-│     ├── Admin/Tester → "Get Early Access" button                   │
-│     └── User → "Join Waitlist" button                              │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Device              | View       | Description                           |
+| ------------------- | ---------- | ------------------------------------- |
+| 📱 **Mobile**       | Vertical   | Collapsible accordion timeline        |
+| 🖥️ **Desktop**      | Horizontal | Timeline with gradient connector line |
+| 👤 **Admin/Tester** | Role-based | "Get Early Access" button             |
+| 👤 **User**         | Role-based | "Join Waitlist" button                |
 
 ---
 
@@ -276,26 +265,20 @@ accessButton: {
 
 ## 📍 Homepage Component Order
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    HOMEPAGE SECTIONS                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   1.  Hero                                                         │
-│   2.  Video Embed (NotebookLM)                                     │
-│   3.  Problem-Solution-Outcome                                     │
-│   4.  How It Works                                                 │
-│   5.  Tech Cards                                                   │
-│   6.  Tech Stack Summary                                           │
-│   7.  MVP Feature Grid                                             │
-│   8.  🆕 Product Roadmap Timeline ← NEW                            │
-│   9.  Roadmap (Original detailed version)                          │
-│  10.  Testimonials                                                 │
-│  11.  Footer CTA                                                   │
-│  12.  Footer                                                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Order | Section                               |
+| ----- | ------------------------------------- |
+| 1     | Hero                                  |
+| 2     | Video Embed (NotebookLM)              |
+| 3     | Problem-Solution-Outcome              |
+| 4     | How It Works                          |
+| 5     | Tech Cards                            |
+| 6     | Tech Stack Summary                    |
+| 7     | MVP Feature Grid                      |
+| **8** | **🆕 Product Roadmap Timeline** ← NEW |
+| 9     | Roadmap (Original detailed version)   |
+| 10    | Testimonials                          |
+| 11    | Footer CTA                            |
+| 12    | Footer                                |
 
 ---
 

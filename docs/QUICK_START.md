@@ -1,105 +1,239 @@
-# ⚡ Quick Start - Apply Migrations in 5 Minutes
+# ⚡ Quick Start Guide
 
-## 🎯 What You Need
+## Get Your Backend Running in 5 Minutes
 
-1. Supabase account → https://supabase.com
-2. Your project's API credentials
-3. 5 minutes ⏱️
+**Difficulty Level**: Beginner\
+**Time Required**: 5 minutes\
+**Last Updated**: December 15, 2025
 
 ---
 
-## 📝 Steps (Copy & Paste)
+## 📋 Table of Contents
 
-### 1️⃣ Get API Credentials (2 min)
+1. [Pre-requisites](#-pre-requisites)
+2. [Step-by-Step Setup](#-step-by-step-setup)
+3. [Verification](#-verification)
+4. [Troubleshooting](#-troubleshooting)
+
+---
+
+## 🎯 Pre-requisites
+
+Before you begin, ensure you have:
+
+| Requirement      | Where to Get                         | Status |
+| ---------------- | ------------------------------------ | ------ |
+| Supabase Account | [supabase.com](https://supabase.com) | ☐      |
+| Project Created  | Supabase Dashboard                   | ☐      |
+| API Credentials  | Settings → API                       | ☐      |
+
+---
+
+## 📝 Step-by-Step Setup
+
+### Step 1: Get API Credentials (2 min)
+
+```mermaid
+flowchart LR
+    A[Supabase Dashboard] --> B[Open Project]
+    B --> C[Settings ⚙️]
+    C --> D[API Section]
+    D --> E[Copy Credentials]
+```
+
+**Navigate to:**
 
 ```
-1. Go to: https://supabase.com/dashboard
-2. Open your project
-3. Settings (⚙️) → API
-4. Copy:
-   - Project URL
-   - anon/public key
-   - project ID from URL
+https://supabase.com/dashboard → Your Project → Settings ⚙️ → API
 ```
 
-### 2️⃣ Update .env (30 sec)
+**Copy these values:**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    CREDENTIALS TO COPY                              │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  📋 Project URL                                                     │
+│     └── https://xxxxx.supabase.co                                  │
+│                                                                     │
+│  🔑 anon/public key                                                 │
+│     └── eyJhbGciOiJIUz...                                          │
+│                                                                     │
+│  🆔 Project ID (from URL)                                           │
+│     └── xxxxx                                                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Step 2: Update Environment File (30 sec)
+
+Create or edit your `.env` file:
 
 ```bash
+# Copy from template
+cp .env.example .env
+```
+
+**Add your credentials:**
+
+```env
 VITE_SUPABASE_URL=your-url-here
-VITE_SUPABASE_PUBLISHABLE_KEY=your-key-here
+VITE_SUPABASE_ANON_KEY=your-key-here
 VITE_SUPABASE_PROJECT_ID=your-id-here
 ```
 
-### 3️⃣ Run Migration 1 (1 min)
+> [!TIP]
+> Make sure to restart your dev server after modifying `.env` files!
 
-```
-1. Supabase Dashboard → SQL Editor (📝)
-2. Click "New query"
-3. Open: supabase/migrations/001_initial_schema.sql
-4. Copy ALL → Paste → Click "Run"
-5. ✅ Should see: "Success. No rows returned"
-```
+---
 
-**Creates:** Tables, RLS policies, triggers
+### Step 3: Run Migration 1 — Initial Schema (1 min)
 
-### 4️⃣ Run Migration 2 (1 min)
-
-```
-1. SQL Editor → "New query"
-2. Open: supabase/migrations/002_storage_setup.sql
-3. Copy ALL → Paste → Click "Run"
-4. ✅ Should see: "Success. No rows returned"
+```mermaid
+flowchart LR
+    A[SQL Editor 📝] --> B[New Query]
+    B --> C[Paste SQL]
+    C --> D[Click Run]
+    D --> E[✅ Success]
 ```
 
-**Creates:** Storage buckets for videos
+**Steps:**
 
-### 5️⃣ Verify (30 sec)
+| Step | Action                                             | Expected Result                |
+| ---- | -------------------------------------------------- | ------------------------------ |
+| 1    | Open Supabase Dashboard → SQL Editor (📝)          | Editor opens                   |
+| 2    | Click "New query"                                  | Empty query panel              |
+| 3    | Open: `supabase/migrations/001_initial_schema.sql` | File contents                  |
+| 4    | Copy ALL → Paste → Click "Run"                     | Query executes                 |
+| 5    | Check result                                       | ✅ "Success. No rows returned" |
+
+**What this creates:**
+
+```
+┌────────────────────────────────────────────────────┐
+│  TABLES CREATED                                    │
+├────────────────────────────────────────────────────┤
+│  ✅ profiles        User profiles with metadata    │
+│  ✅ recordings      Video recordings metadata      │
+│  ✅ feedback        AI analysis results            │
+│  ✅ progress        User progress tracking         │
+├────────────────────────────────────────────────────┤
+│  ALSO CREATED                                      │
+├────────────────────────────────────────────────────┤
+│  🔒 RLS Policies    Row-level security            │
+│  ⚡ Triggers         Automatic profile creation    │
+└────────────────────────────────────────────────────┘
+```
+
+---
+
+### Step 4: Run Migration 2 — Storage Setup (1 min)
+
+**Repeat the same process:**
+
+| Step | Action                                            |
+| ---- | ------------------------------------------------- |
+| 1    | SQL Editor → "New query"                          |
+| 2    | Open: `supabase/migrations/002_storage_setup.sql` |
+| 3    | Copy ALL → Paste → Click "Run"                    |
+| 4    | Verify: ✅ "Success. No rows returned"            |
+
+**What this creates:**
+
+```
+┌────────────────────────────────────────────────────┐
+│  STORAGE BUCKETS CREATED                           │
+├────────────────────────────────────────────────────┤
+│  📁 recordings      Video file storage             │
+│  📁 thumbnails      Video thumbnail images         │
+├────────────────────────────────────────────────────┤
+│  ALSO CREATED                                      │
+├────────────────────────────────────────────────────┤
+│  🔒 Storage Policies  Upload/download permissions  │
+└────────────────────────────────────────────────────┘
+```
+
+---
+
+### Step 5: Verify Setup (30 sec)
 
 ```bash
-# Restart dev server
+# Restart your dev server
 npm run dev
 ```
 
-**Check:**
-- Table Editor → See 4 tables ✅
-- Storage → See 2 buckets ✅
-- Try signup → Works ✅
+---
+
+## ✅ Verification
+
+**Check these items in Supabase Dashboard:**
+
+| Check   | Location          | Expected          |
+| ------- | ----------------- | ----------------- |
+| Tables  | Table Editor (📊) | 4+ tables visible |
+| Storage | Storage section   | 2 buckets visible |
+| Auth    | Authentication    | Providers enabled |
+
+**Test in browser:**
+
+```mermaid
+flowchart LR
+    A[Visit localhost:5173] --> B[Try Signup]
+    B --> C[Check Email]
+    C --> D[Confirm Account]
+    D --> E[✅ Login Works]
+```
 
 ---
 
-## ✅ Done!
+## 🎉 Success!
 
-Your backend is ready. Now you can:
-- Sign up users
-- Record videos
-- Upload files
-- View in gallery
-- See analytics
+Your backend is now fully configured. You can:
 
----
-
-## 🆘 Issues?
-
-**Error running migration?**
-- Copy the ENTIRE file (including first line)
-- Check for any red error messages
-- Re-run the migration
-
-**No tables showing?**
-- Refresh browser
-- Check Table Editor (📊) in sidebar
-
-**Can't login after signup?**
-- Check email for confirmation
-- Authentication → Email templates
-- Make sure Email provider is enabled
+| Feature       | Status   |
+| ------------- | -------- |
+| Sign up users | ✅ Ready |
+| Record videos | ✅ Ready |
+| Upload files  | ✅ Ready |
+| View gallery  | ✅ Ready |
+| See analytics | ✅ Ready |
 
 ---
 
-## 📚 Full Guide
+## 🆘 Troubleshooting
 
-Need more details? See: `SUPABASE_MIGRATION_GUIDE.md`
+### Common Issues
+
+| Problem                               | Solution                                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Error running migration**           | Copy the ENTIRE file (including first line). Check for red error messages. Re-run.                |
+| **No tables showing**                 | Refresh browser. Check Table Editor (📊) in sidebar.                                              |
+| **Can't login after signup**          | Check email for confirmation. Enable Email provider in Auth settings.                             |
+| **Environment variables not working** | Ensure `.env` exists (not `.env.example`). Restart dev server. Variables must start with `VITE_`. |
+
+> [!WARNING]
+> If you see RLS policy errors, make sure you ran BOTH migration files in order.
 
 ---
 
-**That's it! 🎉 You're ready to record videos!**
+## 📚 Additional Resources
+
+| Document                                                 | Description              |
+| -------------------------------------------------------- | ------------------------ |
+| [SETUP.md](SETUP.md)                                     | Detailed setup checklist |
+| [TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md) | Full architecture docs   |
+| [Backend README](../backend/README.md)                   | Local processor setup    |
+| [Supabase README](../supabase-organized/README.md)       | Database configuration   |
+
+---
+
+<div align="center">
+
+**🎉 That's it! You're ready to record videos!**
+
+_Setup complete in 5 minutes or less_
+
+</div>

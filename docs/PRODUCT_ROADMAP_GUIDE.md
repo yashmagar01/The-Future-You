@@ -1,191 +1,218 @@
-# Product Roadmap Implementation Guide
+# 🗺️ Product Roadmap Implementation Guide
 
-## Overview
+## Roadmap Timeline Component Documentation
 
-A clean, responsive Product Roadmap timeline has been added to the homepage, displaying milestones with exact launch dates as specified.
+**Component Version**: 1.0\
+**Status**: Production Ready ✅\
+**Last Updated**: December 15, 2025
 
-## Files Created
+---
 
-### 1. **src/data/timelineData.ts**
-Data structure for all roadmap milestones. Easy to update dates, features, and descriptions.
+## 📋 Table of Contents
+
+1. [Overview](#1-overview)
+2. [Files Created](#2-files-created)
+3. [Files Modified](#3-files-modified)
+4. [Features](#4-features)
+5. [Usage](#5-usage)
+6. [Customization](#6-customization)
+7. [Testing](#7-testing)
+
+---
+
+## 1. Overview
+
+A clean, responsive Product Roadmap timeline has been added to the homepage,
+displaying milestones with exact launch dates.
+
+```mermaid
+gantt
+    title Product Roadmap Timeline
+    dateFormat YYYY-MM-DD
+    section MVP
+    MVP Launched        :done, 2025-04-19, 1d
+    section NVP
+    NVP Launch          :active, 2025-07-20, 1d
+    section Dream
+    Dream Version       :2026-01-01, 365d
+```
+
+### Milestone Status
+
+| Milestone         | Date          | Status       | Color  |
+| ----------------- | ------------- | ------------ | ------ |
+| **MVP Launched**  | 19 April 2025 | ✅ Completed | Green  |
+| **NVP Launch**    | 20 July 2025  | 🔶 Scheduled | Orange |
+| **Dream Version** | 2026+         | 🔵 Future    | Blue   |
+
+---
+
+## 2. Files Created
+
+### 2.1 Data Structure (`src/data/timelineData.ts`)
+
+Centralized data structure for all roadmap milestones:
 
 ```typescript
 export interface Milestone {
   id: string;
   title: string;
   date: string;
-  status: 'completed' | 'scheduled' | 'future';
-  color: { bg, text, border, indicator };
+  status: "completed" | "scheduled" | "future";
+  color: { bg; text; border; indicator };
   features: string[];
   description: string;
-  accessButton?: { admin, user };
+  accessButton?: { admin; user };
 }
 ```
 
-**Current Milestones:**
-- **MVP Launched**: 19 April 2025 (Completed) ✅
-- **NVP Launch**: 20 July 2025 (Scheduled) 🔶
-- **Dream Version**: 2026+ (Future) 🔵
+### 2.2 Component (`src/components/home/ProductRoadmap.tsx`)
 
-### 2. **src/components/home/ProductRoadmap.tsx**
-Main roadmap component with:
-- **Desktop**: Horizontal timeline with gradient connector line
-- **Mobile**: Vertical collapsible accordion timeline
-- **Role-based buttons**: Different CTAs for admin/tester vs regular users
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    COMPONENT FEATURES                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  📱 Mobile View                                                     │
+│     └── Vertical collapsible accordion timeline                    │
+│                                                                     │
+│  🖥️ Desktop View                                                    │
+│     └── Horizontal timeline with gradient connector line           │
+│                                                                     │
+│  👤 Role-Based                                                      │
+│     ├── Admin/Tester → "Get Early Access" button                   │
+│     └── User → "Join Waitlist" button                              │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-## Files Modified
+---
 
-### 3. **src/pages/Home.tsx**
-Updated imports and added ProductRoadmap component:
+## 3. Files Modified
+
+### 3.1 Home Page (`src/pages/Home.tsx`)
+
 ```tsx
 import ProductRoadmap from "@/components/home/ProductRoadmap";
 
 // Added after MVPFeatureGrid:
-<ProductRoadmap userRole="user" />
+<ProductRoadmap userRole="user" />;
 ```
 
-### 4. **src/components/MVPFeatureGrid.tsx**
+### 3.2 Feature Grid (`src/components/MVPFeatureGrid.tsx`)
+
 Updated legend dates:
+
 - MVP: "Launched 19 April 2025"
 - NVP: "Launch 20 July 2025"
-- Fixed status indicators to use `green-500` instead of `brand-green`
+- Fixed status indicators to use `green-500`
 
-## Features
+---
 
-### ✅ Exact Date Display
-- MVP: **19 April 2025** (green, completed status)
-- NVP: **20 July 2025** (orange, scheduled status)
-- Dream: **2026+** (blue, future status)
+## 4. Features
 
-### ✅ Feature Lists
-Each milestone shows its feature list:
-- **MVP**: 7 features (Daily uploads, Private AI analysis, Speech clarity, etc.)
-- **NVP**: 2 features (Live roleplay, Gamification & badges)
-- **Dream**: 3 features (Avatar mentor, Conversation engine, VR practice)
+### 4.1 Feature Lists Per Milestone
 
-### ✅ Role-Based Access
-```tsx
-<ProductRoadmap userRole="admin" />  // Shows "Get Early Access"
-<ProductRoadmap userRole="user" />   // Shows "Join Waitlist"
+```mermaid
+graph TB
+    subgraph "MVP (7 Features)"
+        A1[Daily uploads]
+        A2[Private AI analysis]
+        A3[Speech clarity]
+        A4[Posture tracking]
+        A5[Emotional tone]
+        A6[Progress dashboard]
+        A7[Zero-cost processing]
+    end
+    
+    subgraph "NVP (2 Features)"
+        B1[Live roleplay]
+        B2[Gamification & badges]
+    end
+    
+    subgraph "Dream (3 Features)"
+        C1[Avatar mentor]
+        C2[Conversation engine]
+        C3[VR practice]
+    end
 ```
 
-### ✅ Responsive Design
-- **Desktop (lg+)**: Horizontal 3-column timeline with connecting line
-- **Mobile**: Vertical collapsible cards with expand/collapse
+### 4.2 Responsive Design
 
-### ✅ Visual Consistency
-Uses existing design system:
-- Tailwind spacing: `px-6`, `py-8`, `gap-6`
-- Border radius: `rounded-xl`
-- Shadows: `shadow-lg`
-- Colors: `green-500`, `orange-500`, `blue-500`
+| Breakpoint            | Layout              | Behavior                      |
+| --------------------- | ------------------- | ----------------------------- |
+| **Desktop** (≥1024px) | Horizontal 3-column | Timeline with connecting line |
+| **Mobile** (<1024px)  | Vertical accordion  | Collapsible cards             |
 
-### ✅ Accessibility
-- Proper ARIA labels
-- Keyboard navigation support
-- Semantic HTML
-- Role attributes
+### 4.3 Accessibility
 
-## Usage Examples
+| Feature             | Implementation      |
+| ------------------- | ------------------- |
+| ARIA Labels         | ✅ Proper labeling  |
+| Keyboard Navigation | ✅ Full support     |
+| Semantic HTML       | ✅ Proper structure |
+| Role Attributes     | ✅ Defined          |
 
-### Basic Usage
+---
+
+## 5. Usage
+
+### 5.1 Basic Usage
+
 ```tsx
 import ProductRoadmap from "@/components/home/ProductRoadmap";
 
-// In your component:
-<ProductRoadmap />
+// Default usage
+<ProductRoadmap />;
 ```
 
-### With User Role
+### 5.2 With User Role
+
 ```tsx
 <ProductRoadmap userRole="admin" />   // Early access button
 <ProductRoadmap userRole="tester" />  // Early access button
 <ProductRoadmap userRole="user" />    // Waitlist button
 ```
 
-### Update Timeline Data
-Edit `src/data/timelineData.ts`:
+### 5.3 Update Timeline Data
 
-```typescript
+```tsx
+// File: src/data/timelineData.ts
+
 export const timelineData: Milestone[] = [
   {
-    id: 'mvp',
-    title: 'MVP Launched',
-    date: '19 April 2025',  // ← Update date here
-    status: 'completed',
+    id: "mvp",
+    title: "MVP Launched",
+    date: "19 April 2025", // ← Update date here
+    status: "completed",
     features: [
-      'Daily uploads',      // ← Add/remove features
-      'Private AI analysis',
+      "Daily uploads", // ← Add/remove features
+      "Private AI analysis",
       // ...
-    ]
-  }
+    ],
+  },
 ];
 ```
 
-## Integration Checklist
+---
 
-- ✅ Created `src/data/timelineData.ts`
-- ✅ Created `src/components/home/ProductRoadmap.tsx`
-- ✅ Updated `src/pages/Home.tsx` imports
-- ✅ Added ProductRoadmap after MVPFeatureGrid
-- ✅ Updated MVPFeatureGrid legend dates
-- ✅ Fixed icon color consistency
-- ✅ Maintained existing card layout (no breaking changes)
-- ✅ Added responsive horizontal/vertical layouts
-- ✅ Implemented role-based button logic
+## 6. Customization
 
-## Component Positioning
+### 6.1 Change Colors
 
-Current homepage order:
-1. Hero
-2. Video Embed (NotebookLM)
-3. Problem-Solution-Outcome
-4. How It Works
-5. Tech Cards
-6. Tech Stack Summary
-7. **MVP Feature Grid**
-8. **🆕 Product Roadmap Timeline** ← New component
-9. Roadmap (Original detailed version)
-10. Testimonials
-11. Footer CTA
-12. Footer
-
-## Testing
-
-### Desktop View (≥1024px)
-- [ ] Horizontal timeline displays correctly
-- [ ] Gradient connector line visible
-- [ ] All 3 milestones side-by-side
-- [ ] Icons centered above cards
-- [ ] Feature lists readable
-
-### Mobile View (<1024px)
-- [ ] Vertical timeline displays
-- [ ] Cards collapse/expand on tap
-- [ ] Vertical connectors between cards
-- [ ] No horizontal scroll
-- [ ] Touch-friendly spacing
-
-### Role-Based Logic
-- [ ] Admin sees "Get Early Access" (NVP milestone)
-- [ ] Tester sees "Get Early Access" (NVP milestone)
-- [ ] User sees "Join Waitlist" (NVP milestone)
-- [ ] MVP and Dream milestones don't show buttons
-
-## Customization
-
-### Change Colors
-Edit `src/data/timelineData.ts`:
 ```typescript
+// File: src/data/timelineData.ts
+
 color: {
-  bg: 'bg-purple-500/10',      // Background
-  text: 'text-purple-600',     // Text color
+  bg: 'bg-purple-500/10',       // Background
+  text: 'text-purple-600',      // Text color
   border: 'border-purple-500/20', // Border
-  indicator: 'bg-purple-500'   // Icon background
+  indicator: 'bg-purple-500'    // Icon background
 }
 ```
 
-### Add New Milestone
+### 6.2 Add New Milestone
+
 ```typescript
 {
   id: 'v2',
@@ -203,35 +230,102 @@ color: {
 }
 ```
 
-### Change Button Text
-Edit `timelineData.ts`:
+### 6.3 Change Button Text
+
 ```typescript
 accessButton: {
-  admin: 'Beta Access Now',  // Shown to admins/testers
-  user: 'Get Notified'       // Shown to regular users
+  admin: 'Beta Access Now',   // Shown to admins/testers
+  user: 'Get Notified'        // Shown to regular users
 }
 ```
 
-## Notes
+---
 
-- **No breaking changes**: Existing MVPFeatureGrid layout unchanged
-- **Existing Roadmap preserved**: Original detailed roadmap still present
-- **Easy maintenance**: All dates/features in one data file
-- **TypeScript safe**: Full type definitions included
-- **Design consistent**: Uses existing Tailwind utilities
+## 7. Testing
 
-## Future Enhancements
+### 7.1 Desktop Testing Checklist
 
-Potential additions:
-- [ ] Progress percentage bars
-- [ ] Email capture modal on "Join Waitlist"
-- [ ] Admin dashboard integration
-- [ ] Milestone completion animations
-- [ ] Confetti on completed milestones
-- [ ] Email notifications for upcoming releases
+| Test                                   | Status |
+| -------------------------------------- | ------ |
+| Horizontal timeline displays correctly | ☐      |
+| Gradient connector line visible        | ☐      |
+| All 3 milestones side-by-side          | ☐      |
+| Icons centered above cards             | ☐      |
+| Feature lists readable                 | ☐      |
+
+### 7.2 Mobile Testing Checklist
+
+| Test                              | Status |
+| --------------------------------- | ------ |
+| Vertical timeline displays        | ☐      |
+| Cards collapse/expand on tap      | ☐      |
+| Vertical connectors between cards | ☐      |
+| No horizontal scroll              | ☐      |
+| Touch-friendly spacing            | ☐      |
+
+### 7.3 Role-Based Testing
+
+| Scenario                 | Expected Button    |
+| ------------------------ | ------------------ |
+| Admin views NVP          | "Get Early Access" |
+| Tester views NVP         | "Get Early Access" |
+| User views NVP           | "Join Waitlist"    |
+| Any user views MVP/Dream | No button          |
 
 ---
 
-**Last Updated**: November 16, 2025  
-**Component Version**: 1.0  
-**Status**: Production Ready ✅
+## 📍 Homepage Component Order
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    HOMEPAGE SECTIONS                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   1.  Hero                                                         │
+│   2.  Video Embed (NotebookLM)                                     │
+│   3.  Problem-Solution-Outcome                                     │
+│   4.  How It Works                                                 │
+│   5.  Tech Cards                                                   │
+│   6.  Tech Stack Summary                                           │
+│   7.  MVP Feature Grid                                             │
+│   8.  🆕 Product Roadmap Timeline ← NEW                            │
+│   9.  Roadmap (Original detailed version)                          │
+│  10.  Testimonials                                                 │
+│  11.  Footer CTA                                                   │
+│  12.  Footer                                                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔮 Future Enhancements
+
+| Enhancement                      | Priority | Status    |
+| -------------------------------- | -------- | --------- |
+| Progress percentage bars         | Medium   | ☐ Planned |
+| Email capture on "Join Waitlist" | High     | ☐ Planned |
+| Admin dashboard integration      | Medium   | ☐ Planned |
+| Milestone completion animations  | Low      | ☐ Planned |
+| Confetti on completed milestones | Low      | ☐ Planned |
+| Email notifications for releases | Medium   | ☐ Planned |
+
+---
+
+> [!NOTE]
+> **Design Consistency**: The roadmap uses existing Tailwind utilities and
+> design tokens to maintain visual consistency with the rest of the application.
+
+> [!TIP]
+> **Easy Maintenance**: All dates and features are centralized in
+> `timelineData.ts` for easy updates without touching component code.
+
+---
+
+<div align="center">
+
+**Component Status: Production Ready ✅**
+
+_Last Updated: December 15, 2025_
+
+</div>

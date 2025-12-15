@@ -23,21 +23,14 @@
 
 ### 1.1 Project Status
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      PROJECT HEALTH                                 │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Status:           MVP In-Progress (Hybrid Local/Cloud)           │
-│   Completion:       ████████████░░░░░░░░░  65%                     │
-│   Production Ready: ⚠️ Limited (localhost dependency)              │
-│                                                                     │
-│   ✅ Core flows (Auth, Record, Upload) work                        │
-│   ⚠️ AI processing implemented but fragile                         │
-│   ❌ Local-only processing reliance                                │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Metric               | Value                                |
+| -------------------- | ------------------------------------ |
+| **Status**           | MVP In-Progress (Hybrid Local/Cloud) |
+| **Completion**       | 65%                                  |
+| **Production Ready** | ⚠️ Limited (localhost dependency)    |
+| **Core flows**       | ✅ Auth, Record, Upload work         |
+| **AI processing**    | ⚠️ Implemented but fragile           |
+| **Processing model** | ❌ Local-only reliance               |
 
 ### 1.2 Technology Stack Confirmation
 
@@ -112,22 +105,11 @@ graph TB
 
 ### 3.1 Missing Features
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    KNOWN LIMITATIONS                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  🔴 Cloud Fallback                                                  │
-│     └── Backend requires local server running                      │
-│                                                                     │
-│  🟡 Real-time Feedback                                              │
-│     └── Processing is async, no real-time during recording         │
-│                                                                     │
-│  🟡 Blocking Operations                                             │
-│     └── Video processing is synchronous and CPU-intensive          │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Priority    | Limitation              | Description                                        |
+| ----------- | ----------------------- | -------------------------------------------------- |
+| 🔴 Critical | **Cloud Fallback**      | Backend requires local server running              |
+| 🟡 Medium   | **Real-time Feedback**  | Processing is async, no real-time during recording |
+| 🟡 Medium   | **Blocking Operations** | Video processing is synchronous and CPU-intensive  |
 
 ### 3.2 Resource Constraints
 
@@ -197,25 +179,14 @@ sequenceDiagram
 
 ### 5.2 Flow Breakpoints
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CRITICAL PATHS                                   │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ✅ WORKING                                                         │
-│     ├── User → Frontend → Supabase Storage                         │
-│     ├── LocalServer → Supabase (signed URLs)                       │
-│     └── PythonWorker → AI Analysis                                 │
-│                                                                     │
-│  ⚠️ FRAGILE                                                         │
-│     ├── Frontend → localhost:3001 (fails if server down)           │
-│     └── Edge Function → LOCAL_PROCESSING_ENDPOINT                  │
-│                                                                     │
-│  ❌ BROKEN IF OFFLINE                                               │
-│     └── Any user without local server running                      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Status                   | Path                                      | Details                  |
+| ------------------------ | ----------------------------------------- | ------------------------ |
+| ✅ **WORKING**           | User → Frontend → Supabase Storage        | Upload flow functional   |
+| ✅ **WORKING**           | LocalServer → Supabase (signed URLs)      | Download flow functional |
+| ✅ **WORKING**           | PythonWorker → AI Analysis                | Processing functional    |
+| ⚠️ **FRAGILE**           | Frontend → localhost:3001                 | Fails if server down     |
+| ⚠️ **FRAGILE**           | Edge Function → LOCAL_PROCESSING_ENDPOINT | Hardcoded localhost      |
+| ❌ **BROKEN IF OFFLINE** | Any user without local server             | Processing fails         |
 
 ---
 

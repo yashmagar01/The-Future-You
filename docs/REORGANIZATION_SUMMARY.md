@@ -58,43 +58,20 @@ graph TB
 
 ### Directory Tree
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    PROJECT STRUCTURE                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  yash-reflections-mvp/                                             │
-│  │                                                                  │
-│  ├── 📂 frontend/                 # React Frontend                 │
-│  │   ├── src/                    # React source code              │
-│  │   │   ├── components/         # UI components                  │
-│  │   │   ├── pages/              # Route pages                    │
-│  │   │   ├── hooks/              # Custom hooks                   │
-│  │   │   ├── contexts/           # React contexts                 │
-│  │   │   └── integrations/       # Supabase client                │
-│  │   ├── public/                 # Static assets                  │
-│  │   ├── package.json            # Frontend dependencies          │
-│  │   └── README.md               # Frontend guide                 │
-│  │                                                                  │
-│  ├── 📂 backend/                  # Local AI Processing           │
-│  │   ├── local-processor/        # Node.js + Express              │
-│  │   │   ├── server.js           # Main server logic              │
-│  │   │   └── worker_whisper.py   # Python AI worker               │
-│  │   └── README.md               # Backend guide                  │
-│  │                                                                  │
-│  ├── 📂 supabase-organized/       # Supabase Configuration        │
-│  │   ├── supabase/                                                 │
-│  │   │   ├── functions/          # 14 Edge Functions              │
-│  │   │   └── migrations/         # Database migrations            │
-│  │   └── README.md               # Database guide                 │
-│  │                                                                  │
-│  ├── 📂 docs/                     # Documentation                 │
-│  ├── package.json                # Root scripts                   │
-│  ├── README.md                   # Main README                    │
-│  └── .env                        # Environment variables          │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Directory                          | Contents                                          |
+| ---------------------------------- | ------------------------------------------------- |
+| **`yash-reflections-mvp/`**        | Root directory                                    |
+| └── **`frontend/`** 📂             | React Frontend                                    |
+| &nbsp;&nbsp;└── `src/`             | React source (components, pages, hooks, contexts) |
+| &nbsp;&nbsp;└── `public/`          | Static assets                                     |
+| &nbsp;&nbsp;└── `package.json`     | Frontend dependencies                             |
+| └── **`backend/`** 📂              | Local AI Processing                               |
+| &nbsp;&nbsp;└── `local-processor/` | Node.js + Express (server.js, worker.py)          |
+| └── **`supabase-organized/`** 📂   | Supabase Configuration                            |
+| &nbsp;&nbsp;└── `supabase/`        | Edge Functions & Migrations                       |
+| └── **`docs/`** 📂                 | Documentation                                     |
+| └── `package.json`                 | Root scripts                                      |
+| └── `README.md`                    | Main README                                       |
 
 ---
 
@@ -268,20 +245,13 @@ flowchart LR
 
 ## 🎉 Summary
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    REORGANIZATION COMPLETE                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ✅ frontend/              React application                       │
-│  ✅ backend/               Local AI processor                      │
-│  ✅ supabase-organized/    Database & serverless functions         │
-│  ✅ docs/                  All documentation                       │
-│                                                                     │
-│  RESULT: Better maintainability, easier onboarding, cleaner code!  │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Component                 | Status      | Description                                              |
+| ------------------------- | ----------- | -------------------------------------------------------- |
+| **`frontend/`**           | ✅ Complete | React application                                        |
+| **`backend/`**            | ✅ Complete | Local AI processor                                       |
+| **`supabase-organized/`** | ✅ Complete | Database & serverless functions                          |
+| **`docs/`**               | ✅ Complete | All documentation                                        |
+| **Result**                | 🎉          | Better maintainability, easier onboarding, cleaner code! |
 
 > [!TIP]
 > Each component can now be developed, tested, and deployed independently while

@@ -24,22 +24,14 @@ This update aligns the codebase with the official **Local-First MVP
 architecture**, removing cloud API dependencies in favor of privacy-first,
 offline-capable alternatives.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    ALIGNMENT SUMMARY                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ❌ REMOVED (Cloud APIs)          ✅ REPLACED WITH (Local)         │
-│  ├── OpenAI GPT-4                 ├── Transformers.js              │
-│  ├── Gemini API                   ├── Local templates              │
-│  ├── Azure Speech                 ├── faster-whisper               │
-│  ├── Hume Emotion                 ├── RoBERTa (local)              │
-│  └── Cloud GPU compute            └── Local CPU processing         │
-│                                                                     │
-│  RESULT: Zero-cost, privacy-first, offline-capable                 │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| REMOVED (Cloud APIs) | REPLACED WITH (Local)                         |
+| -------------------- | --------------------------------------------- |
+| ❌ OpenAI GPT-4      | ✅ Transformers.js                            |
+| ❌ Gemini API        | ✅ Local templates                            |
+| ❌ Azure Speech      | ✅ faster-whisper                             |
+| ❌ Hume Emotion      | ✅ RoBERTa (local)                            |
+| ❌ Cloud GPU compute | ✅ Local CPU processing                       |
+| **Result**           | **Zero-cost, privacy-first, offline-capable** |
 
 ---
 

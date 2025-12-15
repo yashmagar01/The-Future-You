@@ -24,19 +24,12 @@
 
 ### 1.1 Audit Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      AUDIT SUMMARY                                  │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Architecture:     Hybrid Local-Cloud (Store-and-Forward)         │
-│   AI Processing:    Privacy-First (Local)                          │
-│   Cost Model:       Zero API Cost                                   │
-│                                                                     │
-│   Overall Rating:   ⭐⭐⭐⭐☆ (4/5 - Impressive Local MVP)          │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Aspect             | Details                                |
+| ------------------ | -------------------------------------- |
+| **Architecture**   | Hybrid Local-Cloud (Store-and-Forward) |
+| **AI Processing**  | Privacy-First (Local)                  |
+| **Cost Model**     | Zero API Cost                          |
+| **Overall Rating** | ⭐⭐⭐⭐☆ (4/5 - Impressive Local MVP) |
 
 ### 1.2 Key Strengths
 
@@ -91,20 +84,14 @@ sequenceDiagram
 
 ### 2.2 Data Flow Summary
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    DATA FLOW                                        │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  1. CAPTURE:   User records video in Browser (MediaRecorder)       │
-│  2. UPLOAD:    Frontend uploads Blob → Supabase Storage            │
-│  3. QUEUE:     Creates record with status: 'uploaded'              │
-│  4. POLL:      Local server polls every 5s                         │
-│  5. PROCESS:   Node.js → Python Worker → AI Analysis               │
-│  6. RESULT:    Insert feedback → Update status: 'completed'        │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Step           | Action   | Description                                   |
+| -------------- | -------- | --------------------------------------------- |
+| **1. CAPTURE** | Record   | User records video in Browser (MediaRecorder) |
+| **2. UPLOAD**  | Store    | Frontend uploads Blob → Supabase Storage      |
+| **3. QUEUE**   | Queue    | Creates record with status: 'uploaded'        |
+| **4. POLL**    | Detect   | Local server polls every 5s                   |
+| **5. PROCESS** | Analyze  | Node.js → Python Worker → AI Analysis         |
+| **6. RESULT**  | Complete | Insert feedback → Update status: 'completed'  |
 
 ---
 
@@ -168,20 +155,13 @@ graph TB
 
 ### 3.4 Posture Algorithm
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    POSTURE SCORING                                  │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Ratio = neck_length / shoulder_width                             │
-│                                                                     │
-│   Score Classification:                                            │
-│   ├── > 0.50 → "Regal"    (Excellent posture)                     │
-│   ├── > 0.35 → "Good"     (Acceptable posture)                    │
-│   └── ≤ 0.35 → "Slouch"   (Needs improvement)                     │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+**Formula**: `Ratio = neck_length / shoulder_width`
+
+| Ratio  | Classification | Quality            |
+| ------ | -------------- | ------------------ |
+| > 0.50 | **Regal**      | Excellent posture  |
+| > 0.35 | **Good**       | Acceptable posture |
+| ≤ 0.35 | **Slouch**     | Needs improvement  |
 
 ### 3.5 Database (Supabase PostgreSQL)
 
@@ -253,26 +233,22 @@ gantt
 
 ## 🎯 Final Verdict
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    FINAL ASSESSMENT                                 │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   The system is a technically impressive "Local-First" MVP.        │
-│                                                                     │
-│   ✅ Successfully avoids cloud AI costs                            │
-│   ✅ Delivers high-fidelity analysis                               │
-│   ✅ Privacy-first architecture                                    │
-│                                                                     │
-│   This typically requires expensive APIs like:                     │
-│   • OpenAI Whisper ($0.006/min)                                    │
-│   • Google Cloud Vision ($3.50/1000 images)                        │
-│   • Azure Cognitive Services ($1/1000 transactions)                │
-│                                                                     │
-│   SAVINGS: ~₹100,000+/year for typical usage                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+The system is a technically impressive "Local-First" MVP.
+
+| Verdict                         | Status |
+| ------------------------------- | ------ |
+| Avoids cloud AI costs           | ✅ Yes |
+| Delivers high-fidelity analysis | ✅ Yes |
+| Privacy-first architecture      | ✅ Yes |
+
+**Cost Comparison (Typical APIs Avoided)**:
+
+| Service                  | Cost                 |
+| ------------------------ | -------------------- |
+| OpenAI Whisper           | $0.006/min           |
+| Google Cloud Vision      | $3.50/1000 images    |
+| Azure Cognitive Services | $1/1000 transactions |
+| **Annual Savings**       | **~₹100,000+/year**  |
 
 ---
 

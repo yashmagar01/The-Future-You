@@ -49,22 +49,11 @@ https://supabase.com/dashboard → Your Project → Settings ⚙️ → API
 
 **Copy these values:**
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CREDENTIALS TO COPY                              │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  📋 Project URL                                                     │
-│     └── https://xxxxx.supabase.co                                  │
-│                                                                     │
-│  🔑 anon/public key                                                 │
-│     └── eyJhbGciOiJIUz...                                          │
-│                                                                     │
-│  🆔 Project ID (from URL)                                           │
-│     └── xxxxx                                                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Credential             | Example                     | Where to Find                            |
+| ---------------------- | --------------------------- | ---------------------------------------- |
+| 📋 **Project URL**     | `https://xxxxx.supabase.co` | Settings → API → Project URL             |
+| 🔑 **anon/public key** | `eyJhbGciOiJIUz...`         | Settings → API → anon key                |
+| 🆔 **Project ID**      | `xxxxx`                     | From URL: supabase.com/project/**xxxxx** |
 
 ---
 
@@ -112,21 +101,14 @@ flowchart LR
 
 **What this creates:**
 
-```
-┌────────────────────────────────────────────────────┐
-│  TABLES CREATED                                    │
-├────────────────────────────────────────────────────┤
-│  ✅ profiles        User profiles with metadata    │
-│  ✅ recordings      Video recordings metadata      │
-│  ✅ feedback        AI analysis results            │
-│  ✅ progress        User progress tracking         │
-├────────────────────────────────────────────────────┤
-│  ALSO CREATED                                      │
-├────────────────────────────────────────────────────┤
-│  🔒 RLS Policies    Row-level security            │
-│  ⚡ Triggers         Automatic profile creation    │
-└────────────────────────────────────────────────────┘
-```
+| Type       | Component       | Purpose                     |
+| ---------- | --------------- | --------------------------- |
+| **Tables** | `profiles`      | User profiles with metadata |
+| **Tables** | `recordings`    | Video recordings metadata   |
+| **Tables** | `feedback`      | AI analysis results         |
+| **Tables** | `progress`      | User progress tracking      |
+| **Other**  | RLS Policies 🔒 | Row-level security          |
+| **Other**  | Triggers ⚡     | Automatic profile creation  |
 
 ---
 
@@ -143,18 +125,11 @@ flowchart LR
 
 **What this creates:**
 
-```
-┌────────────────────────────────────────────────────┐
-│  STORAGE BUCKETS CREATED                           │
-├────────────────────────────────────────────────────┤
-│  📁 recordings      Video file storage             │
-│  📁 thumbnails      Video thumbnail images         │
-├────────────────────────────────────────────────────┤
-│  ALSO CREATED                                      │
-├────────────────────────────────────────────────────┤
-│  🔒 Storage Policies  Upload/download permissions  │
-└────────────────────────────────────────────────────┘
-```
+| Type         | Component           | Purpose                     |
+| ------------ | ------------------- | --------------------------- |
+| **Buckets**  | `recordings` 📁     | Video file storage          |
+| **Buckets**  | `thumbnails` 📁     | Video thumbnail images      |
+| **Policies** | Storage Policies 🔒 | Upload/download permissions |
 
 ---
 

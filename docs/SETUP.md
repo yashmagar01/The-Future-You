@@ -21,19 +21,13 @@
 
 ## Setup Progress Tracker
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      SETUP CHECKLIST                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ☐  Step 1: Install Dependencies                                   │
-│  ☐  Step 2: Configure Environment Variables                        │
-│  ☐  Step 3: Run Database Migrations                                │
-│  ☐  Step 4: Start Development Server                               │
-│  ☐  Step 5: Test All Features                                      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Step | Task                            | Status |
+| ---- | ------------------------------- | ------ |
+| 1    | Install Dependencies            | ☐      |
+| 2    | Configure Environment Variables | ☐      |
+| 3    | Run Database Migrations         | ☐      |
+| 4    | Start Development Server        | ☐      |
+| 5    | Test All Features               | ☐      |
 
 ---
 
@@ -248,35 +242,12 @@ flowchart LR
 
 ### Quick Fixes
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    COMMON ISSUES & FIXES                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  🎥 Camera not working?                                             │
-│     ├── Grant browser camera permissions                            │
-│     ├── Try Chrome (recommended)                                    │
-│     └── Close other apps using camera                               │
-│                                                                     │
-│  📤 Upload failing?                                                 │
-│     ├── Check Storage bucket exists                                 │
-│     ├── Verify RLS policies                                         │
-│     ├── Check console for errors                                    │
-│     └── Ensure file size < 50MB                                     │
-│                                                                     │
-│  📊 No data showing?                                                │
-│     ├── Verify migrations ran successfully                          │
-│     ├── Check RLS policies                                          │
-│     ├── Open browser console                                        │
-│     └── Check Supabase project status                               │
-│                                                                     │
-│  🔑 Environment variables not working?                              │
-│     ├── Ensure .env exists (not .env.example)                       │
-│     ├── Restart dev server                                          │
-│     └── Variables must start with VITE_                             │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Issue                             | Solutions                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| 🎥 **Camera not working?**        | Grant browser permissions • Try Chrome • Close other camera apps                          |
+| 📤 **Upload failing?**            | Check Storage bucket exists • Verify RLS policies • Check console • Ensure file < 50MB    |
+| 📊 **No data showing?**           | Verify migrations ran • Check RLS policies • Open browser console • Check Supabase status |
+| 🔑 **Env variables not working?** | Ensure `.env` exists • Restart dev server • Variables must start with `VITE_`             |
 
 > [!WARNING]
 > Always restart your development server after changing environment variables!

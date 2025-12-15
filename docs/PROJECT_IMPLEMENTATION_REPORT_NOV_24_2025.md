@@ -22,22 +22,15 @@
 
 ### 1.1 MVP Completion
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      MVP STATUS                                     │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Overall Completion:    ██████████████████░░  85%                 │
-│   Current Phase:         Beta Testing                               │
-│   Status:               Production Ready (MVP)                      │
-│                                                                     │
-│   ✅ Core flows work (Auth, Record, Upload)                        │
-│   ✅ AI processing implemented                                      │
-│   ✅ Local-first architecture complete                              │
-│   ⚠️ Scaling to production pending                                  │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Metric                 | Value                        |
+| ---------------------- | ---------------------------- |
+| **Overall Completion** | 85%                          |
+| **Current Phase**      | Beta Testing                 |
+| **Status**             | Production Ready (MVP)       |
+| **Core flows**         | ✅ Auth, Record, Upload work |
+| **AI processing**      | ✅ Implemented               |
+| **Architecture**       | ✅ Local-first complete      |
+| **Scaling**            | ⚠️ Production pending        |
 
 ### 1.2 Key Metrics
 
@@ -181,29 +174,18 @@ pie title AI Model Implementation
 
 ### 4.3 Processing Specifications
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    AI PROCESSING SPECS                              │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  Speech-to-Text:                                                   │
-│  ├── Model: faster-whisper base.en                                 │
-│  ├── Size: ~150MB                                                  │
-│  ├── Runtime: Python 3.11+ (via Node.js subprocess)               │
-│  └── Speed: ~3x real-time                                          │
-│                                                                     │
-│  Emotion Detection:                                                 │
-│  ├── Model: RoBERTa multilabel                                     │
-│  ├── Categories: 11 emotions                                       │
-│  └── Runtime: Transformers.js (Node.js)                            │
-│                                                                     │
-│  Pose Analysis:                                                     │
-│  ├── Model: MediaPipe Pose                                         │
-│  ├── Landmarks: 33 body points                                     │
-│  └── Runtime: Client-side & Python                                 │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Model                 | Attribute  | Value                                 |
+| --------------------- | ---------- | ------------------------------------- |
+| **Speech-to-Text**    | Model      | faster-whisper base.en                |
+|                       | Size       | ~150MB                                |
+|                       | Runtime    | Python 3.11+ (via Node.js subprocess) |
+|                       | Speed      | ~3x real-time                         |
+| **Emotion Detection** | Model      | RoBERTa multilabel                    |
+|                       | Categories | 11 emotions                           |
+|                       | Runtime    | Transformers.js (Node.js)             |
+| **Pose Analysis**     | Model      | MediaPipe Pose                        |
+|                       | Landmarks  | 33 body points                        |
+|                       | Runtime    | Client-side & Python                  |
 
 ---
 
@@ -234,21 +216,14 @@ pie title AI Model Implementation
 
 ## 📈 Summary
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    IMPLEMENTATION SUMMARY                           │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   ✅ Frontend:        95% Complete (React + TypeScript)            │
-│   ✅ Backend:         85% Complete (Node.js + Python)              │
-│   ✅ AI Pipeline:     90% Complete (All models working)            │
-│   ✅ Database:        100% Complete (Supabase deployed)            │
-│   ✅ Documentation:   90% Complete (All guides written)            │
-│                                                                     │
-│   OVERALL MVP:        85% Complete — Production Ready (Beta)       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Component         | Status           | Details                 |
+| ----------------- | ---------------- | ----------------------- |
+| **Frontend**      | 95% Complete     | React + TypeScript      |
+| **Backend**       | 85% Complete     | Node.js + Python        |
+| **AI Pipeline**   | 90% Complete     | All models working      |
+| **Database**      | 100% Complete    | Supabase deployed       |
+| **Documentation** | 90% Complete     | All guides written      |
+| **OVERALL MVP**   | **85% Complete** | Production Ready (Beta) |
 
 ---
 

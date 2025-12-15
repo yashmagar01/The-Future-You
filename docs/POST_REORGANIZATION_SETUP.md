@@ -61,34 +61,27 @@ Open http://localhost:5173 — Supabase errors should be gone! ✅
 
 ### Directory Structure Comparison
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    BEFORE REORGANIZATION                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  yash-reflections-mvp/                                             │
-│  ├── .env            ← Environment variables here                  │
-│  ├── src/            ← React code here                             │
-│  ├── package.json                                                  │
-│  └── vite.config.ts                                                │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+**Before Reorganization:**
 
-┌─────────────────────────────────────────────────────────────────────┐
-│                    AFTER REORGANIZATION                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  yash-reflections-mvp/                                             │
-│  ├── .env                ← Still here (reference)                  │
-│  ├── frontend/                                                     │
-│  │   ├── .env           ← ⚠️ NEEDS TO BE HERE TOO!                 │
-│  │   ├── src/           ← React code moved here                    │
-│  │   ├── package.json                                              │
-│  │   └── vite.config.ts                                            │
-│  └── backend/                                                      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Path                    | Content                    |
+| ----------------------- | -------------------------- |
+| `yash-reflections-mvp/` | Root directory             |
+| └── `.env`              | Environment variables here |
+| └── `src/`              | React code here            |
+| └── `package.json`      | Dependencies               |
+| └── `vite.config.ts`    | Vite config                |
+
+**After Reorganization:**
+
+| Path                                         | Content                      |
+| -------------------------------------------- | ---------------------------- |
+| `yash-reflections-mvp/`                      | Root directory               |
+| └── `.env`                                   | Still here (reference)       |
+| └── `frontend/`                              | Frontend directory           |
+| &nbsp;&nbsp;&nbsp;&nbsp;└── `.env`           | ⚠️ **NEEDS TO BE HERE TOO!** |
+| &nbsp;&nbsp;&nbsp;&nbsp;└── `src/`           | React code moved here        |
+| &nbsp;&nbsp;&nbsp;&nbsp;└── `vite.config.ts` | Vite config                  |
+| └── `backend/`                               | Backend directory            |
 
 ### Why This Matters
 
@@ -146,30 +139,12 @@ npm start
 
 ### Common Issues & Solutions
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    TROUBLESHOOTING GUIDE                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ❌ "VITE_SUPABASE_URL is undefined"                                │
-│     ├── Check frontend/.env exists                                  │
-│     ├── Verify it contains real values (not placeholders)          │
-│     └── Restart dev server                                          │
-│                                                                     │
-│  ❌ "Cannot find module '@/components/...'"                         │
-│     └── Run: cd frontend && npm install                            │
-│                                                                     │
-│  ❌ "Port 5173 already in use"                                      │
-│     ├── Windows: netstat -ano | findstr :5173                      │
-│     ├── Kill process: taskkill /PID <PID> /F                       │
-│     └── Then restart: npm run dev                                   │
-│                                                                     │
-│  ❌ Still seeing old errors after restart                           │
-│     ├── Clear Vite cache: rm -rf node_modules/.vite                │
-│     └── Hard refresh: Ctrl+Shift+R (Windows/Linux)                 │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Issue                                          | Solutions                                                               |
+| ---------------------------------------------- | ----------------------------------------------------------------------- |
+| ❌ **"VITE_SUPABASE_URL is undefined"**        | Check `frontend/.env` exists • Verify real values • Restart dev server  |
+| ❌ **"Cannot find module '@/components/...'"** | Run: `cd frontend && npm install`                                       |
+| ❌ **"Port 5173 already in use"**              | `netstat -ano \| findstr :5173` • `taskkill /PID <PID> /F` • Restart    |
+| ❌ **Still seeing old errors**                 | Clear cache: `rm -rf node_modules/.vite` • Hard refresh: `Ctrl+Shift+R` |
 
 > [!WARNING]
 > Never commit your `.env` file! Only `.env.example` should be in git.

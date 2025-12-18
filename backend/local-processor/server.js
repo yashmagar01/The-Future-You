@@ -11,10 +11,10 @@ require('dotenv').config();
 let emotionPipeline;
 async function getEmotionModel() {
   if (!emotionPipeline) {
-    console.log("Loading Emotion Model (Xenova/distilbert-base-uncased-finetuned-emotion)...");
+    console.log("Loading Emotion Model (Xenova/emotion-english-distilroberta-base)...");
     const { pipeline } = await import('@xenova/transformers');
-    // 6-class emotion classifier: sadness, joy, love, anger, fear, surprise
-    emotionPipeline = await pipeline('text-classification', 'Xenova/distilbert-base-uncased-finetuned-emotion', { top_k: null });
+    // Official ONNX-ready emotion model: anger, disgust, fear, joy, neutral, sadness, surprise
+    emotionPipeline = await pipeline('text-classification', 'Xenova/emotion-english-distilroberta-base', { top_k: null });
     console.log("Emotion Model Loaded.");
   }
   return emotionPipeline;

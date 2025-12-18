@@ -11,17 +11,11 @@ require('dotenv').config();
 let emotionPipeline;
 async function getEmotionModel() {
   if (!emotionPipeline) {
-    console.log("Loading Emotion Model (Xenova/distilbert-base-uncased-finetuned-emotion)...");
+    console.log("Loading Emotion Model (MicahB/emotion_text_classifier)...");
     const { pipeline } = await import('@xenova/transformers');
-    // Standard Xenova emotion model with HF_TOKEN for Azure IP authentication
-    emotionPipeline = await pipeline(
-      'text-classification',
-      'Xenova/distilbert-base-uncased-finetuned-emotion',
-      {
-        accessToken: process.env.HF_TOKEN, // Bypasses Azure IP blocking
-        top_k: null
-      }
-    );
+    // MicahB model - explicitly converted for transformers.js (ONNX verified)
+    // Detects: joy, sadness, anger, fear, surprise, disgust, neutral
+    emotionPipeline = await pipeline('text-classification', 'MicahB/emotion_text_classifier');
     console.log("Emotion Model Loaded.");
   }
   return emotionPipeline;

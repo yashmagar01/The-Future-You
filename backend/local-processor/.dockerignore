@@ -1,0 +1,42 @@
+# ===============================================
+# .dockerignore - Reduce Docker context size
+# ===============================================
+
+# Node modules (will be installed fresh in container)
+node_modules/
+npm-debug.log
+
+# Python virtual environments
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Local environment files (use Docker env vars instead)
+.env
+.env.local
+
+# Temporary files
+temp/*
+tmp/*
+uploads/*
+logs/*
+*.log
+
+# Development files
+.git/
+.gitignore
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+tests/
+*.test.js

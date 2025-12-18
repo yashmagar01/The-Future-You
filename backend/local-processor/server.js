@@ -42,7 +42,7 @@ async function getCoherenceModel() {
 }
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -522,6 +522,7 @@ app.post('/generate-script', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Local processor listening at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Local processor listening at http://0.0.0.0:${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

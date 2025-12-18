@@ -1,7 +1,19 @@
-# AI Processing Dependencies for The Future You
-# Uses faster-whisper (CTranslate2 port of OpenAI Whisper) for transcription
-faster-whisper
-mediapipe
-opencv-python
-numpy
-requests
+# ===============================================
+# Python Dependencies for The Future You Backend
+# Production-ready for Docker/Linux deployment
+# ===============================================
+
+# Speech-to-Text: CTranslate2 port of OpenAI Whisper (fast, accurate, CPU-friendly)
+faster-whisper>=1.0.0
+
+# Pose Detection: Google MediaPipe for posture analysis
+mediapipe>=0.10.0
+
+# OpenCV: HEADLESS version for server environments (no GUI/display required)
+opencv-python-headless>=4.8.0
+
+# Numerical Computing
+numpy>=1.24.0
+
+# HTTP requests (for downloading models if needed)
+requests>=2.28.0

@@ -7,7 +7,8 @@
 faster-whisper>=1.0.0
 
 # Pose Detection: Google MediaPipe for posture analysis
-mediapipe>=0.10.0
+# PINNED to 0.10.9 for stable 'solutions' API on headless servers
+mediapipe==0.10.9
 
 # OpenCV: HEADLESS version for server environments (no GUI/display required)
 opencv-python-headless>=4.8.0

@@ -7,14 +7,14 @@ const {spawn } = require('child_process');
 const cors = require('cors');
 require('dotenv').config();
 
-// Singleton for Transformers.js pipeline (Multi-emotion classifier)
+// Singleton for Transformers.js pipeline (Emotion classifier)
 let emotionPipeline;
 async function getEmotionModel() {
   if (!emotionPipeline) {
-    console.log("Loading Emotion Model (Xenova/twitter-roberta-base-emotion-multilabel-latest)...");
+    console.log("Loading Emotion Model (Xenova/distilbert-base-uncased-finetuned-emotion)...");
     const { pipeline } = await import('@xenova/transformers');
-    // Multi-label emotion classifier: anger, anticipation, disgust, fear, joy, love, optimism, pessimism, sadness, surprise, trust
-    emotionPipeline = await pipeline('text-classification', 'Xenova/twitter-roberta-base-emotion-multilabel-latest', { top_k: null });
+    // 6-class emotion classifier: sadness, joy, love, anger, fear, surprise
+    emotionPipeline = await pipeline('text-classification', 'Xenova/distilbert-base-uncased-finetuned-emotion', { top_k: null });
     console.log("Emotion Model Loaded.");
   }
   return emotionPipeline;

@@ -23,14 +23,14 @@
 
 ### 1.1 Project Status
 
-| Metric               | Value                                |
-| -------------------- | ------------------------------------ |
-| **Status**           | MVP In-Progress (Hybrid Local/Cloud) |
-| **Completion**       | 65%                                  |
-| **Production Ready** | ⚠️ Limited (localhost dependency)    |
-| **Core flows**       | ✅ Auth, Record, Upload work         |
-| **AI processing**    | ⚠️ Implemented but fragile           |
-| **Processing model** | ❌ Local-only reliance               |
+| Metric               | Value                             |
+| -------------------- | --------------------------------- |
+| **Status**           | MVP Beta (Hybrid Local/Cloud)     |
+| **Completion**       | 85%                               |
+| **Production Ready** | ⚠️ Limited (localhost dependency) |
+| **Core flows**       | ✅ Auth, Record, Upload work      |
+| **AI processing**    | ✅ Implemented (local-first)      |
+| **Processing model** | ✅ Polling-based worker loop      |
 
 ### 1.2 Technology Stack Confirmation
 
@@ -229,7 +229,7 @@ graph LR
 ```typescript
 // Support remote processing URL
 const endpoint = Deno.env.get("PROCESSING_ENDPOINT") ||
-  "http://localhost:3001";
+    "http://localhost:3001";
 ```
 
 **3. Create requirements.txt**
@@ -247,12 +247,12 @@ numpy
 
 | Metric                   | Value  |
 | ------------------------ | ------ |
-| **Overall Completion**   | 65%    |
-| **Frontend**             | 90% ✅ |
-| **Backend**              | 70% ⚠️ |
-| **AI Pipeline**          | 85% ✅ |
-| **Production Readiness** | 40% ❌ |
-| **Documentation**        | 75% ✅ |
+| **Overall Completion**   | 85%    |
+| **Frontend**             | 95% ✅ |
+| **Backend**              | 85% ✅ |
+| **AI Pipeline**          | 90% ✅ |
+| **Production Readiness** | 60% ⚠️ |
+| **Documentation**        | 95% ✅ |
 
 ---
 

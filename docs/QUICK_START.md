@@ -74,6 +74,10 @@ VITE_SUPABASE_ANON_KEY=your-key-here
 VITE_SUPABASE_PROJECT_ID=your-id-here
 ```
 
+> [!IMPORTANT]
+> Ensure the `.env` file is ALSO placed in the `frontend/` directory, as Vite
+> looks for environment variables there. See [SETUP.md](SETUP.md) for details.
+
 > [!TIP]
 > Make sure to restart your dev server after modifying `.env` files!
 
@@ -196,12 +200,11 @@ Your backend is now fully configured. You can:
 
 ## 📚 Additional Resources
 
-| Document                                                 | Description              |
-| -------------------------------------------------------- | ------------------------ |
-| [SETUP.md](SETUP.md)                                     | Detailed setup checklist |
-| [TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md) | Full architecture docs   |
-| [Backend README](../backend/README.md)                   | Local processor setup    |
-| [Supabase README](../supabase-organized/README.md)       | Database configuration   |
+| Document                                           | Description              |
+| -------------------------------------------------- | ------------------------ |
+| [SETUP.md](SETUP.md)                               | Detailed setup checklist |
+| [Backend README](../backend/Docs/README.md)        | Local processor setup    |
+| [Supabase README](../supabase-organized/README.md) | Database configuration   |
 
 ---
 

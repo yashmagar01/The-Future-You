@@ -60,8 +60,14 @@ pip install faster-whisper mediapipe opencv-python numpy
 ### Step 1: Create Environment File
 
 ```bash
-cp .env.example .env
+# From project root
+cp .env frontend/.env
 ```
+
+> [!IMPORTANT]
+> **Vite Environment Requirement**: Vite looks for the `.env` file in the same
+> directory as `vite.config.ts`. You **must** have a copy of the `.env` file
+> inside the `frontend/` directory for the application to connect to Supabase.
 
 ### Step 2: Configure Supabase Credentials
 
@@ -246,6 +252,7 @@ flowchart LR
 | --------------------------------- | ----------------------------------------------------------------------------------------- |
 | 🎥 **Camera not working?**        | Grant browser permissions • Try Chrome • Close other camera apps                          |
 | 📤 **Upload failing?**            | Check Storage bucket exists • Verify RLS policies • Check console • Ensure file < 50MB    |
+| 🔗 **"Supabase Not Configured"?** | **Quick Fix**: Copy root `.env` to `frontend/.env` and restart the dev server.            |
 | 📊 **No data showing?**           | Verify migrations ran • Check RLS policies • Open browser console • Check Supabase status |
 | 🔑 **Env variables not working?** | Ensure `.env` exists • Restart dev server • Variables must start with `VITE_`             |
 

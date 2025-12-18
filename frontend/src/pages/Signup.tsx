@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, Loader2, AlertCircle, CheckCircle2, Video } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, CheckCircle2, Video, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -19,6 +19,7 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
@@ -231,16 +232,30 @@ const Signup = () => {
                 <label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password (min. 6 characters)"
-                  className="h-11 border-gray-300 focus:border-primary focus:ring-primary"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading || success || googleLoading}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password (min. 6 characters)"
+                    className="h-11 border-gray-300 focus:border-primary focus:ring-primary pr-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading || success || googleLoading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-primary"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button 

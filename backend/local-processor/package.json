@@ -1,6 +1,6 @@
 {
   "name": "yash-ai-local-processor",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Jugaad local AI processing server - Vosk + Transformers.js + MediaPipe (₹0 cost)",
   "main": "server.js",
   "scripts": {

@@ -3,7 +3,7 @@
 ## AI-Powered Communication & Self-Growth Platform
 
 **Project Classification**: Zero-Cost Local AI Communication Coaching System\
-**Version**: MVP 0.1.0\
+**Version**: v1.5.0 (Private Cloud MVP)\
 **Last Updated**: December 15, 2025\
 **Author**: Yash Magar
 
@@ -663,15 +663,15 @@ segments, info = model.transcribe(
 // Emotion Model - Multi-label classifier (11 emotions)
 let emotionPipeline;
 async function getEmotionModel() {
-  if (!emotionPipeline) {
-    const { pipeline } = await import("@xenova/transformers");
-    emotionPipeline = await pipeline(
-      "text-classification",
-      "Xenova/twitter-roberta-base-emotion-multilabel-latest",
-      { top_k: null },
-    );
-  }
-  return emotionPipeline;
+    if (!emotionPipeline) {
+        const { pipeline } = await import("@xenova/transformers");
+        emotionPipeline = await pipeline(
+            "text-classification",
+            "Xenova/twitter-roberta-base-emotion-multilabel-latest",
+            { top_k: null },
+        );
+    }
+    return emotionPipeline;
 }
 ```
 

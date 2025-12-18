@@ -17,6 +17,7 @@ dist-ssr
 .env.local
 frontend/.env
 backend/.env
+backend/local-processor/.env.azure
 
 # AI Models (large files)
 backend/models/

@@ -13,10 +13,10 @@ dist-ssr
 *.local
 
 # Environment variables
-.env
-.env.local
-frontend/.env
-backend/.env
+# .env
+# .env.local
+# frontend/.env
+# backend/.env
 
 # AI Models (large files)
 backend/models/

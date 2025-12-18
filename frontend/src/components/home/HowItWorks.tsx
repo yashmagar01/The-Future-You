@@ -46,7 +46,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden bg-white/50">
+    <section id="how-it-works" className="py-24 px-4 relative overflow-hidden bg-white/50">
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="text-center mb-24">
           <motion.div

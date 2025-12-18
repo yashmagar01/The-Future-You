@@ -123,7 +123,8 @@ const Waitlist = () => {
     setShowSuccessModal(false);
   };
 
-  const launchDate = new Date('2026-04-19T00:00:00');
+  // Beta signups close in 3 days (Dec 22, 2025 midnight IST)
+  const launchDate = new Date('2025-12-22T00:00:00');
 
   return (
     <Layout>
@@ -161,7 +162,7 @@ const Waitlist = () => {
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
-            Be first to try the AI communication coach that helps you master public speaking,
+            Be first to try your personal <strong className="text-foreground">AI Expert Mentor</strong> that helps you master public speaking,
             job interviews, and everyday conversations through daily video practice.
           </p>
 
@@ -169,7 +170,7 @@ const Waitlist = () => {
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Clock className="h-5 w-5 text-primary" />
-              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Launching in</p>
+              <p className="text-sm font-semibold text-red-600 uppercase tracking-wide">🔥 Beta Signups Close In</p>
             </div>
             <Countdown targetDate={launchDate} />
           </div>
@@ -192,7 +193,7 @@ const Waitlist = () => {
               </div>
               <h3 className="font-semibold">Early Access</h3>
               <p className="text-sm text-muted-foreground">
-                Get invited in small batches before public launch on April 19, 2025
+                Limited spots — signups close Dec 22nd, then we go heads-down building!
               </p>
             </div>
             <div className="text-center space-y-3">

@@ -1,253 +1,120 @@
 # Backend - Local AI Processor
 
-Zero-cost, local-first AI processing server using Vosk, Transformers.js, MediaPipe, and FFmpeg.
+A high-performance, local-first AI processing server designed for the Yash
+Reflections MVP. This server handles heavy computation tasks—transcription,
+posture analysis, and personalized script generation—using a zero-cost,
+offline-capable architecture.
 
-## Tech Stack (100% Free, Offline)
+## 🚀 Tech Stack (100% Free & Offline)
 
-- **Runtime**: Node.js + Express.js
-- **Speech-to-Text**: Vosk (offline, vosk-model-en-in-0.5)
-- **NLP/Sentiment**: Hugging Face Transformers.js
-- **Body Language**: MediaPipe Pose Landmarker
-- **Video Processing**: FFmpeg (via fluent-ffmpeg)
-- **File Upload**: Multer
-- **Cost**: ₹0/month (100% local processing)
+- **Runtime**: Node.js (Express.js) + Python 3.10+
+- **Speech-to-Text**: **Faster-Whisper (base.en)**
+  - CTranslate2 implementation of OpenAI's Whisper.
+  - Up to 4x faster than original Whisper with int8 quantization.
+- **Visual Analysis**: **MediaPipe (Python)**
+  - Real-time skeletal tracking for posture alignment, slope, and centering
+    metrics.
+- **NLP / Emotion**: **Transformers.js** (In-process Node.js)
+  - **Emotion**: `twitter-roberta-base-emotion-multilabel-latest` (Multi-label
+    classification)
+  - **Coherence**: `bert-base-uncased` (Thought structure analysis)
+- **Script Generation**: **Ollama (Llama 3.2)**
+  - Personalized communication coaching scripts via local LLM.
+- **Video Processing**: FFmpeg
+- **Database**: Supabase (via Service Role for background worker polling)
 
-## Structure
+## 📂 Project Structure
 
 ```
 backend/
 ├── local-processor/
-│   ├── server.js         # Main Express server
-│   ├── package.json      # Node dependencies
-│   ├── models/           # Downloaded AI models (Vosk)
-│   ├── uploads/          # Temporary video storage
-│   └── temp/             # Frame extraction
-├── JUGAAD_SETUP.md       # Complete installation guide
-├── REFACTORING_SUMMARY.md # Architecture & cost analysis
-└── README.md             # This file
+│   ├── server.js         # Express server & Background worker loop
+│   ├── worker_whisper.py # Python worker for audio & visual analysis
+│   ├── models/           # (Auto-managed) AI model weights
+│   ├── tmp/              # Temporary file processing area
+│   ├── package.json      # Node.js dependencies
+│   └── requirements.txt  # Python package requirements
+├── worker/               # Deployment-ready containerized worker logic
+└── Docs/
+    └── README.md         # This file
 ```
 
-## Quick Start
+## 🛠️ Quick Start
 
-### 1. Install Dependencies
+### 1. Prerequisites
+
+- **FFmpeg**: Must be installed and available in system PATH.
+- **Python 3.10+**: With `pip` installed.
+- **Ollama**: Installed and running locally (`ollama run llama3.2`).
+
+### 2. Install Dependencies
 
 ```bash
-cd local-processor
+cd backend/local-processor
 npm install
+pip install -r requirements.txt
 ```
 
-### 2. Install System Requirements
+### 3. Configuration
 
-**FFmpeg** (required):
-```bash
-# Windows (via Chocolatey)
-choco install ffmpeg
+Create a `.env` file in `backend/local-processor/`:
 
-# macOS
-brew install ffmpeg
-
-# Ubuntu/Debian
-sudo apt-get install ffmpeg
+```env
+PORT=3001
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-**Python + Vosk** (required for transcription):
-```bash
-pip install vosk mediapipe opencv-python
-```
-
-### 3. Download AI Models
-
-Download Vosk model for speech recognition:
-```bash
-cd local-processor/models
-wget https://alphacephei.com/vosk/models/vosk-model-en-in-0.5.zip
-unzip vosk-model-en-in-0.5.zip
-```
-
-### 4. Start Server
+### 4. Start the Processor
 
 ```bash
 npm start
 ```
 
-Server runs on http://localhost:3001
+The server will start an Express API on port 3001 and simultaneously begin the
+**Background Worker Loop**, polling Supabase for new recordings.
 
-## API Endpoints
+## 🔄 Processing Pipeline
 
-### POST /analyze
-Analyzes uploaded video and returns comprehensive feedback.
+1. **Poll**: Worker checks Supabase for recordings with status `uploaded`.
+2. **Download**: Fetches the video to the local `tmp/` directory.
+3. **Analyze (Python)**:
+   - **Audio**: Extracts audio and transcribes using **Faster-Whisper**.
+   - **Visual**: Extracts frames and analyzes posture using **MediaPipe**.
+   - **Speech**: Calculates WPM, stutters, and detects filler words ("um",
+     "like", etc.).
+4. **Analyze (Node.js)**:
+   - **Emotion**: Analyzes transcript sentiment/emotion using **RoBERTa**.
+   - **Coherence**: Checks structural coherence using **BERT**.
+5. **Score**: Calculates aggregate scores (Clarity, Pacing, Tone, Energy,
+   Confidence).
+6. **Upload**: Syncs results back to the Supabase `feedback` table and marks
+   recording as `completed`.
 
-**Request**:
-```bash
-curl -X POST http://localhost:3001/analyze \
-  -F "video=@recording.mp4" \
-  -F "recordingId=test-123"
-```
+## 📡 API Endpoints
 
-**Response**:
-```json
-{
-  "overall_score": 78,
-  "vocal_clarity": {
-    "score": 80,
-    "details": "Clear speech with minimal filler words"
-  },
-  "body_language": {
-    "score": 75,
-    "details": "Good posture, moderate gesture use"
-  },
-  "content_structure": {
-    "score": 82,
-    "details": "Well-organized with 12 complete sentences"
-  },
-  "engagement": {
-    "score": 76,
-    "details": "Consistent energy, positive sentiment"
-  },
-  "strengths": [
-    "Excellent clarity and articulation",
-    "Confident body language"
-  ],
-  "areas_for_improvement": [
-    "Reduce filler word usage",
-    "Increase gesture variety"
-  ],
-  "transcript": "Full transcript text...",
-  "processing_time_seconds": 45
-}
-```
+### `POST /generate-script`
 
-### GET /health
-Health check endpoint.
+Generates personalized scripts using Ollama (Llama 3.2).
 
-**Response**:
-```json
-{
-  "status": "ok",
-  "endpoint": "/analyze"
-}
-```
+- **Request**: `{ "profileData": { ...userProfile } }`
+- **Response**:
+  `{ "variations": { "short": "...", "medium": "...", "long": "..." } }`
 
-## Processing Pipeline
+### `GET /`
 
-1. **Receive Video** - Uploaded via Multer
-2. **Extract Audio** - FFmpeg → WAV 16kHz mono
-3. **Transcribe** - Vosk Python subprocess → text transcript
-4. **Analyze Text** - Transformers.js:
-   - Filler word detection (um, uh, like)
-   - Sentiment analysis
-   - Clarity scoring
-5. **Extract Frames** - FFmpeg → 1 frame per 5 seconds
-6. **Analyze Body Language** - MediaPipe:
-   - Posture quality
-   - Gesture activity
-   - Eye contact estimation
-7. **Calculate Scores** - Combine all metrics
-8. **Return Results** - JSON response
+Health check for the local processor.
 
-## Performance
+## 📈 Performance & Scaling
 
-**Processing Time** (Intel i5 laptop):
-- 1 minute video: ~30 seconds
-- 2 minute video: ~60 seconds
-- 5 minute video: ~2.5 minutes
+- **Processing Ratio**: ~0.5x to 1x real-time (e.g., 60s video takes 30-60s to
+  process) on standard modern CPUs.
+- **Memory Usage**: ~2-4GB RAM depending on model residency.
+- **Optimization**: Uses `int8` quantization for Whisper and `GPU` delegation
+  for MediaPipe where available.
 
-**Capacity**:
-- ~40 videos/hour (sequential processing)
-- ~320 videos/day (8 hours operation)
+## 🔗 Related Resources
 
-## Environment Variables
-
-Create `.env` file in `local-processor/`:
-
-```env
-PORT=3001
-MAX_FRAMES_PER_VIDEO=20
-AUDIO_SAMPLE_RATE=16000
-ENABLE_MEDIAPIPE=true
-ENABLE_VOSK=true
-VOSK_MODEL_PATH=./models/vosk-model-en-in-0.5
-```
-
-## Integration with Supabase
-
-The Supabase Edge Function calls this local server:
-
-```typescript
-// In supabase/functions/process-recordings/index.ts
-const LOCAL_PROCESSING_ENDPOINT = "http://localhost:3001/analyze";
-
-const response = await fetch(LOCAL_PROCESSING_ENDPOINT, {
-  method: 'POST',
-  body: formData
-});
-```
-
-**Configuration**:
-```bash
-supabase secrets set LOCAL_PROCESSING_ENDPOINT=http://localhost:3001/analyze
-```
-
-For production, use:
-- Same network: `http://192.168.1.X:3001/analyze`
-- ngrok tunnel: `https://abc123.ngrok.io/analyze`
-
-## Development
-
-### Run with Auto-Reload
-```bash
-npm run dev
-```
-
-### Test with Sample Video
-```bash
-npm test
-# Or manually:
-curl -X POST http://localhost:3001/analyze -F video=@test.mp4
-```
-
-## Troubleshooting
-
-See **JUGAAD_SETUP.md** for detailed troubleshooting guide.
-
-**Common Issues**:
-
-1. **Vosk model not found** - Download vosk-model-en-in-0.5
-2. **FFmpeg not installed** - Install FFmpeg system binary
-3. **Python dependencies missing** - `pip install vosk mediapipe`
-4. **High CPU usage** - Reduce MAX_FRAMES_PER_VIDEO
-
-## Cost Comparison
-
-| Service | Cloud Cost | Jugaad Cost |
-|---------|-----------|-------------|
-| Speech-to-Text | $24/mo | ₹0 |
-| Sentiment Analysis | $15/mo | ₹0 |
-| Video Analysis | $40/mo | ₹0 |
-| Processing | $20/mo | ₹0 |
-| **Total** | **$99/mo** | **₹0/mo** |
-
-**Annual Savings: ₹84,000** 🎉
-
-## Documentation
-
-- **JUGAAD_SETUP.md** - Complete setup guide (15 minutes)
-- **REFACTORING_SUMMARY.md** - Architecture & refactoring details
-- **../supabase-organized/docs/** - Integration documentation
-
-## Running from Root
-
-From project root:
-```bash
-# Start backend
-npm run backend
-
-# Development mode with auto-reload
-npm run backend:dev
-```
-
-## Related Links
-
-- Frontend: `../frontend/`
-- Supabase: `../supabase-organized/`
-- Main README: `../README.md`
+- [Frontend README](../../frontend/README.md)
+- [Project Handoff Report](../../docs/PROJECT_HANDOFF_REPORT.md)
+- [Supabase Setup Documentation](../../supabase-organized/docs/)

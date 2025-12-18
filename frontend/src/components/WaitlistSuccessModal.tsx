@@ -139,38 +139,88 @@ const WaitlistSuccessModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Shareable Card (hidden, used for capture) */}
+        {/* Shareable Card (hidden, used for capture) - Exact match to reference design */}
         <div className="absolute -left-[9999px] top-0">
           <div
             ref={shareCardRef}
-            className="w-[600px] h-[315px] bg-gradient-to-br from-emerald-500 via-teal-500 to-blue-600 p-8 flex flex-col justify-between"
-            style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+            style={{
+              width: "600px",
+              height: "315px",
+              background: "linear-gradient(135deg, #2dd4bf 0%, #14b8a6 25%, #0d9488 50%, #0891b2 75%, #0284c7 100%)",
+              padding: "32px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              borderRadius: "16px",
+            }}
           >
-            {/* Top */}
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🚀</span>
+            {/* Top - Logo and Brand */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                width: "52px",
+                height: "52px",
+                backgroundColor: "#ffffff",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}>
+                <span style={{ fontSize: "28px" }}>🚀</span>
               </div>
-              <div className="text-white">
-                <div className="font-bold text-xl">The Future You</div>
-                <div className="text-white/80 text-sm">AI Expert Mentor</div>
+              <div>
+                <div style={{ color: "#ffffff", fontWeight: "700", fontSize: "22px", lineHeight: "1.2" }}>
+                  The Future You
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "14px", fontWeight: "500" }}>
+                  AI Expert Mentor
+                </div>
               </div>
             </div>
             
-            {/* Middle */}
-            <div className="text-white">
-              <div className="text-3xl font-bold mb-2">I just joined the Beta Waitlist! 🎉</div>
-              <div className="text-white/90 text-lg">
+            {/* Middle - Main Message */}
+            <div>
+              <div style={{ 
+                color: "#ffffff", 
+                fontSize: "36px", 
+                fontWeight: "800", 
+                marginBottom: "12px",
+                lineHeight: "1.1",
+              }}>
+                I just joined the Beta Waitlist! <span style={{ fontSize: "32px" }}>🎉</span>
+              </div>
+              <div style={{ 
+                color: "rgba(255,255,255,0.9)", 
+                fontSize: "18px", 
+                fontWeight: "500",
+                lineHeight: "1.4",
+              }}>
                 Master public speaking & ace interviews with your personal AI coach
               </div>
             </div>
             
-            {/* Bottom */}
-            <div className="flex items-center justify-between">
-              <div className="text-white/80 text-sm">
-                🔥 Limited spots • Beta closes Dec 22nd
+            {/* Bottom - CTA */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ 
+                color: "rgba(255,255,255,0.9)", 
+                fontSize: "15px", 
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}>
+                <span>🔥</span> Limited spots • Beta closes Dec 22nd
               </div>
-              <div className="bg-white text-emerald-600 px-4 py-2 rounded-full font-bold text-sm">
+              <div style={{
+                backgroundColor: "#ffffff",
+                color: "#0d9488",
+                padding: "10px 20px",
+                borderRadius: "50px",
+                fontWeight: "700",
+                fontSize: "14px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}>
                 Join free → the-future-you.vercel.app
               </div>
             </div>

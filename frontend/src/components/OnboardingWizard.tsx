@@ -138,9 +138,9 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                 },
                 {
                     id: 'deep_struggle',
-                    title: 'In your own words...',
-                    subtitle: 'Describe the specific moment you lose confidence.',
-                    icon: PenTool,
+                    title: 'What brings you here?',
+                    subtitle: 'Choose your main focus area.',
+                    icon: Target,
                 },
                 {
                     id: 'accent',
@@ -312,6 +312,38 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             case 'fork':
                 return (
                     <div className="grid gap-4 pt-2">
+                        {/* Beta Option (First) */}
+                        <div 
+                            onClick={() => setData({ ...data, userTier: 'beta' })}
+                            className={cn(
+                                "cursor-pointer relative overflow-hidden rounded-xl border-2 p-6 transition-all hover:bg-accent/5",
+                                data.userTier === 'beta' 
+                                    ? "border-primary bg-primary/5" 
+                                    : "border-muted bg-card hover:border-primary/50"
+                            )}
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className={cn(
+                                    "p-3 rounded-lg",
+                                    data.userTier === 'beta' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                )}>
+                                    <Sparkles className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-semibold text-lg">Beta User (Recommended)</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Join the inner circle. We save your progress to help you grow faster.
+                                    </p>
+                                </div>
+                                {data.userTier === 'beta' && (
+                                    <div className="absolute top-4 right-4">
+                                        <Check className="w-5 h-5 text-primary" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Standard Option (Second) */}
                         <div 
                             onClick={() => setData({ ...data, userTier: 'standard' })}
                             className={cn(
@@ -329,42 +361,12 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                                     <Ghost className="w-6 h-6" />
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="font-semibold text-lg">Ghost Mode (Standard)</h3>
+                                    <h3 className="font-semibold text-lg">Standard User</h3>
                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Analyze and vanish. Your video is deleted immediately after processing. Perfect for quick checks.
+                                        Analyze and vanish. No data saved. Perfect for quick one-off checks.
                                     </p>
                                 </div>
                                 {data.userTier === 'standard' && (
-                                    <div className="absolute top-4 right-4">
-                                        <Check className="w-5 h-5 text-primary" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div 
-                            onClick={() => setData({ ...data, userTier: 'beta' })}
-                            className={cn(
-                                "cursor-pointer relative overflow-hidden rounded-xl border-2 p-6 transition-all hover:bg-accent/5",
-                                data.userTier === 'beta' 
-                                    ? "border-primary bg-primary/5" 
-                                    : "border-muted bg-card hover:border-primary/50"
-                            )}
-                        >
-                            <div className="flex items-start gap-4">
-                                <div className={cn(
-                                    "p-3 rounded-lg",
-                                    data.userTier === 'beta' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                                )}>
-                                    <Vault className="w-6 h-6" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h3 className="font-semibold text-lg">Vault Mode (Beta)</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Join the Committee. We save your audio to track progress. You help train our AI.
-                                    </p>
-                                </div>
-                                {data.userTier === 'beta' && (
                                     <div className="absolute top-4 right-4">
                                         <Check className="w-5 h-5 text-primary" />
                                     </div>
@@ -495,17 +497,41 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             case 'deep_struggle':
                 return (
                     <div className="space-y-6 py-2">
-                        <div className="space-y-4">
-                            <Label htmlFor="deepStruggle" className="text-lg font-medium">Describe the moment you lose confidence</Label>
-                            <Textarea
-                                id="deepStruggle"
-                                placeholder="I freeze when people look at me..."
-                                value={data.deepStruggle}
-                                onChange={(e) => setData({ ...data, deepStruggle: e.target.value })}
-                                className="min-h-[150px] text-lg p-4 bg-background/50 border-primary/20 focus:border-primary transition-all resize-none"
-                                autoFocus
-                            />
-                        </div>
+                        <Label className="text-lg font-medium">What's your main challenge?</Label>
+                        <RadioGroup
+                            value={data.deepStruggle}
+                            onValueChange={(val) => setData({ ...data, deepStruggle: val })}
+                            className="grid gap-3 pt-2"
+                        >
+                            {[
+                                { value: 'Public Speaking', label: "Public Speaking", icon: Users },
+                                { value: 'Job Interviews', label: "Job Interviews", icon: Target },
+                                { value: 'Social Anxiety', label: "Social Situations", icon: MessageSquare },
+                                { value: 'General Confidence', label: "General Confidence", icon: Sparkles },
+                            ].map((option) => (
+                                <Label
+                                    key={option.value}
+                                    className={cn(
+                                        "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-accent/5",
+                                        data.deepStruggle === option.value
+                                            ? "border-primary bg-primary/5"
+                                            : "border-muted bg-card hover:border-primary/50"
+                                    )}
+                                >
+                                    <RadioGroupItem value={option.value} className="sr-only" />
+                                    <div className={cn(
+                                        "p-2 rounded-lg",
+                                        data.deepStruggle === option.value ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                    )}>
+                                        <option.icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="font-medium text-base">{option.label}</div>
+                                    {data.deepStruggle === option.value && (
+                                        <Check className="w-5 h-5 text-primary ml-auto" />
+                                    )}
+                                </Label>
+                            ))}
+                        </RadioGroup>
                     </div>
                 );
             case 'accent':
@@ -640,7 +666,7 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
             <div className="relative bg-card/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
                 
-                <div className="p-8 min-h-[400px] flex flex-col">
+                <div className="p-6 md:p-8 min-h-[400px] flex flex-col">
                     <div className="mb-8 text-center">
                         <motion.h2 
                             key={steps[currentStep].title}
@@ -692,28 +718,38 @@ export function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
                             Back
                         </Button>
                         
-                        <Button 
-                            onClick={handleNext} 
-                            disabled={!isStepValid() || isSubmitting}
-                            className="min-w-[120px] bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg hover:shadow-primary/25 transition-all"
-                        >
-                            {isSubmitting ? (
-                                <div className="flex items-center">
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                                    Saving...
-                                </div>
-                            ) : currentStep === steps.length - 1 ? (
-                                <div className="flex items-center">
-                                    Get Started
-                                    <Sparkles className="w-4 h-4 ml-2" />
-                                </div>
-                            ) : (
-                                <div className="flex items-center">
-                                    Next
-                                    <ChevronRight className="w-4 h-4 ml-2" />
-                                </div>
-                            )}
-                        </Button>
+                        <div className="flex gap-4">
+                            <Button
+                                variant="ghost"
+                                onClick={onComplete}
+                                className="text-muted-foreground hover:text-foreground hidden sm:flex"
+                            >
+                                Skip
+                            </Button>
+                            
+                            <Button 
+                                onClick={handleNext} 
+                                disabled={!isStepValid() || isSubmitting}
+                                className="min-w-[120px] bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg hover:shadow-primary/25 transition-all"
+                            >
+                                {isSubmitting ? (
+                                    <div className="flex items-center">
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                                        Saving...
+                                    </div>
+                                ) : currentStep === steps.length - 1 ? (
+                                    <div className="flex items-center">
+                                        Get Started
+                                        <Sparkles className="w-4 h-4 ml-2" />
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center">
+                                        Next
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </div>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -15,9 +15,13 @@ import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { useCreateRecording } from "@/hooks/useRecordings";
 import { ProcessingTips } from "@/components/ProcessingTips";
 
+import { cn } from "@/lib/utils";
+
 const Record = () => {
 
   const [isUploading, setIsUploading] = useState(false);
+  // ... (rest of state items are unchanged, just showing context)
+
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
@@ -294,66 +298,80 @@ const Record = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
         <div className="text-center mb-6 sm:mb-8 animate-fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3 px-2">Record Your Reflection</h1>
-          <p className="text-muted-foreground text-base sm:text-lg px-2">
-            Take 5-10 minutes to practice your communication skills
-          </p>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 px-2">
+            {isUploading ? "Processing Session" : "Record Your Reflection"}
+          </h1>
+          {!isUploading && (
+            <p className="text-muted-foreground text-base sm:text-lg px-2">
+              Take 5-10 minutes to practice your communication skills
+            </p>
+          )}
         </div>
 
-        {/* Role-based banner */}
-        {!loadingRole && (
-          <Alert
-            className={`mb-6 sm:mb-8 animate-slide-up ${userRole === 'tester' || userRole === 'admin'
-                ? 'border-primary bg-primary/5'
-                : 'border-accent bg-accent/5'
-              }`}
-          >
-            {userRole === 'tester' || userRole === 'admin' ? (
-              <>
-                <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
-                <AlertDescription className="text-sm">
-                  <strong className="text-primary">Tester Priority:</strong> Your analysis will be ready soon.
-                  You'll receive an email notification when it's complete.
-                </AlertDescription>
-              </>
-            ) : (
-              <>
-                <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
-                <AlertDescription className="text-sm">
-                  <strong className="text-accent">Standard Processing:</strong> Your analysis will be ready in 2–3 days.
-                  You'll receive an email when it's done.
-                </AlertDescription>
-              </>
+        {/* Preparation Content - Only show when NOT uploading */}
+        {!isUploading && (
+          <>
+            {/* Role-based banner */}
+            {!loadingRole && (
+              <Alert
+                className={`mb-6 sm:mb-8 animate-slide-up ${userRole === 'tester' || userRole === 'admin'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-accent bg-accent/5'
+                  }`}
+              >
+                {userRole === 'tester' || userRole === 'admin' ? (
+                  <>
+                    <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
+                    <AlertDescription className="text-sm">
+                      <strong className="text-primary">Tester Priority:</strong> Your analysis will be ready soon.
+                      You'll receive an email notification when it's complete.
+                    </AlertDescription>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
+                    <AlertDescription className="text-sm">
+                      <strong className="text-accent">Standard Processing:</strong> Your analysis will be ready in 2–3 days.
+                      You'll receive an email when it's done.
+                    </AlertDescription>
+                  </>
+                )}
+              </Alert>
             )}
-          </Alert>
+
+            <div className="grid md:grid-cols-2 gap-4 mb-6 sm:mb-8 animate-slide-up">
+              <Alert className="border-blue-500/20 bg-blue-500/5">
+                <Info className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                <AlertDescription className="text-sm">
+                  <strong className="text-blue-600 block mb-1">Pro Tips:</strong>
+                  Find a quiet space, maintain eye contact with the camera, and speak clearly. 
+                  Aim for the full 5 minutes for the most accurate analysis.
+                </AlertDescription>
+              </Alert>
+
+              <Alert className="border-brand-green/20 bg-brand-green/5">
+                <Shield className="h-4 w-4 text-brand-green" aria-hidden="true" />
+                <AlertDescription className="text-sm">
+                  <strong className="text-brand-green block mb-1">Privacy Guaranteed:</strong>
+                  Your recording is processed locally on your device first. 
+                  We never share your personal data with third parties.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </>
         )}
-
-        <div className="grid md:grid-cols-2 gap-4 mb-6 sm:mb-8 animate-slide-up">
-          <Alert className="border-blue-500/20 bg-blue-500/5">
-            <Info className="h-4 w-4 text-blue-500" aria-hidden="true" />
-            <AlertDescription className="text-sm">
-              <strong className="text-blue-600 block mb-1">Pro Tips:</strong>
-              Find a quiet space, maintain eye contact with the camera, and speak clearly. 
-              Aim for the full 5 minutes for the most accurate analysis.
-            </AlertDescription>
-          </Alert>
-
-          <Alert className="border-brand-green/20 bg-brand-green/5">
-            <Shield className="h-4 w-4 text-brand-green" aria-hidden="true" />
-            <AlertDescription className="text-sm">
-              <strong className="text-brand-green block mb-1">Privacy Guaranteed:</strong>
-              Your recording is processed locally on your device first. 
-              We never share your personal data with third parties.
-            </AlertDescription>
-          </Alert>
-        </div>
 
         {isUploading ? (
           <div className="space-y-6 animate-in fade-in duration-500">
             {/* Show Tips only when processing (upload complete) */}
             {uploadProgress === 100 && <ProcessingTips />}
 
-            <Card className="p-6 sm:p-8 shadow-medium border-zinc-200 dark:border-zinc-800">
+            <Card className={cn(
+              "p-6 sm:p-8 transition-all duration-500",
+              uploadProgress === 100 
+                ? "shadow-none border-0 bg-transparent" 
+                : "shadow-medium border-zinc-200 dark:border-zinc-800"
+            )}>
               <div className="text-center space-y-6">
                 {uploadProgress < 100 ? (
                   /* Uploading State */
@@ -386,7 +404,7 @@ const Record = () => {
                       <Progress value={processingProgress} className="w-full h-2" />
                     </div>
                     
-                    <p className="text-sm text-muted-foreground bg-muted/50 py-2 px-3 rounded-md inline-block">
+                    <p className="text-sm text-muted-foreground/80 bg-muted/30 py-2 px-3 rounded-md inline-block">
                       <Shield className="w-3 h-3 inline mr-1.5 -mt-0.5" />
                       Please keep this tab open
                     </p>
@@ -398,7 +416,7 @@ const Record = () => {
             {/* Budget Disclaimer (Only during processing) */}
             {uploadProgress === 100 && (
               <div className="text-center space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-700 delay-300">
-                <p className="text-sm text-muted-foreground/60 italic max-w-md mx-auto leading-relaxed">
+                <p className="text-xs text-muted-foreground/50 italic max-w-sm mx-auto leading-relaxed">
                   ( We are currently operating on a tight budget. You are in the queue and your video will be processed shortly. Thank you for your patience! )
                 </p>
               </div>

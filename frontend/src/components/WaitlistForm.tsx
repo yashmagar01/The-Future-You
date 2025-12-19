@@ -162,6 +162,37 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
         throw new Error(error.message || "Failed to join waitlist");
       }
 
+      // Send confirmation email via edge function
+      try {
+        const emailResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              type: 'confirmation',
+              to: formData.email,
+              name: formData.name || null,
+              confirmToken: confirmToken,
+            }),
+          }
+        );
+        
+        if (!emailResponse.ok) {
+          const emailError = await emailResponse.json();
+          console.error('Email sending failed:', emailError);
+          // Don't throw - let the user know they're on the list even if email fails
+        } else {
+          console.log('Confirmation email sent successfully');
+        }
+      } catch (emailErr) {
+        console.error('Email sending error:', emailErr);
+        // Continue - email failure shouldn't block waitlist signup
+      }
+
       // Log analytics event
       logEvent(ANALYTICS_EVENTS.WAITLIST_SIGNUP, {
         source: source,

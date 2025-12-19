@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Loader2, Clock, Zap, Info, Shield } from "lucide-react";
+import { AlertCircle,  Loader2, 
+  Upload, 
+  FileVideo, 
+  Zap, 
+  Shield, 
+  Clock,
+  Settings,
+  Info 
+} from 'lucide-react';
 import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
@@ -363,64 +371,109 @@ const Record = () => {
 
         {isUploading ? (
           <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Show Tips only when processing (upload complete) */}
-            {uploadProgress === 100 && <ProcessingTips />}
+             {/* Single Unified Card for Upload/Processing */}
+            {/* Single Unified Card for Upload/Processing */}
+            <Card className="p-6 sm:p-12 shadow-lg border-zinc-200 dark:border-zinc-800 min-h-[400px] flex flex-col justify-center items-center relative overflow-hidden bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
+              
+              {/* Background Accents (Subtle) */}
+              <div className="absolute top-0 right-0 -mr-32 -mt-32 w-80 h-80 bg-brand-green/5 rounded-full blur-3xl opacity-60" />
+              <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl opacity-60" />
 
-            <Card className={cn(
-              "p-6 sm:p-8 transition-all duration-500",
-              uploadProgress === 100 
-                ? "shadow-none border-0 bg-transparent" 
-                : "shadow-medium border-zinc-200 dark:border-zinc-800"
-            )}>
-              <div className="text-center space-y-6">
+              <div className="relative z-10 w-full max-w-xl space-y-10 text-center">
+                
+                {/* STATE A: Uploading */}
                 {uploadProgress < 100 ? (
-                  /* Uploading State */
-                  <div className="space-y-4">
-                    <div className="relative">
+                  <div className="space-y-8 animate-in fade-in duration-500">
+                    <div className="relative mb-6">
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-sm font-bold">{uploadProgress}%</span>
+                        <span className="text-xl font-bold font-nano text-foreground/80">{uploadProgress}%</span>
                       </div>
-                      <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary/20" aria-hidden="true" />
+                      <Loader2 className="h-24 w-24 animate-spin mx-auto text-primary/20" aria-hidden="true" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">Uploading your video...</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Almost there</p>
+                      <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 mb-2">
+                        Uploading your video...
+                      </h3>
+                      <p className="text-muted-foreground font-medium">Please hold tight, almost there.</p>
                     </div>
-                    <Progress value={uploadProgress} className="w-full h-2" />
+                    {/* Standard Progress Bar for Upload */}
+                    <Progress value={uploadProgress} className="w-full h-3 bg-zinc-100 dark:bg-zinc-800" />
                   </div>
                 ) : (
-                  /* Processing State */
-                  <div className="space-y-4">
-                    <div className="bg-brand-green/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                      <Zap className="h-8 w-8 text-brand-green" aria-hidden="true" />
-                    </div>
+                  /* STATE B & C: Processing (Queued or Analyzing) */
+                  <div className="space-y-8 animate-in fade-in duration-700">
                     
-                    <div>
-                      <h3 className="text-xl font-semibold mb-2">{statusMessage || "Analyzing content..."}</h3>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-2 px-1">
-                        <span>Analysis in progress</span>
-                        <span>{processingProgress}%</span>
+                    {/* Status Header */}
+                    <div className="space-y-4">
+                      <div className={cn(
+                        "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 transition-all duration-500",
+                         processingProgress > 0 ? "bg-brand-green/10 animate-pulse" : "bg-zinc-100 dark:bg-zinc-800"
+                      )}>
+                        {processingProgress > 0 ? (
+                          <Zap className="h-10 w-10 text-brand-green" aria-hidden="true" />
+                        ) : (
+                          <Clock className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+                        )}
                       </div>
-                      <Progress value={processingProgress} className="w-full h-2" />
+                      
+                      <h3 className="text-xl sm:text-3xl font-bold text-[#333333] dark:text-zinc-200 transition-all duration-500">
+                        {processingProgress > 0 ? (
+                          <span className="flex items-center justify-center gap-2 animate-pulse">
+                            Status: AI Core Active
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center gap-2">
+                            Status: In Queue
+                          </span>
+                        )}
+                      </h3>
+                      
+                      <p className="text-muted-foreground font-medium text-base sm:text-lg">
+                        {processingProgress > 0 
+                          ? "Analyzing video data..." 
+                          : "Waiting for available AI slot..."}
+                      </p>
                     </div>
-                    
-                    <p className="text-sm text-muted-foreground/80 bg-muted/30 py-2 px-3 rounded-md inline-block">
-                      <Shield className="w-3 h-3 inline mr-1.5 -mt-0.5" />
-                      Please keep this tab open
-                    </p>
+
+                    {/* Enhanced Gradient Progress Bar */}
+                    <div className="space-y-3">
+                      <div className="relative h-3 w-full bg-[#E0E0E0] dark:bg-zinc-800 rounded-full overflow-hidden shadow-inner">
+                        <div 
+                          className={cn(
+                            "absolute top-0 left-0 h-full transition-all duration-1000 ease-out rounded-full",
+                            processingProgress > 0 
+                              ? "bg-gradient-to-r from-[#00C9FF] to-[#92FE9D] animate-shimmer bg-[length:200%_100%] shadow-[0_0_15px_rgba(0,201,255,0.5)]" 
+                              : "bg-zinc-300 dark:bg-zinc-700 width-[5%]" // Small static bar for Queue
+                          )}
+                          style={{ width: `${Math.max(processingProgress, 5)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <span className="text-xs sm:text-sm font-bold text-[#333333] dark:text-zinc-400">
+                          {processingProgress}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cyclical Tips (Below Progress Bar) */}
+                    <div className="pt-2">
+                      <ProcessingTips />
+                    </div>
+
+                    {/* Footer: Disclaimer & Privacy */}
+                    <div className="space-y-4 pt-6 border-t border-border/40">
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                        <Shield className="w-3 h-3" />
+                        <span>Private • Secure • Local</span>
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground/80 px-4">
+                        ( We are currently operating on a tight budget. Thank you for your patience! )
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             </Card>
-
-            {/* Budget Disclaimer (Only during processing) */}
-            {uploadProgress === 100 && (
-              <div className="text-center space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-700 delay-300">
-                <p className="text-xs text-muted-foreground/50 italic max-w-sm mx-auto leading-relaxed">
-                  ( We are currently operating on a tight budget. You are in the queue and your video will be processed shortly. Thank you for your patience! )
-                </p>
-              </div>
-            )}
           </div>
         ) : (
           <VideoRecorder
@@ -429,6 +482,7 @@ const Record = () => {
             maxDuration={600}
           />
         )}
+
 
         {/* Script Display */}
         <div className="animate-slide-up">

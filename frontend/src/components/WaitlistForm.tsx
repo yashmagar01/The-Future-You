@@ -165,18 +165,15 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
       // Send confirmation email via edge function
       try {
         const emailResponse = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
+          'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/send-waitlist-email',
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
             },
             body: JSON.stringify({
-              type: 'confirmation',
-              to: formData.email,
-              name: formData.name || null,
-              confirmToken: confirmToken,
+              email: formData.email,
+              name: formData.name || 'Friend',
             }),
           }
         );
@@ -186,7 +183,8 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
           console.error('Email sending failed:', emailError);
           // Don't throw - let the user know they're on the list even if email fails
         } else {
-          console.log('Confirmation email sent successfully');
+          const result = await emailResponse.json();
+          console.log('Confirmation email sent successfully:', result.messageId);
         }
       } catch (emailErr) {
         console.error('Email sending error:', emailErr);

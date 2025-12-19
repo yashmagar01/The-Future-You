@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { useCreateRecording } from "@/hooks/useRecordings";
+import { ProcessingTips } from "@/components/ProcessingTips";
 
 const Record = () => {
 
@@ -348,26 +349,61 @@ const Record = () => {
         </div>
 
         {isUploading ? (
-          <Card className="p-6 sm:p-8 mb-6 shadow-medium">
-            <div className="text-center space-y-4">
-              {uploadProgress < 100 ? (
-                <>
-                  <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" aria-hidden="true" />
-                  <h3 className="text-lg font-semibold">Uploading your video... {uploadProgress}%</h3>
-                  <Progress value={uploadProgress} className="w-full" />
-                </>
-              ) : (
-                <>
-                  <Zap className="h-12 w-12 animate-pulse mx-auto text-brand-green" aria-hidden="true" />
-                  <h3 className="text-lg font-semibold">{statusMessage || "Analyzing content..."}</h3>
-                  <Progress value={processingProgress} className="w-full" />
-                </>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Please don't close this page. This may take a few moments.
-              </p>
-            </div>
-          </Card>
+          <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Show Tips only when processing (upload complete) */}
+            {uploadProgress === 100 && <ProcessingTips />}
+
+            <Card className="p-6 sm:p-8 shadow-medium border-zinc-200 dark:border-zinc-800">
+              <div className="text-center space-y-6">
+                {uploadProgress < 100 ? (
+                  /* Uploading State */
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm font-bold">{uploadProgress}%</span>
+                      </div>
+                      <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary/20" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Uploading your video...</h3>
+                      <p className="text-sm text-muted-foreground mt-1">Almost there</p>
+                    </div>
+                    <Progress value={uploadProgress} className="w-full h-2" />
+                  </div>
+                ) : (
+                  /* Processing State */
+                  <div className="space-y-4">
+                    <div className="bg-brand-green/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                      <Zap className="h-8 w-8 text-brand-green" aria-hidden="true" />
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">{statusMessage || "Analyzing content..."}</h3>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-2 px-1">
+                        <span>Analysis in progress</span>
+                        <span>{processingProgress}%</span>
+                      </div>
+                      <Progress value={processingProgress} className="w-full h-2" />
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground bg-muted/50 py-2 px-3 rounded-md inline-block">
+                      <Shield className="w-3 h-3 inline mr-1.5 -mt-0.5" />
+                      Please keep this tab open
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Budget Disclaimer (Only during processing) */}
+            {uploadProgress === 100 && (
+              <div className="text-center space-y-2 animate-in slide-in-from-bottom-2 fade-in duration-700 delay-300">
+                <p className="text-sm text-muted-foreground/60 italic max-w-md mx-auto leading-relaxed">
+                  ( We are currently operating on a tight budget. You are in the queue and your video will be processed shortly. Thank you for your patience! )
+                </p>
+              </div>
+            )}
+          </div>
         ) : (
           <VideoRecorder
             onRecordingComplete={handleRecordingComplete}

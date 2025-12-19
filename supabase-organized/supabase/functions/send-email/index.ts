@@ -88,7 +88,7 @@ function generatePromotionEmailHTML(inviteUrl: string, name?: string): string {
   `;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -159,7 +159,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Email error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to send email" }),
+      JSON.stringify({ error: (error as any).message || "Failed to send email" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

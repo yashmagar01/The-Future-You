@@ -1,0 +1,10 @@
+{
+    "liveServer.settings.multiRootWorkspaceName": "yash-reflections-mvp",
+    "deno.enable": true,
+    "deno.enablePaths": ["supabase-organized/supabase/functions"],
+    "deno.lint": true,
+    "deno.unstable": [],
+    "css.lint.unknownAtRules": "ignore",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.preferences.includePackageJsonAutoImports": "on"
+}

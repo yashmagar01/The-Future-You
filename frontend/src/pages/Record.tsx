@@ -31,7 +31,7 @@ const Record = () => {
   // ... (rest of state items are unchanged, just showing context)
 
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [processingProgress, setProcessingProgress] = useState(0);
+  const [processingProgress, setProcessingProgress] = useState(75);
   const [statusMessage, setStatusMessage] = useState("");
   const [userRole, setUserRole] = useState<'tester' | 'user' | 'admin'>('user');
   const [loadingRole, setLoadingRole] = useState(true);
@@ -351,18 +351,18 @@ const Record = () => {
               <Alert className="border-blue-500/20 bg-blue-500/5">
                 <Info className="h-4 w-4 text-blue-500" aria-hidden="true" />
                 <AlertDescription className="text-sm">
-                  <strong className="text-blue-600 block mb-1">Pro Tips:</strong>
-                  Find a quiet space, maintain eye contact with the camera, and speak clearly. 
-                  Aim for the full 5 minutes for the most accurate analysis.
+                  <strong className="text-blue-600 block mb-1">AI Rapid Analysis:</strong>
+                  Your recording is processed automatically by our private cloud engine.
+                  Results are typically ready in 2–5 minutes.
                 </AlertDescription>
               </Alert>
 
               <Alert className="border-brand-green/20 bg-brand-green/5">
                 <Shield className="h-4 w-4 text-brand-green" aria-hidden="true" />
                 <AlertDescription className="text-sm">
-                  <strong className="text-brand-green block mb-1">Privacy Guaranteed:</strong>
-                  Your recording is processed locally on your device first. 
-                  We never share your personal data with third parties.
+                  <strong className="text-brand-green block mb-1">Private Cloud Security:</strong>
+                  Video data is encrypted at rest and processed in a secure, isolated environment.
+                  We perform zero-data-retention on processing nodes.
                 </AlertDescription>
               </Alert>
             </div>
@@ -435,19 +435,9 @@ const Record = () => {
                       </p>
                     </div>
 
-                    {/* Enhanced Gradient Progress Bar */}
+                    {/* Progress Bar - Same as Upload */}
                     <div className="space-y-3">
-                      <div className="relative h-3 w-full bg-[#E0E0E0] dark:bg-zinc-800 rounded-full overflow-hidden shadow-inner">
-                        <div 
-                          className={cn(
-                            "absolute top-0 left-0 h-full transition-all duration-1000 ease-out rounded-full",
-                            processingProgress > 0 
-                              ? "bg-gradient-to-r from-[#00C9FF] to-[#92FE9D] animate-shimmer bg-[length:200%_100%] shadow-[0_0_15px_rgba(0,201,255,0.5)]" 
-                              : "bg-zinc-300 dark:bg-zinc-700 width-[5%]" // Small static bar for Queue
-                          )}
-                          style={{ width: `${Math.max(processingProgress, 5)}%` }}
-                        />
-                      </div>
+                      <Progress value={processingProgress} className="w-full h-3 bg-zinc-100 dark:bg-zinc-800" />
                       <div className="flex justify-end">
                         <span className="text-xs sm:text-sm font-bold text-[#333333] dark:text-zinc-400">
                           {processingProgress}%

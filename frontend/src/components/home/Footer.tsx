@@ -20,9 +20,9 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: Github, href: "https://github.com", label: "GitHub" },
-    { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-    { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+    { icon: Github, href: "https://github.com/yashmagar01", label: "GitHub" },
+    { icon: Twitter, href: "https://x.com/yashmag50534849", label: "X (Twitter)" },
+    { icon: Linkedin, href: "https://www.linkedin.com/in/yash-magar/", label: "LinkedIn" },
     { icon: Mail, href: "mailto:yashajaymagar10@gmail.com", label: "Email" }
   ];
 

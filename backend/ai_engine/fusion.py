@@ -100,7 +100,7 @@ def detect_incongruence(normalized: dict) -> dict:
         
         return {
             "incongruence_index": round(variance, 4),
-            "authenticity_warning": variance > 0.3,
+            "authenticity_warning": variance > 0.1,  # Stricter threshold (was 0.3)
             "signal_spread": round(spread, 4),
             "strongest_signal": max_key,
             "weakest_signal": min_key,

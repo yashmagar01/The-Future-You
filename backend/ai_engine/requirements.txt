@@ -6,3 +6,4 @@ mediapipe==0.10.9
 sentence-transformers
 spacy
 opencv-python
+scikit-learn

@@ -139,14 +139,8 @@ async function processRecording(recording_id, video_path) {
         pythonProcess.on('close', async (code) => {
           console.log(`Python worker exited with code ${code}`);
           
-          // Cleanup temp file
-          try {
-            if (fs.existsSync(localVideoPath)) {
-              fs.unlinkSync(localVideoPath);
-            }
-          } catch (cleanupError) {
-            console.error('Failed to cleanup temp file:', cleanupError);
-          }
+          // Cleanup deferred to after detailed analysis
+
 
           if (code === 0) {
             try {
@@ -291,15 +285,69 @@ async function processRecording(recording_id, video_path) {
                 (clarityScore * 0.35) + (confidenceScore * 0.25) + (toneScore * 0.20) + (energyScore * 0.20)
               );
 
+              // ==========================================
+              // PHASE 2: ADVANCED AI ENGINE (v1.6.5)
+              // ==========================================
+              let advancedMetrics = null;
+              const transcriptPath = path.join(tmpDir, `${recording_id}_transcript.txt`);
+              
+              try {
+                  console.log("Starting Phase 2 Advanced Analysis...");
+                  
+                  // 1. Save transcript to temp file
+                  fs.writeFileSync(transcriptPath, results.transcript || "");
+                  
+                  // 2. Spawn Advanced Python Engine
+                  const advancedProcess = spawn(pythonCommand, [
+                      '../ai_engine/main.py', 
+                      '--video', localVideoPath,
+                      '--transcript-file', transcriptPath,
+                      '--sentiment', String(toneScore)
+                  ], { shell: true, cwd: __dirname });
+
+                  let advancedData = '';
+                  let advancedError = '';
+
+                  advancedProcess.stdout.on('data', (data) => { advancedData += data.toString(); });
+                  advancedProcess.stderr.on('data', (data) => { advancedError += data.toString(); });
+
+                  await new Promise((resolve) => {
+                      advancedProcess.on('close', (code) => {
+                          if (code === 0 && advancedData) {
+                              try {
+                                  advancedMetrics = JSON.parse(advancedData);
+                                  console.log("Advanced AI Analysis Complete.");
+                              } catch (e) {
+                                  console.error("Failed to parse Advanced AI output:", e);
+                              }
+                          } else {
+                              console.error("Advanced AI failed:", advancedError);
+                          }
+                          resolve();
+                      });
+                  });
+
+              } catch (advError) {
+                  console.error("Advanced AI Pipeline Error:", advError);
+                  // Non-blocking: we proceed with basic metrics if this fails
+              } finally {
+                  // Cleanup transcript file
+                  try { if (fs.existsSync(transcriptPath)) fs.unlinkSync(transcriptPath); } catch (e) {}
+              }
+
               const feedbackData = {
                 recording_id: recording_id,
                 overall_score: overallScore,
                 clarity_score: clarityScore,
                 pace_score: pacingScore,
                 tone_score: toneScore,
+                pace_score: pacingScore,
+                tone_score: toneScore,
                 confidence_score: confidenceScore,
                 energy_score: energyScore,
+                advanced_metrics: advancedMetrics, // New Phase 2 data
                 filler_words_count: results.filler_count,
+
                 stutter_count: results.stutter_count || 0,
                 strengths: ["Good effort", "Clear audio"], 
                 improvements: ["Practice pacing", "Reduce filler words"],
@@ -320,16 +368,26 @@ async function processRecording(recording_id, video_path) {
               // Update recording status
               await supabase.from('recordings').update({ status: 'completed' }).eq('id', recording_id);
               console.log('Processing completed successfully.');
+              console.log('Processing completed successfully.');
+              
+              // SUCCESS CLEANUP
+              try { if (fs.existsSync(localVideoPath)) fs.unlinkSync(localVideoPath); } catch (e) {}
+
               resolve();
+
 
             } catch (parseError) {
               console.error('Error parsing results:', parseError);
               await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
+              // ERROR CLEANUP 1
+              try { if (fs.existsSync(localVideoPath)) fs.unlinkSync(localVideoPath); } catch (e) {}
               reject(parseError);
             }
           } else {
             console.error('Worker failed with code:', code);
             await supabase.from('recordings').update({ status: 'failed' }).eq('id', recording_id);
+            // ERROR CLEANUP 2
+            try { if (fs.existsSync(localVideoPath)) fs.unlinkSync(localVideoPath); } catch (e) {}
             reject(new Error(`Worker failed with code ${code}: ${pythonError}`));
           }
         });

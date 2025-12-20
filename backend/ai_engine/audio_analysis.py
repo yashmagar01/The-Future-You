@@ -44,6 +44,39 @@ def analyze_audio(audio_path):
         else:
             pitch_var = 0.0
 
+        # --- Timeline Generation (New for Phase 3) ---
+        # Generate a simplified timeline of pitch (avg per 0.5s)
+        # Parselmouth Pitch object has frames every time_step
+        pitch_timeline = []
+        try:
+            time_step = pitch.get_time_step()
+            total_frames = pitch.get_number_of_frames()
+            
+            # Aggregate into ~20 points for the graph
+            window_size = max(1, int(total_frames / 20))
+            
+            current_vals = []
+            for i in range(total_frames):
+                val = pitch.get_value_in_frame(i + 1) # 1-based index
+                # 0 often means unvoiced
+                if val > 0: 
+                    current_vals.append(val)
+                
+                if (i + 1) % window_size == 0:
+                    if current_vals:
+                        pitch_timeline.append(round(float(np.mean(current_vals)), 1))
+                    else:
+                        pitch_timeline.append(0) # Silence/Unvoiced
+                    current_vals = []
+            
+            # Append remaining
+            if current_vals:
+                pitch_timeline.append(round(float(np.mean(current_vals)), 1))
+                
+        except Exception as e:
+            logging.warning(f"Failed to generate pitch timeline: {e}")
+            pitch_timeline = []
+
         # Metric 2: Harmonics-to-Noise Ratio (HNR)
         harmonicity = sound.to_harmonicity()
         hnr_values = harmonicity.values
@@ -58,7 +91,8 @@ def analyze_audio(audio_path):
         return {
             "pitch_var": round(pitch_var, 4),
             "hnr_mean": round(hnr_mean, 4),
-            "pause_ratio": round(pause_ratio, 4)
+            "pause_ratio": round(pause_ratio, 4),
+            "pitch_timeline": pitch_timeline
         }
 
     except Exception as e:

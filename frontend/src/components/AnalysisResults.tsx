@@ -9,6 +9,7 @@ import AICoach from './AICoach';
 import confetti from 'canvas-confetti';
 import CoherenceGraph from './CoherenceGraph';
 import AuthenticityStatus from './AuthenticityStatus';
+import ConfidenceWave from './ConfidenceWave';
 
 // --- Types based on the "Golden JSON" Schema ---
 
@@ -60,6 +61,13 @@ export interface AdvancedMetrics {
       text_sentiment: number;
       body_openness: number;
     };
+  };
+  // Phase 3 Extensions
+  audio?: {
+    pitch_timeline?: number[];
+  };
+  video?: {
+    gesture_timeline?: number[];
   };
 }
 
@@ -272,6 +280,16 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
                   incongruenceIndex={advanced_metrics.fusion.incongruence_index}
                   hasWarning={advanced_metrics.fusion.authenticity_warning}
                   breakdown={advanced_metrics.fusion.normalized_scores}
+                />
+             </div>
+          )}
+
+          {/* Confidence Wave (Phase 3) */}
+          {(advanced_metrics.audio?.pitch_timeline || advanced_metrics.video?.gesture_timeline) && (
+             <div className="h-[250px] lg:col-span-2">
+                <ConfidenceWave 
+                   pitchTimeline={advanced_metrics.audio?.pitch_timeline}
+                   gestureTimeline={advanced_metrics.video?.gesture_timeline}
                 />
              </div>
           )}

@@ -30,6 +30,7 @@ def analyze_video(video_path):
     stride = 5  # Process every 5th frame
     
     torso_areas = []
+    instant_energies = [] # Store per-frame energy for timeline
     gesture_energy = 0
     prev_wrists = None
     
@@ -57,20 +58,21 @@ def analyze_video(video_path):
                 r_wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST].x, landmarks[mp_pose.PoseLandmark.RIGHT_WRIST].y]
                 
                 # Metric 1: Torso Expansion (Openness)
-                # Area of triangle (Nose, L_Shoulder, R_Shoulder)
                 area = calculate_area(nose, l_shoulder, r_shoulder)
-                # Normalize by shoulder width to handle camera distance
                 shoulder_width = np.sqrt((l_shoulder[0] - r_shoulder[0])**2 + (l_shoulder[1] - r_shoulder[1])**2)
                 if shoulder_width > 0:
                     normalized_area = area / (shoulder_width**2)
                     torso_areas.append(normalized_area)
                 
                 # Metric 2: Gesture Energy
+                instant_energy = 0
                 if prev_wrists is not None:
                     l_dist = np.sqrt((l_wrist[0] - prev_wrists[0][0])**2 + (l_wrist[1] - prev_wrists[0][1])**2)
                     r_dist = np.sqrt((r_wrist[0] - prev_wrists[1][0])**2 + (r_wrist[1] - prev_wrists[1][1])**2)
-                    gesture_energy += (l_dist + r_dist)
+                    instant_energy = l_dist + r_dist
+                    gesture_energy += instant_energy
                 
+                instant_energies.append(instant_energy)
                 prev_wrists = (l_wrist, r_wrist)
         
         frame_count += 1
@@ -82,11 +84,22 @@ def analyze_video(video_path):
 
     avg_openness = float(np.mean(torso_areas)) if torso_areas else 0.0
     
+    # --- Timeline Generation ---
+    # Aggregate into ~20 points
+    gesture_timeline = []
+    if instant_energies:
+        window_size = max(1, int(len(instant_energies) / 20))
+        for i in range(0, len(instant_energies), window_size):
+            window = instant_energies[i:i+window_size]
+            if window:
+                gesture_timeline.append(round(float(np.mean(window)), 4))
+
     return {
         "posture_index": round(avg_openness, 4),
         "gesture_energy": round(gesture_energy, 4),
         "frames_processed": processed_frames,
-        "total_frames": frame_count
+        "total_frames": frame_count,
+        "gesture_timeline": gesture_timeline
     }
 
 if __name__ == "__main__":

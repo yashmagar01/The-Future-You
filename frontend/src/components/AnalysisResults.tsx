@@ -125,7 +125,52 @@ const getMetricStatus = (score: number): 'excellent' | 'good' | 'average' | 'nee
   if (score >= 80) return 'excellent';
   if (score >= 70) return 'good';
   if (score >= 60) return 'average';
+  if (score >= 60) return 'average';
   return 'needs-work';
+};
+
+// Helper: Generate Coach Advice based on metrics
+const getCoachAdvice = (metrics: AnalysisMetrics, advanced?: AdvancedMetrics): string[] => {
+  const advice: string[] = [];
+
+  // 1. Incongruence / Authenticity
+  if (advanced?.fusion) {
+    if (advanced.fusion.authenticity_warning) {
+      advice.push("We detected a mismatch between your tone and your words. Try to align your facial expressions with your message.");
+    } else if (advanced.fusion.incongruence_index < 0.05) {
+      advice.push("Your delivery was incredibly authentic! Your voice, body, and words were perfectly aligned.");
+    }
+  }
+
+  // 2. Coherence / Logic Flow
+  if (advanced?.coherence) {
+    const score = advanced.coherence.flow_score;
+    if (score > 0.8) {
+      advice.push("Your logical flow was excellent. Ideas connected smoothly from one to the next.");
+    } else if (score < 0.4) {
+      advice.push("The logical connection between sentences seemed a bit loose. Try using more transition words.");
+    }
+  }
+
+  // 3. Clarity & Pacing
+  if (metrics.clarity.score > 90) {
+    advice.push("Crystal clear delivery! You minimized filler words effectively.");
+  } else if (metrics.clarity.filler_word_count > 5) {
+    advice.push(`We caught a few filler words (${metrics.clarity.filler_word_count}). Pausing is better than saying 'um'.`);
+  }
+
+  if (metrics.pacing && metrics.pacing.score < 60) {
+    advice.push(metrics.pacing.feedback || "Watch your pacing. Try to keep a steady rhythm.");
+  }
+
+  // Fallback defaults if analysis is sparse
+  if (advice.length === 0) {
+    advice.push("Great effort! Keep practicing to improve your confidence score.");
+    advice.push("Focus on maintaining strong eye contact throughout your recording.");
+    advice.push("Try to vary your pitch to keep the audience engaged.");
+  }
+
+  return advice.slice(0, 4); // Return top 4 tips
 };
 
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS, onSeek }) => {
@@ -155,12 +200,8 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
     { time: '1:10', score: 70, label: 'Positive', phrase: "start learning" },
   ];
 
-  // Mock AI Coach Data
-  const mockTakeaways = [
-    "You started strong with a clear hook about the 'Midwitt Meme'.",
-    "Great use of contrast between the 'Jedi' and the 'Idiot' founders.",
-    "The conclusion about 'launching quickly' was delivered with high conviction."
-  ];
+  // Dynamic AI Coach Data
+  const takeaways = getCoachAdvice(metrics, advanced_metrics);
 
   const mockActionItems = [
     { id: '1', text: "Replace 'actually' with a pause for emphasis.", timestamp: 35, completed: false },
@@ -200,7 +241,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
               Key Takeaways
             </h3>
             <ul className="space-y-4">
-              {mockTakeaways.map((takeaway, idx) => (
+              {takeaways.map((takeaway, idx) => (
                 <li key={idx} className="flex gap-3 text-base text-gray-700 bg-white/60 p-3 rounded-lg border border-[#10b981]/10">
                   <span className="text-[#10b981] font-bold">•</span>
                   {takeaway}

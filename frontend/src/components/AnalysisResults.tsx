@@ -7,6 +7,8 @@ import ConfidenceGauge from './ConfidenceGauge';
 import SentimentGraph from './SentimentGraph';
 import AICoach from './AICoach';
 import confetti from 'canvas-confetti';
+import CoherenceGraph from './CoherenceGraph';
+import AuthenticityStatus from './AuthenticityStatus';
 
 // --- Types based on the "Golden JSON" Schema ---
 
@@ -44,11 +46,29 @@ export interface AnalysisMetrics {
   timeline?: { time: string; wpm: number }[];
 }
 
+export interface AdvancedMetrics {
+  coherence?: {
+    flow_score: number;
+    coherence_timeline: number[];
+  };
+  fusion?: {
+    incongruence_index: number;
+    authenticity_warning: boolean;
+    normalized_scores: {
+      pitch_stability: number;
+      voice_quality: number;
+      text_sentiment: number;
+      body_openness: number;
+    };
+  };
+}
+
 export interface AnalysisData {
   video_id?: string;
   created_at?: string;
   overall_score: number;
   metrics: AnalysisMetrics;
+  advanced_metrics?: AdvancedMetrics;
   transcript_summary?: string;
 }
 
@@ -109,7 +129,7 @@ const getMetricStatus = (score: number): 'excellent' | 'good' | 'average' | 'nee
 };
 
 const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS, onSeek }) => {
-  const { overall_score, metrics, transcript_summary } = analysis;
+  const { overall_score, metrics, advanced_metrics, transcript_summary } = analysis;
   const [displayScore, setDisplayScore] = useState(0);
   const confettiTriggered = useRef(false);
 
@@ -190,6 +210,32 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
           </div>
         </div>
       </div>
+
+      {/* SECTION 1.5: ADVANCED INSIGHTS (Phase 2) */}
+      {advanced_metrics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Logic & Flow */}
+          {advanced_metrics.coherence && (
+            <div className="h-[250px]">
+               <CoherenceGraph 
+                  timeline={advanced_metrics.coherence.coherence_timeline} 
+                  averageScore={advanced_metrics.coherence.flow_score}
+               />
+            </div>
+          )}
+          
+          {/* Authenticity Check */}
+          {advanced_metrics.fusion && (
+             <div className="h-[250px]">
+                <AuthenticityStatus 
+                  incongruenceIndex={advanced_metrics.fusion.incongruence_index}
+                  hasWarning={advanced_metrics.fusion.authenticity_warning}
+                  breakdown={advanced_metrics.fusion.normalized_scores}
+                />
+             </div>
+          )}
+        </div>
+      )}
 
       {/* SECTION 2: CORE METRICS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

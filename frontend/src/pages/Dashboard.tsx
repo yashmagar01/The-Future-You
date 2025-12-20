@@ -33,7 +33,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import AnalysisResults, { AnalysisData, AnalysisMetrics } from "@/components/AnalysisResults";
+import AnalysisResults, { AnalysisData, AnalysisMetrics, AdvancedMetrics } from "@/components/AnalysisResults";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -50,6 +50,7 @@ const Dashboard = () => {
   const analysisData: AnalysisData | null = latestFeedback ? {
     overall_score: latestFeedback.overall_score,
     metrics: latestFeedback.key_insights as unknown as AnalysisMetrics,
+    advanced_metrics: latestFeedback.advanced_metrics as unknown as AdvancedMetrics,
     transcript_summary: (latestFeedback.key_insights as any)?.transcript || "No transcript available."
   } : null;
 

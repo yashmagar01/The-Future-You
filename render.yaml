@@ -1,0 +1,19 @@
+services:
+  - type: worker
+    name: the-future-you-processor
+    runtime: docker
+    dockerfilePath: ./Dockerfile.worker
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: HUGGING_FACE_API_KEY
+        sync: false
+    autoDeploy: true

@@ -1,0 +1,61 @@
+# ==============================================================
+# Dockerfile for The Future You - AI Processing Worker
+# Stack: Node.js 20 + Python 3.11 + ffmpeg (Render.com)
+# Build context: repo ROOT (not local-processor/)
+# ==============================================================
+
+FROM node:20-slim
+
+# Install system dependencies: Python, ffmpeg, build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-dev \
+    ffmpeg \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Make python3 the default python
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+WORKDIR /app
+
+# ---- Python dependencies ----
+# Copy requirements from local-processor + ai_engine
+COPY backend/local-processor/requirements.txt ./requirements.txt
+COPY backend/ai_engine/requirements.txt ./ai_engine_requirements.txt
+
+RUN pip3 install --no-cache-dir -r requirements.txt
+# ai_engine deps: install what we can, skip failures (some need GPU)
+RUN pip3 install --no-cache-dir numpy pandas librosa praat-parselmouth \
+    scikit-learn sentence-transformers || true
+RUN pip3 install --no-cache-dir mediapipe==0.10.9 opencv-python-headless || true
+RUN pip3 install --no-cache-dir spacy || true
+
+# ---- Node.js dependencies ----
+COPY backend/local-processor/package*.json ./
+RUN npm ci --omit=dev
+
+# ---- Application source ----
+# Copy both local-processor (runs as the worker root) and ai_engine
+COPY backend/local-processor/ ./
+# Place ai_engine at ../ai_engine relative to /app
+# server.js calls: spawn(python, ['../ai_engine/main.py', ...], {cwd: __dirname})
+# __dirname = /app, so ../ai_engine = /ai_engine
+COPY backend/ai_engine/ /ai_engine/
+
+# Create required runtime directories
+RUN mkdir -p tmp uploads logs
+
+# Expose port
+EXPOSE 3001
+
+# Health check 
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:' + (process.env.PORT||3001), r => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+
+CMD ["node", "server.js"]

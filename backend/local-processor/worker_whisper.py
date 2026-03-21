@@ -36,7 +36,7 @@ def analyze_audio(audio_path, model_path_unused):
     # Using 'base.en' model - good balance of speed and accuracy for English
     # Model downloads automatically on first use (~150MB)
     try:
-        model = WhisperModel("base.en", device="cpu", compute_type="int8")
+        model = WhisperModel("tiny.en", device="cpu", compute_type="int8")
         
         # Prompt helps Whisper recognize filler words accurately
         prompt_text = "Umm, uh, like, I mean, sort of, you know..."

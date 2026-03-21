@@ -309,7 +309,13 @@ async function processRecording(recording_id, video_path) {
                   let advancedError = '';
 
                   advancedProcess.stdout.on('data', (data) => { advancedData += data.toString(); });
-                  advancedProcess.stderr.on('data', (data) => { advancedError += data.toString(); });
+                  
+                  // Stream stderr to console for real-time feedback
+                  advancedProcess.stderr.on('data', (data) => { 
+                      const msg = data.toString();
+                      advancedError += msg;
+                      console.error(`[Advanced AI] ${msg.trim()}`); 
+                  });
 
                   await new Promise((resolve) => {
                       advancedProcess.on('close', (code) => {
@@ -367,7 +373,6 @@ async function processRecording(recording_id, video_path) {
               
               // Update recording status
               await supabase.from('recordings').update({ status: 'completed' }).eq('id', recording_id);
-              console.log('Processing completed successfully.');
               console.log('Processing completed successfully.');
               
               // SUCCESS CLEANUP

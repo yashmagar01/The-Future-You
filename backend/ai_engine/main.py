@@ -15,22 +15,25 @@ import json
 import argparse
 import subprocess
 import tempfile
+# Configure logging FIRST
 import logging
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from audio_analysis import analyze_audio
-from video_analysis import analyze_video
-from text_analysis import calculate_coherence
-from fusion import analyze_fusion
-
-# Configure logging to stderr (so stdout stays clean for JSON)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     stream=sys.stderr
 )
+
+logging.info("Initializing AI Engine modules...")
+logging.info("Importing audio_analysis...")
+from audio_analysis import analyze_audio
+logging.info("Importing video_analysis...")
+from video_analysis import analyze_video
+logging.info("Importing text_analysis (this may download 'sentence-transformers' model)...")
+from text_analysis import calculate_coherence
+logging.info("Importing fusion...")
+from fusion import analyze_fusion
+logging.info("All modules imported successfully.")
+
 
 
 def extract_audio(video_path: str) -> str:

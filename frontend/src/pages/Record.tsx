@@ -70,9 +70,23 @@ const Record = () => {
     fetchUserRole();
   }, [user]);
 
-  // Helper to simulate processing progress
-  // Polling logic
+  // Helper to simulate processing progress with phases
   const pollForStatus = (recordingId: string) => {
+    // Phase 1 (0-50%): Fast initial processing
+    // Phase 2 (50-90%): Slower advanced analysis
+    
+    let phase = 1;
+    let messageIndex = 0;
+    
+    const messages = [
+      "Analyzing audio patterns...", 
+      "Detecting facial micro-expressions...",
+      "Analyzing semantic coherence... (Deep Think)",
+      "Cross-referencing multimodal signals...",
+      "Generating coaching insights...",
+      "Finalizing sophisticated metrics..."
+    ];
+
     const interval = setInterval(async () => {
       try {
         const { data, error } = await supabase
@@ -87,8 +101,21 @@ const Record = () => {
         }
 
         if (data.status === 'processing') {
-          setStatusMessage("AI is analyzing your video...");
-          setProcessingProgress((prev) => Math.min(prev + 5, 90));
+          setProcessingProgress((prev) => {
+            // Decaying progress curve
+            if (prev < 30) return prev + 5;        // Fast start
+            if (prev < 50) return prev + 2;        // Phase 1 ending
+            if (prev < 70) return prev + 0.5;      // Phase 2 starting (Model load)
+            if (prev < 90) return prev + 0.2;      // Phase 2 crunching (slowest)
+            return prev; // Cap at 90 until done
+          });
+          
+          // Rotate messages every few seconds
+          if (Math.random() > 0.7) {
+            messageIndex = (messageIndex + 1) % messages.length;
+            setStatusMessage(messages[messageIndex]);
+          }
+          
         } else if (data.status === 'completed') {
           setStatusMessage("Analysis complete!");
           setProcessingProgress(100);
@@ -110,9 +137,9 @@ const Record = () => {
         console.error("Polling error:", err);
       }
     }, 2000); // Poll every 2 seconds
-
-    // Cleanup interval on component unmount is handled by the fact that we navigate away
-    // But ideally we should track this interval ID. For now, this is sufficient for the MVP flow.
+    
+    // Safety timeout: Stop polling after 5 minutes
+    setTimeout(() => clearInterval(interval), 300000);
   };
 
   const uploadFileWithProgress = async (file: File, path: string) => {
@@ -440,7 +467,7 @@ const Record = () => {
                       <Progress value={processingProgress} className="w-full h-3 bg-zinc-100 dark:bg-zinc-800" />
                       <div className="flex justify-end">
                         <span className="text-xs sm:text-sm font-bold text-[#333333] dark:text-zinc-400">
-                          {processingProgress}%
+                          {Math.round(processingProgress)}%
                         </span>
                       </div>
                     </div>

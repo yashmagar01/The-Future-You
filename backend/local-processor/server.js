@@ -5,7 +5,17 @@ const path = require('path');
 const {spawn } = require('child_process');
 // const fetch = require('node-fetch'); // Native fetch is available in Node 18+
 const cors = require('cors');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
+
+// Initialize Gemini client if API key is provided
+const geminiApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
+if (genAI) {
+  console.log("Google Gemini AI Companion initialized.");
+} else {
+  console.warn("GEMINI_API_KEY not configured. Falling back to local context companion coach.");
+}
 
 // Singleton for Transformers.js pipeline (Emotion classifier)
 let emotionPipeline;
@@ -567,7 +577,7 @@ async function generateScriptWithOllama(profileData, attempt = 1) {
   }
 }
 
-// --- API ENDPOINT ---
+// --- API ENDPOINT: SCRIPT GENERATOR ---
 app.post('/generate-script', async (req, res) => {
   try {
     const { profileData } = req.body;
@@ -583,6 +593,580 @@ app.post('/generate-script', async (req, res) => {
   } catch (error) {
     console.error("Script Generation Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ==========================================
+// AI COMPANION & HABIT TRACKING LOGIC
+// ==========================================
+
+async function assembleUserContext(userId) {
+  const context = {
+    name: 'User',
+    bio: '',
+    goals: [],
+    anchors: [],
+    habits: [],
+    habitSummary: 'No habit data recorded yet.',
+    recentScores: null,
+    memories: []
+  };
+
+  if (!userId) return context;
+
+  try {
+    // 1. Profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, bio, goals, anchors')
+      .eq('id', userId)
+      .single();
+
+    if (profile) {
+      context.name = profile.full_name || 'User';
+      context.bio = profile.bio || '';
+      context.goals = Array.isArray(profile.goals) ? profile.goals : [];
+      context.anchors = Array.isArray(profile.anchors) ? profile.anchors : [];
+    }
+
+    // 2. Habits & today's logs
+    const todayStr = new Date().toISOString().split('T')[0];
+    const { data: habits } = await supabase
+      .from('habits')
+      .select('id, name, category, frequency')
+      .eq('user_id', userId)
+      .eq('archived', false);
+
+    if (habits && habits.length > 0) {
+      context.habits = habits;
+      const habitIds = habits.map(h => h.id);
+      
+      const { data: todayLogs } = await supabase
+        .from('habit_logs')
+        .select('habit_id, completed')
+        .in('habit_id', habitIds)
+        .eq('logged_date', todayStr);
+
+      const completedCount = todayLogs ? todayLogs.filter(l => l.completed).length : 0;
+      context.habitSummary = `Tracking ${habits.length} habits. Completed today: ${completedCount}/${habits.length}. Habits: ${habits.map(h => h.name).join(', ')}`;
+    }
+
+    // 3. Latest feedback / speech scores
+    const { data: recentRecordings } = await supabase
+      .from('recordings')
+      .select('id, created_at, feedback (overall_score, clarity_score, pace_score, tone_score, confidence_score, strengths, improvements)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (recentRecordings && recentRecordings.length > 0 && recentRecordings[0].feedback && recentRecordings[0].feedback.length > 0) {
+      const fb = recentRecordings[0].feedback[0];
+      context.recentScores = {
+        overall: fb.overall_score,
+        clarity: fb.clarity_score,
+        pace: fb.pace_score,
+        tone: fb.tone_score,
+        confidence: fb.confidence_score,
+        strengths: fb.strengths || [],
+        improvements: fb.improvements || []
+      };
+    }
+
+    // 4. Saved reflection memories
+    const { data: memories } = await supabase
+      .from('reflections_memories')
+      .select('title, content, category')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (memories) {
+      context.memories = memories;
+    }
+  } catch (err) {
+    console.error('Error assembling user context:', err);
+  }
+
+  return context;
+}
+
+function buildCompanionPrompt(context) {
+  const goalsSection = context.goals.length > 0
+    ? context.goals.map(g => `- ${g}`).join('\n')
+    : 'Not yet specified.';
+  const anchorsSection = context.anchors.length > 0
+    ? context.anchors.map(a => `- ${a}`).join('\n')
+    : 'Not yet specified.';
+  const memoriesSection = context.memories.length > 0
+    ? context.memories.map(m => `• ${m.title}: ${m.content}`).join('\n')
+    : 'No prior memories saved.';
+
+  let speechSection = 'No recent video speech recordings analyzed yet.';
+  if (context.recentScores) {
+    speechSection = `Latest Reflection Scores: Overall: ${context.recentScores.overall}/100, Clarity: ${context.recentScores.clarity}/100, Pace: ${context.recentScores.pace}/100, Confidence: ${context.recentScores.confidence}/100, Tone: ${context.recentScores.tone}/100.
+Top Strengths: ${(context.recentScores.strengths || []).join(', ') || 'Consistent practice'}
+Areas for Growth: ${(context.recentScores.improvements || []).join(', ') || 'Pacing and conscious pauses'}`;
+  }
+
+  return `You are ${context.name}'s personal AI Diary & Communication Growth Companion on "The Future You" platform.
+Your mission is to help ${context.name} reflect on their daily experiences, track their habits, improve speaking and vocal presence, and stay grounded in their core values.
+
+--- User Profile Context ---
+Name: ${context.name}
+Bio: ${context.bio || 'Growth-minded individual'}
+
+Personal Goals:
+${goalsSection}
+
+Grounding Anchors & Core Values:
+${anchorsSection}
+
+Habit Status:
+${context.habitSummary}
+
+Speech & Communication Profile:
+${speechSection}
+
+Key Memories & Reflection Notes:
+${memoriesSection}
+
+--- Coaching Guidelines ---
+1. Empathy & Encouragement: Be warm, authentic, concise, and empowering.
+2. Grounded Connection: When contextually relevant, reference their goals, habits, anchors, or speech metrics naturally.
+3. Guided Reflection: Ask 1 concise, thought-provoking question to help them reflect deeper rather than giving long monologues.
+4. Actionable Communication Advice: Provide crisp, practical tips on articulation, pause control, energy, and authenticity when they discuss speaking or self-expression.
+5. Markdown: Use clean Markdown formatting with bullet points or bold text where appropriate.`;
+}
+
+// --- AI COMPANION CHAT ENDPOINT ---
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, conversationHistory = [], userId, sessionId = 'default', stream = true } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Assemble rich context
+    const context = await assembleUserContext(userId);
+    const systemInstruction = buildCompanionPrompt(context);
+
+    // Save user message to Supabase
+    if (userId) {
+      supabase.from('companion_messages').insert({
+        user_id: userId,
+        session_id: sessionId,
+        role: 'user',
+        content: message
+      }).catch(err => console.error('Error saving user message:', err));
+    }
+
+    if (genAI) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-2.0-flash',
+          systemInstruction: systemInstruction
+        });
+
+        const contents = conversationHistory.map(msg => ({
+          role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
+          parts: [{ text: msg.content }]
+        }));
+
+        contents.push({
+          role: 'user',
+          parts: [{ text: message }]
+        });
+
+        if (stream) {
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.setHeader('Connection', 'keep-alive');
+
+          let fullResponseText = '';
+          const result = await model.generateContentStream({ contents });
+
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            fullResponseText += chunkText;
+            res.write(`data: ${JSON.stringify({ chunk: chunkText })}\n\n`);
+          }
+
+          res.write('data: [DONE]\n\n');
+          res.end();
+
+          // Save assistant message to Supabase
+          if (userId && fullResponseText) {
+            supabase.from('companion_messages').insert({
+              user_id: userId,
+              session_id: sessionId,
+              role: 'assistant',
+              content: fullResponseText
+            }).catch(err => console.error('Error saving assistant message:', err));
+          }
+          return;
+        } else {
+          const result = await model.generateContent({ contents });
+          const responseText = result.response.text();
+
+          if (userId) {
+            supabase.from('companion_messages').insert({
+              user_id: userId,
+              session_id: sessionId,
+              role: 'assistant',
+              content: responseText
+            }).catch(err => console.error('Error saving assistant message:', err));
+          }
+
+          return res.json({ response: responseText });
+        }
+      } catch (geminiError) {
+        console.error('Gemini streaming error, falling back:', geminiError);
+      }
+    }
+
+    // Local Fallback Companion Response
+    const fallbackResponse = `Thank you for sharing, ${context.name}. Reflecting on what you said: "${message.slice(0, 80)}${message.length > 80 ? '...' : ''}".\n\n` +
+      `Keep taking consistent steps towards your goals: ${context.goals.slice(0, 2).join(', ') || 'daily self-growth'}. ` +
+      `How do you feel today about your current pace and grounding?`;
+
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.write(`data: ${JSON.stringify({ chunk: fallbackResponse })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } else {
+      res.json({ response: fallbackResponse });
+    }
+
+    if (userId) {
+      supabase.from('companion_messages').insert({
+        user_id: userId,
+        session_id: sessionId,
+        role: 'assistant',
+        content: fallbackResponse
+      }).catch(err => console.error('Error saving fallback message:', err));
+    }
+  } catch (error) {
+    console.error('[API/CHAT ERROR]:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// --- HABITS API ENDPOINTS ---
+app.get('/api/habits', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId query parameter is required' });
+    }
+
+    const { data: habits, error: habitsError } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('archived', false)
+      .order('created_at', { ascending: true });
+
+    if (habitsError) throw habitsError;
+
+    // Fetch past 14 days of logs
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const startDateStr = fourteenDaysAgo.toISOString().split('T')[0];
+
+    const habitIds = (habits || []).map(h => h.id);
+    let logs = [];
+
+    if (habitIds.length > 0) {
+      const { data: logsData, error: logsError } = await supabase
+        .from('habit_logs')
+        .select('*')
+        .in('habit_id', habitIds)
+        .gte('logged_date', startDateStr)
+        .order('logged_date', { ascending: false });
+
+      if (!logsError && logsData) {
+        logs = logsData;
+      }
+    }
+
+    // Compute streaks and stats
+    const todayStr = new Date().toISOString().split('T')[0];
+    const habitStats = {};
+
+    (habits || []).forEach(habit => {
+      const habitLogs = logs.filter(l => l.habit_id === habit.id && l.completed);
+      const isCompletedToday = habitLogs.some(l => l.logged_date === todayStr);
+      
+      // Calculate current streak
+      let streak = 0;
+      let checkDate = new Date();
+      // If not completed today, start checking from yesterday
+      if (!isCompletedToday) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      for (let i = 0; i < 30; i++) {
+        const dStr = checkDate.toISOString().split('T')[0];
+        const log = habitLogs.find(l => l.logged_date === dStr);
+        if (log && log.completed) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      habitStats[habit.id] = {
+        streak,
+        completedToday: isCompletedToday,
+        totalCompletions: habitLogs.length
+      };
+    });
+
+    res.json({ habits: habits || [], logs, stats: habitStats });
+  } catch (error) {
+    console.error('[API/HABITS GET ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+app.post('/api/habits', async (req, res) => {
+  try {
+    const { userId, name, description = '', category = 'growth', frequency = 'daily', target_days = 7, color = '#10B981', icon = 'CheckCircle' } = req.body;
+
+    if (!userId || !name) {
+      return res.status(400).json({ error: 'userId and name are required' });
+    }
+
+    const { data, error } = await supabase
+      .from('habits')
+      .insert({
+        user_id: userId,
+        name,
+        description,
+        category,
+        frequency,
+        target_days,
+        color,
+        icon,
+        archived: false
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('[API/HABITS POST ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+app.put('/api/habits/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, category, color, icon, archived } = req.body;
+
+    const updates = { updated_at: new Date().toISOString() };
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (category !== undefined) updates.category = category;
+    if (color !== undefined) updates.color = color;
+    if (icon !== undefined) updates.icon = icon;
+    if (archived !== undefined) updates.archived = archived;
+
+    const { data, error } = await supabase
+      .from('habits')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('[API/HABITS PUT ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+app.post('/api/habits/log', async (req, res) => {
+  try {
+    const { userId, habitId, completed = true, note = '', loggedDate } = req.body;
+
+    if (!userId || !habitId) {
+      return res.status(400).json({ error: 'userId and habitId are required' });
+    }
+
+    const targetDate = loggedDate || new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .upsert({
+        user_id: userId,
+        habit_id: habitId,
+        completed,
+        note,
+        logged_date: targetDate
+      }, {
+        onConflict: 'habit_id,logged_date'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('[API/HABITS/LOG ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+// --- INSIGHTS API ENDPOINT ---
+app.get('/api/insights', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const context = await assembleUserContext(userId);
+
+    const insights = {
+      greeting: `Welcome back, ${context.name}!`,
+      habitSummary: context.habitSummary,
+      speechScores: context.recentScores,
+      goals: context.goals,
+      anchors: context.anchors,
+      dailyNudge: context.recentScores
+        ? `In your last session, your vocal clarity was ${context.recentScores.clarity}/100. Practice a 60-second reflection video today!`
+        : "Record a quick 60-second video reflection today to track your vocal presence and authenticity.",
+      reflectionPrompt: "What is one key victory or lesson from today that aligns with your core goals?"
+    };
+
+    res.json(insights);
+  } catch (error) {
+    console.error('[API/INSIGHTS ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+// --- PROFILE CONTEXT API ENDPOINTS ---
+app.get('/api/profile/context', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, bio, goals, anchors, avatar_url')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+    res.json(profile);
+  } catch (error) {
+    console.error('[API/PROFILE/CONTEXT GET ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+app.post('/api/profile/context', async (req, res) => {
+  try {
+    const { userId, goals, anchors, bio, full_name } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const updates = { updated_at: new Date().toISOString() };
+    if (goals !== undefined) updates.goals = goals;
+    if (anchors !== undefined) updates.anchors = anchors;
+    if (bio !== undefined) updates.bio = bio;
+    if (full_name !== undefined) updates.full_name = full_name;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('[API/PROFILE/CONTEXT POST ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+// --- REFLECTION MEMORIES API ENDPOINTS ---
+app.get('/api/memories', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const { data, error } = await supabase
+      .from('reflections_memories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('[API/MEMORIES GET ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+app.post('/api/memories', async (req, res) => {
+  try {
+    const { userId, title, content, category = 'reflection', tags = [] } = req.body;
+    if (!userId || !title || !content) {
+      return res.status(400).json({ error: 'userId, title, and content are required' });
+    }
+
+    const { data, error } = await supabase
+      .from('reflections_memories')
+      .insert({
+        user_id: userId,
+        title,
+        content,
+        category,
+        tags
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('[API/MEMORIES POST ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+});
+
+app.delete('/api/memories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('reflections_memories')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ success: true, message: 'Memory deleted' });
+  } catch (error) {
+    console.error('[API/MEMORIES DELETE ERROR]:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 });
 

@@ -113,12 +113,14 @@ export type Database = {
       }
       profiles: {
         Row: {
+          anchors: string[] | null
           avatar_url: string | null
           betaconsent: boolean | null
           bio: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
+          goals: string[] | null
           id: string
           onboarding_data: Json | null
           priority: number | null
@@ -126,12 +128,14 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          anchors?: string[] | null
           avatar_url?: string | null
           betaconsent?: boolean | null
           bio?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
+          goals?: string[] | null
           id: string
           onboarding_data?: Json | null
           priority?: number | null
@@ -139,12 +143,14 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          anchors?: string[] | null
           avatar_url?: string | null
           betaconsent?: boolean | null
           bio?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
+          goals?: string[] | null
           id?: string
           onboarding_data?: Json | null
           priority?: number | null
@@ -152,6 +158,180 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      habits: {
+        Row: {
+          archived: boolean | null
+          category: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          frequency: string | null
+          icon: string | null
+          id: string
+          name: string
+          target_days: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean | null
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          frequency?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          target_days?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          archived?: boolean | null
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          frequency?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          target_days?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      habit_logs: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          habit_id: string
+          id: string
+          logged_date: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          habit_id: string
+          id?: string
+          logged_date?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          habit_id?: string
+          id?: string
+          logged_date?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      companion_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          role: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      reflections_memories: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          id: string
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reflections_memories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       progress: {
         Row: {

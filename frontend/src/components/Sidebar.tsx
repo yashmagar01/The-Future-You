@@ -7,6 +7,7 @@ import {
   BarChart3, 
   User, 
   Settings,
+  Sparkles,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -22,6 +23,7 @@ const navigationItems = [
   { name: 'Record', href: '/record', icon: Video },
   { name: 'Gallery', href: '/gallery', icon: FolderOpen },
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Companion', href: '/companion', icon: Sparkles },
   { name: 'Profile', href: '/profile', icon: User },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

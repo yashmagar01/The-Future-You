@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import Record from "./pages/Record";
 import Gallery from "./pages/Gallery";
 import Dashboard from "./pages/Dashboard";
+import Companion from "./pages/Companion";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
@@ -68,6 +69,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/companion" 
+                element={
+                  <ProtectedRoute>
+                    <Companion />
                   </ProtectedRoute>
                 } 
               />

@@ -161,7 +161,7 @@ COMMENT ON VIEW public.cron_job_status IS 'Monitor status and history of the pro
 SELECT cron.schedule(
   'report-stuck-jobs',
   '0 9 * * *',  -- Every day at 9 AM
-  $$
+  $CRON$
   DO $$
   DECLARE
     stuck_count INTEGER;
@@ -176,7 +176,7 @@ SELECT cron.schedule(
       -- TODO: Send notification email via Edge Function
     END IF;
   END $$;
-  $$
+  $CRON$
 );
 
 -- =====================================================

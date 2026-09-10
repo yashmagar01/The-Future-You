@@ -1,4 +1,8 @@
 -- Create waitlist_entries table
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user'
+CHECK (role IN ('tester', 'user', 'admin'));
+
 CREATE TABLE IF NOT EXISTS waitlist_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT,

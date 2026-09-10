@@ -47,6 +47,7 @@ cypress/downloads
 *.ntvs*
 *.njsproj
 *.sln
+
 *.sw?
 node_modules
 
@@ -54,3 +55,4 @@ node_modules
 venv/
 backend/local-processor/venv/
 backend/local-processor/tmp/
+supabase-organized/supabase/.temp/

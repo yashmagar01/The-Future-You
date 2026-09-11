@@ -3,8 +3,9 @@
 ## Get Your Backend Running in 5 Minutes
 
 **Difficulty Level**: Beginner\
-**Time Required**: 5 minutes\
-**Last Updated**: December 15, 2025
+**Time Required**: 5–10 minutes\
+**Last Updated**: September 2026\
+**Version**: v1.7.0
 
 ---
 

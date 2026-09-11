@@ -1,8 +1,21 @@
-# 🚀 Roadmap v2.0 — Computational Paralinguistics Upgrade
+# 🚀 Roadmap v2.0 — Computational Paralinguistics + World-Class Memory
 
-> **Target Release:** Q1 2026\
+> **Target Release:** Q4 2026\
 > **Codename:** "Beyond Words"\
-> **Status:** 📋 Planning Phase
+> **Status:** 🚧 Active Development — Phase 2 AI engine SHIPPED (v1.7.0)
+
+## ✅ What's Already Done (v1.7.0)
+
+| Feature | Status | Merged |
+|---------|--------|--------|
+| Phase 2 AI engine (Parselmouth + kinematic) | ✅ Done | v1.7 |
+| AI Companion (Gemini 2.0 Flash + streaming) | ✅ Done | v1.7 |
+| Habit tracking system (streaks + logs)       | ✅ Done | v1.7 |
+| Reflection memories (basic table)            | ✅ Done | v1.7 |
+| Authenticity / incongruence detection        | ✅ Done | v1.7 |
+| Semantic coherence (all-MiniLM-L6-v2)        | ✅ Done | v1.7 |
+
+---
 
 ---
 

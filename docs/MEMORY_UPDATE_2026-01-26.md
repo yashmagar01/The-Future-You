@@ -68,11 +68,21 @@ The project has successfully transitioned from **v1.5.0** (Heuristic Scoring) to
 
 ## 5. Environment & Context
 
-- **Local Time**: 2026-01-26
+- **Local Time**: 2026-01-26 → Updated September 2026
 - **Workspace**: `yash-reflections-mvp`
-- **User Goal**: Refining the system for "Supermemory" integration and ensuring
-  robust "in-depth" tracking.
+- **User Goal**: Building a world-class self-owned memory system using pgvector + all-MiniLM-L6-v2. No external API dependency.
+
+## 6. Memory System — Current Status (Updated Sep 2026)
+
+| Layer | Status |
+|-------|--------|
+| Basic `reflections_memories` table | ✅ Exists |
+| pgvector semantic memory | 🚧 Designed — see `docs/MEMORY_SYSTEM.md` |
+| Auto-embed on video analysis | 🚧 Planned for v2.0 |
+| Semantic search at chat time | 🚧 Planned for v2.0 |
+
+**Full design spec**: [`docs/MEMORY_SYSTEM.md`](./MEMORY_SYSTEM.md)
 
 ---
 
-_System generated status report for Supermemory MCP ingestion._
+_Status report — last updated September 2026._

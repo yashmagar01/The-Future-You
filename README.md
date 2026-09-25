@@ -4,7 +4,7 @@
 
 **Project Classification**: Minimal-Cost Local AI Communication Coaching System  
 **Version**: v1.7.0 (Computational Paralinguistics + AI Companion)  
-**Last Updated**: September 2026  
+**Last Updated**: 26 September 2026  
 **Author**: Yash Magar
 
 ---
@@ -13,29 +13,13 @@
 
 **The Future You** is a daily video-reflection and communication coaching platform that helps users build confidence, improve speaking skills, and understand their emotional presence — all using **fully offline, minimal-cost AI models**.
 
-### Project Health Scorecard
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      PROJECT SCORECARD (v1.7.0)                     │
-├─────────────────────────────────────────────────────────────────────┤
-│  Overall Technical Health:           █████████░░░  82/100          │
-│  Code Quality:                       ████████░░░░  78/100          │
-│  Security Posture:                   ██████░░░░░░  65/100          │
-│  ↳ (RLS + OAuth ✅; ngrok unauth, no rate-limit, no CSRF docs ⚠️) │
-│  Performance:                        ████████░░░░  75/100          │
-│  Frontend Design:                    █████████░░░  85/100          │
-│  Documentation:                      ██████████░░  92/100          │
-│  AI Pipeline:                        ██████████░░  93/100          │
-│  Memory System:                      ████░░░░░░░░  40/100 ⚠️       │
-└─────────────────────────────────────────────────────────────────────┘
-```
+### Project Status
 
 | Category               | Status              | Description                                        |
 | ---------------------- | ------------------- | -------------------------------------------------- |
-| **Frontend**           | ✅ Production-Ready | React 18 + Vite + TypeScript                       |
+| **Frontend**           | ✅ Production-Ready | React 18 + Vite 8 + TypeScript                     |
 | **Backend**            | ✅ MVP Functional   | Node.js + Python hybrid processor                  |
-| **Database**           | ✅ Well-Configured  | Supabase PostgreSQL with RLS                       |
+| **Database**           | ✅ Well-Configured  | Supabase PostgreSQL (14 tables) with RLS           |
 | **AI Engine (Phase 2)**| ✅ Innovative       | faster-whisper + Parselmouth + MediaPipe + BERT    |
 | **AI Companion**       | ✅ Implemented      | Gemini 2.0 Flash + habit tracking + memories       |
 | **Authentication**     | ✅ Secure           | Supabase Auth (Email + Google)                     |
@@ -151,7 +135,7 @@ graph TB
     end
 
     subgraph "Cloud — Supabase"
-        C[(PostgreSQL\n9 Tables)]
+        C[(PostgreSQL\n14 Tables)]
         D[Storage\nVideos/Thumbnails]
         E[Auth\nEmail + Google]
         F[14 Edge Functions]
@@ -195,7 +179,7 @@ sequenceDiagram
     participant Frontend
     participant Supabase
     participant NodeServer
-    participant Phase1 as Phase 1 (whisper.py)
+    participant Phase1 as Phase 1 (worker_whisper.py)
     participant Phase2 as Phase 2 (main.py)
 
     User->>Frontend: Upload video
@@ -280,14 +264,15 @@ graph LR
 | Layer             | Technology                | Version   | Purpose                        |
 | ----------------- | ------------------------- | --------- | ------------------------------ |
 | **Frontend UI**   | React                     | 18.3.1    | Core UI library                |
-| **Build Tool**    | Vite                      | 5.4.19    | Fast bundling & HMR            |
+| **Build Tool**    | Vite                      | 8.x       | Fast bundling & HMR            |
 | **Language**      | TypeScript                | 5.8.3     | Type safety                    |
 | **Styling**       | TailwindCSS               | 3.4.17    | Utility-first CSS              |
 | **UI Components** | shadcn/ui                 | Latest    | Radix-based components         |
 | **State**         | TanStack Query            | 5.83.0    | Server state management        |
-| **Routing**       | React Router              | 6.30.1    | Client-side routing            |
+| **Routing**       | React Router              | 7.x       | Client-side routing            |
 | **Animations**    | Framer Motion             | 12.23.24  | UI animations                  |
-| **Charts**        | Recharts                  | 2.15.4    | Data visualization             |
+| **Charts**        | Recharts                  | 2.15.4    | Data visualization (SVG)       |
+| **Report Export** | jsPDF + html2canvas       | 4.x / 1.4 | PNG (3×) + A4 PDF reports      |
 | **Backend**       | Express.js (Node.js)      | Latest    | HTTP server + worker           |
 | **AI Speech**     | faster-whisper            | Latest    | Speech-to-text (CTranslate2)   |
 | **AI Voice**      | Parselmouth (Praat)       | Latest    | Pitch F0 + HNR analysis        |
@@ -297,8 +282,8 @@ graph LR
 | **AI Emotion**    | MicahB emotion classifier | ONNX      | 11-emotion text classification |
 | **AI Companion**  | Gemini 2.0 Flash          | Latest    | Contextual coaching chat (cloud API, free tier)  |
 | **Text Embed**    | all-MiniLM-L6-v2          | 22M param | Semantic coherence             |
-| **Script Gen**    | Ollama (llama3.2)         | Local     | Teleprompter script writer *(planned Q4 2026)*   |
-| **Database**      | Supabase (PostgreSQL 15)  | Latest    | All data persistence           |
+| **Script Gen**    | Ollama (llama3.2)         | Local install | Noted in backend docs; no server endpoint wired yet |
+| **Database**      | Supabase (PostgreSQL)     | Latest    | All data persistence           |
 | **Auth**          | Supabase Auth             | 2.81.1    | Email + Google OAuth           |
 | **Storage**       | Supabase Storage          | —         | Video + thumbnail files        |
 
@@ -583,23 +568,25 @@ graph TB
 
     subgraph "Public Routes"
         F[/ Home]
-        G[/login]
-        H[/signup]
-        I[/waitlist]
+        G[/login · /signup · /register]
+        H[/onboarding]
+        I[/waitlist · /waitlist/confirm]
+        P1[/about · /contact · /privacy-policy · /terms]
     end
 
     subgraph "Protected Routes"
         J[/dashboard]
         K[/record]
         L[/gallery]
-        M[/analysis]
+        M[/analysis/:id]
         N[/companion — AI Chat]
         O[/profile]
         P[/settings]
+        Q[/admin/waitlist · /admin/users]
     end
 
-    E --> F & G & H & I
-    E --> J & K & L & M & N & O & P
+    E --> F & G & H & I & P1
+    E --> J & K & L & M & N & O & P & Q
 ```
 
 ### 7.2 Page Breakdown
@@ -612,7 +599,9 @@ graph TB
 | **Gallery**        | Past recording grid, playback, delete                  |
 | **Companion**      | Gemini 2.0 Flash AI chat with your context             |
 | **Profile**        | Goals, anchors, bio, onboarding data                   |
-| **Settings**       | Theme, privacy, account management                     |
+| **Settings**       | Notification preferences, account management           |
+| **Onboarding**     | Branching wizard (standard / beta paths)               |
+| **Admin**          | Waitlist + user management panels                      |
 
 ### 7.3 State Management
 
@@ -642,11 +631,11 @@ graph LR
 
 ### 8.1 Node.js Server Structure
 
-**File**: `backend/local-processor/server.js` — 1,177 lines, port 3001
+**File**: `backend/local-processor/server.js` — 907 lines, port 3001 (or `PORT` env)
 
 ```
 API Endpoints:
-├── POST /generate-script     → Ollama/llama3.2 teleprompter scripts
+├── GET  /                      → Health check
 ├── POST /api/chat            → Gemini 2.0 Flash streaming chat
 ├── GET  /api/habits          → Habit list + 14-day streak stats
 ├── POST /api/habits          → Create new habit
@@ -665,14 +654,18 @@ API Endpoints:
 ```
 backend/
 ├── local-processor/
-│   ├── server.js              ← Orchestrator + API endpoints
-│   └── worker_whisper.py      ← Phase 1: Whisper + MediaPipe
+│   ├── server.js                ← Orchestrator + API endpoints (907 lines)
+│   ├── worker_whisper.py        ← Phase 1: STT + posture
+│   ├── download-model.js        ← One-time ONNX model download
+│   └── requirements.txt         ← Phase 1 Python deps
 └── ai_engine/
-    ├── main.py                ← Phase 2 orchestrator
-    ├── audio_analysis.py      ← Parselmouth: Pitch F0 + HNR
-    ├── video_analysis.py      ← Gesture energy (kinematic)
-    ├── text_analysis.py       ← BERT sentence coherence
-    └── fusion.py              ← Incongruence / authenticity
+    ├── main.py                  ← Phase 2 orchestrator
+    ├── audio_analysis.py        ← Parselmouth: Pitch F0 + HNR
+    ├── video_analysis.py        ← Gesture energy (kinematic)
+    ├── text_analysis.py         ← BERT semantic coherence
+    ├── fusion.py                ← Incongruence / authenticity
+    ├── companion.py             ← Reflection readiness synthesis
+    └── requirements.txt         ← Phase 2 Python deps
 ```
 
 ### 8.3 Job State Machine
@@ -698,11 +691,14 @@ stateDiagram-v2
 
 ### 9.1 Schema Overview
 
+14 tables across the migrations (`supabase-organized/supabase/migrations/`):
+
 ```mermaid
 erDiagram
     AUTH_USERS ||--|| PROFILES : extends
     PROFILES ||--o{ RECORDINGS : creates
     RECORDINGS ||--|| FEEDBACK : has
+    RECORDINGS ||--o{ TRANSCRIPTS : produces
     PROFILES ||--o{ HABITS : defines
     HABITS ||--o{ HABIT_LOGS : tracks
     PROFILES ||--o{ REFLECTIONS_MEMORIES : stores
@@ -778,6 +774,12 @@ erDiagram
     }
 ```
 
+Plus supporting tables (same migrations): `transcripts` (per-recording
+transcripts, FK → recordings), `prompts` (generated practice prompts),
+`progress` (progress snapshots), `events_analytics` (written by the
+`track-event` edge function), `worker_runs` (processor run bookkeeping),
+`waitlist_entries` + `promotions` (waitlist flow).
+
 ### 9.2 Row-Level Security
 
 All tables have RLS enabled. Users only access their own data:
@@ -828,7 +830,7 @@ CREATE POLICY "own feedback" ON feedback
 |                    | Reflection memory save           | ✅ Basic table     | v1.7  |
 |                    | World-class memory system        | 🚧 Planned         | v2.0  |
 | **👤 User**        | Supabase Auth (Email + Google)   | ✅ Done            | MVP   |
-|                    | 5-step onboarding wizard         | ✅ Done            | MVP   |
+|                    | Branching onboarding wizard    | ✅ Done            | MVP   |
 |                    | Waitlist + admin panel           | ✅ Done            | MVP   |
 
 ---
@@ -1010,9 +1012,9 @@ gantt
     title Memory System Build Plan
     dateFormat YYYY-MM
     section v2.0 Foundation
-    Enable pgvector + schema    :done, 2026-09, 2026-09
-    Embed on analysis complete  :active, 2026-09, 2026-10
-    Semantic search at chat time :2026-10, 2026-10
+    Enable pgvector + schema    :2026-10, 2026-11
+    Embed on analysis complete  :2026-10, 2026-11
+    Semantic search at chat time :2026-11, 2026-12
     section v2.1 Intelligence
     Auto-embed chat messages    :2026-10, 2026-11
     Memory consolidation (merge duplicates) :2026-11, 2026-12
@@ -1031,9 +1033,9 @@ gantt
 
 | Requirement | Version | Purpose             |
 | ----------- | ------- | ------------------- |
-| Node.js     | 18+     | Runtime             |
-| Python      | 3.11+   | AI Worker           |
-| FFmpeg      | Latest  | Video/audio extract |
+| Node.js     | 18+     | Runtime (frontend + worker) |
+| Python      | 3.11+   | AI pipeline         |
+| FFmpeg      | Latest  | Video/audio extraction |
 | Git         | Latest  | Version control     |
 
 ### 12.2 Installation
@@ -1043,44 +1045,65 @@ gantt
 git clone https://github.com/yashmagar01/The-Future-You.git
 cd The-Future-You
 
-# 2. Frontend
-cd frontend
+# 2. JS dependencies (root, frontend app, local processor worker)
 npm install
+npm install --prefix frontend
+cd backend/local-processor && npm install && cd ../..
+
+# 3. Python AI dependencies (two requirement files)
+pip install -r backend/local-processor/requirements.txt
+pip install -r backend/ai_engine/requirements.txt
+
+# 4. Environment files (copy examples, fill in real values — see 12.3)
 cp .env.example .env
-# Edit .env → add your Supabase URL + anon key
+cp frontend/.env.example frontend/.env
+cp backend/local-processor/.env.example backend/local-processor/.env
 
-# 3. Backend
-cd ../backend/local-processor
-npm install
-
-# 4. Python AI dependencies
-pip install faster-whisper mediapipe opencv-python-headless \
-            numpy librosa praat-parselmouth sentence-transformers
-
-# 5. Start everything
-# Terminal 1 — Frontend
-cd frontend && npm run dev
-
-# Terminal 2 — Backend worker
-cd backend/local-processor && node server.js
+# 5. Start everything (each command from the repo root)
+npm run dev          # Frontend → http://localhost:8080
+npm run backend:dev  # Local processor (nodemon) → http://localhost:3001
 ```
+
+Root helper scripts (`package.json`): `dev`, `build`, `preview`, `lint`,
+`test` / `test:ui` / `test:coverage` (frontend via Vitest), `backend`
+(`node server.js`), `backend:dev` (nodemon).
 
 ### 12.3 Environment Variables
 
+All three files start as `.env.example` — copy each to `.env`. Never commit
+real keys (all `.env*` paths are git-ignored).
+
 ```env
-# frontend/.env
+# .env / frontend/.env (Vite — mirrored in both examples)
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+VITE_SUPABASE_PROJECT_ID=your_project_id
+VITE_APP_BASE_URL=http://localhost:8080
+VITE_GEMINI_API_KEY=your_gemini_key          # AI Companion (client fallback)
+VITE_LOCAL_PROCESSOR_URL=http://localhost:3001
 
 # backend/local-processor/.env
-PORT=3001
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-GEMINI_API_KEY=your_gemini_api_key     # optional, for AI companion
+SUPABASE_PROJECT_ID=your_project_id
+APP_BASE_URL=http://localhost:8080
+GEMINI_API_KEY=your_gemini_key               # optional; server falls back
+                                             # to a local companion coach
+                                             # without it
 ```
 
 > [!TIP]
-> Frontend: http://localhost:5173 · Backend: http://localhost:3001
+> Frontend: http://localhost:8080 · Backend: http://localhost:3001
+> (override backend port with `PORT` env).
+
+### 12.4 Verify Your Setup
+
+```bash
+npm run build    # production build must pass (Vite)
+npm run test -- run  # Vitest suite, one-shot (23 tests green)
+npm run lint     # ESLint (repo has pre-existing warnings; add no new ones)
+npm run preview  # serve the production build locally
+```
 
 ---
 
@@ -1088,40 +1111,46 @@ GEMINI_API_KEY=your_gemini_api_key     # optional, for AI companion
 
 ```
 The-Future-You/
-├── 📂 frontend/                     # React Application
+├── 📂 frontend/                     # React Application (v1.7.0)
 │   └── src/
-│       ├── components/              # 30+ custom components
-│       │   ├── companion/           # AI companion UI
-│       │   └── home/                # Landing page sections
-│       ├── pages/                   # 20 page components
+│       ├── components/              # ~97 component files (incl. ui/, companion/, home/)
+│       ├── pages/                   # 21 page modules (19 routes + NotFound)
 │       ├── hooks/                   # useRecordings, usePoseDetection
-│       └── contexts/                # Auth, Onboarding
+│       ├── contexts/                # Auth, Onboarding
+│       └── lib/companion/           # Gemini client, context assembler, types
 │
 ├── 📂 backend/
 │   ├── local-processor/
-│   │   ├── server.js                # Main orchestrator (1177 lines)
+│   │   ├── server.js                # Main orchestrator, 907 lines, port 3001
 │   │   ├── worker_whisper.py        # Phase 1: STT + posture
-│   │   └── requirements.txt
+│   │   ├── download-model.js        # One-time ONNX model download
+│   │   └── requirements.txt         # Phase 1 Python deps
 │   └── ai_engine/
 │       ├── main.py                  # Phase 2 orchestrator
 │       ├── audio_analysis.py        # Pitch F0 + HNR (Parselmouth)
 │       ├── video_analysis.py        # Kinematic gesture energy
 │       ├── text_analysis.py         # BERT semantic coherence
-│       └── fusion.py               # Incongruence detection
+│       ├── fusion.py                # Incongruence detection
+│       ├── companion.py             # Reflection readiness synthesis
+│       └── requirements.txt         # Phase 2 Python deps
 │
 ├── 📂 supabase-organized/
 │   └── supabase/
-│       ├── functions/               # 14 Edge Functions
-│       └── migrations/              # SQL migration files
+│       ├── functions/               # 14 Edge Functions (+ _shared helper)
+│       └── migrations/              # SQL migration files (14 tables)
 │
 ├── 📂 docs/
 │   ├── ROADMAP_v2.0.md
 │   ├── QUICK_START.md
-│   ├── MEMORY_SYSTEM.md             # ← New: world-class memory design
-│   └── SETUP.md
+│   ├── MEMORY_SYSTEM.md             # World-class memory design
+│   ├── SETUP.md
+│   ├── PRODUCTION_URL_CONFIGURATION.md
+│   ├── PONYTAIL_QUALITY_FIRST_OPTIMIZATION.md   # Perf spec + execution log
+│   └── WHAT_PONYTAIL_DID.md         # Phase-by-phase change record
 │
-├── vercel.json
-├── render.yaml
+├── vercel.json                      # SPA rewrites, cache headers, favicon fix
+├── render.yaml                      # Render.com worker deploy config
+├── Dockerfile.worker                # Worker container build
 └── README.md                        # This file
 ```
 
@@ -1272,7 +1301,8 @@ gantt
 
 ## 📱 Live Demo
 
-**Frontend**: [yash-reflections-mvp.vercel.app](https://yash-reflections-mvp.vercel.app)
+**Frontend**: [the-future-you.vercel.app](https://the-future-you.vercel.app)
+(same URL as the in-app canonical link, OG tags, and report QR codes)
 
 ---
 

@@ -1,0 +1,66 @@
+# --- Base Image: One container for both Node & Python ---
+FROM nikolaik/python-nodejs:python3.10-nodejs18-slim
+
+# Hugging Face Spaces REQUIRE the container to run as a non-root user (id 1000)
+# We set up a user 'appuser' and create necessary directories with correct permissions.
+RUN useradd -m -u 1000 appuser
+
+WORKDIR /app
+
+# 1. Install System Dependencies
+# ffmpeg: for audio/video processing
+# libgl1/libglib2.0-0: for opencv-python
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libgl1 \
+    libglib2.0-0 \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Fix permissions for the /app directory so appuser can write temp files
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user for all subsequent commands (Required by HuggingFace)
+USER appuser
+
+# Environment variables for Python/Transformers cache paths 
+# (Forces models to download into the writable /app directory instead of restricted /root)
+ENV TRANSFORMERS_CACHE=/app/.cache/huggingface/transformers \
+    HF_HOME=/app/.cache/huggingface \
+    TORCH_HOME=/app/.cache/torch \
+    MPLCONFIGDIR=/app/.cache/matplotlib \
+    PATH="/home/appuser/.local/bin:${PATH}"
+
+# Create cache directories
+RUN mkdir -p /app/.cache/huggingface/transformers && \
+    mkdir -p /app/.cache/torch && \
+    mkdir -p /app/.cache/matplotlib
+
+# 2. Install Python Dependencies
+# We copy the requirements file first to leverage Docker layer caching
+COPY --chown=appuser:appuser ai_engine/requirements.txt ./ai_engine/
+RUN pip install --user --no-cache-dir -r ai_engine/requirements.txt
+
+# Pre-download Python Models to speed up cold starts
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+# Pre-download whispered models (Optional but highly recommended)
+RUN python -c "from faster_whisper import WhisperModel; WhisperModel('base', device='cpu', compute_type='int8')"
+
+# 3. Install Node Dependencies
+COPY --chown=appuser:appuser local-processor/package*.json ./local-processor/
+WORKDIR /app/local-processor
+RUN npm install --production
+
+# 4. Copy Application Code
+WORKDIR /app
+COPY --chown=appuser:appuser . .
+
+# 5. Runtime Config
+ENV NODE_ENV=production
+# Hugging Face Spaces strictly routes traffic to port 7860
+ENV PORT=7860  
+EXPOSE 7860
+
+# Start Server
+WORKDIR /app/local-processor
+CMD ["node", "server.js"]

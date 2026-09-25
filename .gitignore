@@ -56,3 +56,5 @@ venv/
 backend/local-processor/venv/
 backend/local-processor/tmp/
 supabase-organized/supabase/.temp/
+.vercel
+.env*.local

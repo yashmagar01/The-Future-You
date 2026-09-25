@@ -1,16 +1,17 @@
+import { lazy, Suspense } from "react";
 import Layout from "@/components/Layout";
 import Hero from "@/components/home/Hero";
 import VideoEmbed from "@/components/VideoEmbed";
 import ProblemSolutionOutcome from "@/components/home/ProblemSolutionOutcome";
 import HowItWorks from "@/components/home/HowItWorks";
-import TechCards from "@/components/home/TechCards";
-import TechStackSummary from "@/components/TechStackSummary";
-import MVPFeatureGrid from "@/components/MVPFeatureGrid";
-import ProductRoadmap from "@/components/home/ProductRoadmap";
-import Roadmap from "@/components/home/Roadmap";
-import TestimonialGrid from "@/components/home/TestimonialGrid";
-import FooterCTA from "@/components/home/FooterCTA";
-import Footer from "@/components/home/Footer";
+
+// ponytail: below-fold only. Hero/video/first cards stay eager. Fallback null = no layout shift.
+const TechCards = lazy(() => import("@/components/home/TechCards"));
+const TechStackSummary = lazy(() => import("@/components/TechStackSummary"));
+const MVPFeatureGrid = lazy(() => import("@/components/MVPFeatureGrid"));
+const ProductRoadmap = lazy(() => import("@/components/home/ProductRoadmap"));
+const TestimonialGrid = lazy(() => import("@/components/home/TestimonialGrid"));
+const FooterCTA = lazy(() => import("@/components/home/FooterCTA"));
 
 const Home = () => {
   return (
@@ -43,6 +44,7 @@ const Home = () => {
       {/* 4. How It Works (3-step flow) */}
       <HowItWorks />
 
+      <Suspense fallback={null}>
       {/* 5. Tech & Implementation */}
       <TechCards />
 
@@ -60,6 +62,7 @@ const Home = () => {
 
       {/* 9. Footer CTA */}
       <FooterCTA />
+      </Suspense>
       </main>
     </Layout>
   );

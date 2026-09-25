@@ -72,30 +72,29 @@ const SentimentGraph: React.FC<SentimentGraphProps> = ({ data, dominantEmotion =
     .slice(0, 4);
 
   return (
-    <div className="bg-[#faf7ff] rounded-2xl border border-[rgba(139,92,246,0.12)] shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 relative overflow-hidden">
-      {/* Top Accent Line */}
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-[#8b5cf6]"></div>
-
-      <div className="flex justify-between items-start mb-4">
+    <div className="p-6 lg:p-8 h-full flex flex-col font-sans tracking-tight">
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-teal-500" />
+          <h3 className="text-[22px] font-bold text-gray-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#F4F4F5] flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-gray-700" />
+            </div>
             Emotional Tone
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Multi-emotion analysis (11 categories)</p>
+          <p className="text-[15px] font-medium text-gray-500 mt-2">Multi-emotion analysis (11 categories)</p>
         </div>
         <div className="text-right">
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${dominantConfig.bgColor} ${dominantConfig.color} border text-sm font-bold capitalize`}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#EAF8F2] text-[#16C784] font-bold capitalize">
             {dominantConfig.icon}
             {dominantEmotion}
           </div>
-          <p className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wide">Dominant Tone</p>
+          <p className="text-[12px] text-gray-400 font-bold mt-2 uppercase tracking-widest">Dominant Tone</p>
         </div>
       </div>
 
       {/* Emotion Breakdown Pills */}
       {topEmotions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-8">
           {topEmotions.map((emotion, idx) => {
             const config = emotionConfig[emotion.label.toLowerCase()] || {
               color: 'text-gray-600',
@@ -105,45 +104,45 @@ const SentimentGraph: React.FC<SentimentGraphProps> = ({ data, dominantEmotion =
             return (
               <div
                 key={idx}
-                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full ${config.bgColor} ${config.color} text-xs font-medium border capitalize`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${config.bgColor} ${config.color} text-[13px] font-bold border capitalize`}
               >
                 {config.icon}
                 {emotion.label}
-                <span className="text-[10px] opacity-70">({emotion.confidence}%)</span>
+                <span className="text-[11px] opacity-70">({emotion.confidence}%)</span>
               </div>
             );
           })}
         </div>
       )}
 
-      <div className="h-[200px] w-full">
+      <div className="flex-1 w-full min-h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorSentiment" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.2}/>
-                <stop offset="95%" stopColor="#14b8a6" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#16C784" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="#16C784" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8F0EC" />
             <XAxis 
               dataKey="time" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 12, fill: '#9ca3af', fontWeight: 500 }} 
+              tick={{ fontSize: 13, fill: '#9ca3af', fontWeight: 600 }} 
               interval="preserveStartEnd"
-              dy={10}
+              dy={15}
             />
             <YAxis 
               hide 
               domain={[0, 100]}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#14b8a6', strokeWidth: 2, strokeDasharray: '4 4' }} />
-            <ReferenceLine y={50} stroke="#e5e7eb" strokeDasharray="3 3" label={{ value: 'Neutral', position: 'insideLeft', fill: '#9ca3af', fontSize: 10 }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#16C784', strokeWidth: 2, strokeDasharray: '4 4' }} />
+            <ReferenceLine y={50} stroke="#E8F0EC" strokeDasharray="3 3" />
             <Area 
               type="monotone" 
               dataKey="score" 
-              stroke="#14b8a6" 
+              stroke="#16C784" 
               strokeWidth={3}
               fillOpacity={1} 
               fill="url(#colorSentiment)" 

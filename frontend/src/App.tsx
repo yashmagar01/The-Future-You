@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,25 +9,28 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Analytics } from "@vercel/analytics/react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "./pages/Home";
-import Record from "./pages/Record";
-import Gallery from "./pages/Gallery";
-import Dashboard from "./pages/Dashboard";
-import Companion from "./pages/Companion";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Onboarding from "./pages/Onboarding";
-import Waitlist from "./pages/Waitlist";
-import WaitlistConfirm from "./pages/WaitlistConfirm";
-import WaitlistAdmin from "./pages/WaitlistAdmin";
-import AdminPanel from "./pages/AdminPanel";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Analysis from "./pages/Analysis";
+
+// ponytail: route-level splitting only, Home stays eager for FCP. Fallback renders
+// nothing to avoid layout shift; final visuals unchanged.
+const Record = lazy(() => import("./pages/Record"));
+const Gallery = lazy(() => import("./pages/Gallery"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Companion = lazy(() => import("./pages/Companion"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Waitlist = lazy(() => import("./pages/Waitlist"));
+const WaitlistConfirm = lazy(() => import("./pages/WaitlistConfirm"));
+const WaitlistAdmin = lazy(() => import("./pages/WaitlistAdmin"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Settings = lazy(() => import("./pages/Settings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Analysis = lazy(() => import("./pages/Analysis"));
 
 const queryClient = new QueryClient();
 
@@ -38,6 +42,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -127,6 +132,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
           <Analytics />
         </TooltipProvider>

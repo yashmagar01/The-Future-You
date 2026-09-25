@@ -83,6 +83,8 @@ export interface AnalysisData {
 interface AnalysisResultsProps {
   analysis?: AnalysisData;
   onSeek?: (time: number) => void;
+  videoNode?: React.ReactNode;
+  transcriptNode?: React.ReactNode;
 }
 
 // --- Default Mock Data ---
@@ -181,7 +183,7 @@ const getCoachAdvice = (metrics: AnalysisMetrics, advanced?: AdvancedMetrics): s
   return advice.slice(0, 4); // Return top 4 tips
 };
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS, onSeek }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_ANALYSIS, onSeek, videoNode, transcriptNode }) => {
   const { overall_score, metrics, advanced_metrics, transcript_summary } = analysis;
   const [displayScore, setDisplayScore] = useState(0);
   const confettiTriggered = useRef(false);
@@ -232,50 +234,53 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
   }, [overall_score]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-7 animate-in fade-in duration-500 font-sans tracking-tight">
       
-      {/* SECTION 1: OVERALL PERFORMANCE & KEY TAKEAWAYS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Confidence Score */}
-        <div className="lg:col-span-5">
+      {/* SECTION 1: HERO (Video | Confidence | Takeaways) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* Left: Video Player */}
+        <div className="col-span-1 h-full">
+          {videoNode}
+        </div>
+
+        {/* Center: Confidence Score */}
+        <div className="col-span-1">
           <ConfidenceGauge score={overall_score} />
         </div>
 
-        {/* Key Takeaways */}
-        <div className="lg:col-span-7">
-          <div className="bg-[#f7fdf9] rounded-2xl border border-[rgba(16,185,129,0.12)] border-l-4 border-l-[#10b981] shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-8 h-full">
-            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2 text-lg">
-              <Zap className="w-5 h-5 text-[#10b981]" />
-              Key Takeaways
-            </h3>
-            <ul className="space-y-4">
-              {takeaways.map((takeaway, idx) => (
-                <li key={idx} className="flex gap-3 text-base text-gray-700 bg-white/60 p-3 rounded-lg border border-[#10b981]/10">
-                  <span className="text-[#10b981] font-bold">•</span>
-                  {takeaway}
-                </li>
-              ))}
-            </ul>
-          </div>
+        {/* Right: Key Takeaways */}
+        <div className="col-span-1 border border-[#E8F0EC] shadow-sm rounded-[20px] bg-white p-5 lg:p-6 h-full">
+          <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-lg">
+            <div className="w-8 h-8 rounded-full bg-[#EAF8F2] flex items-center justify-center">
+              <Zap className="w-4 h-4 text-[#16C784]" />
+            </div>
+            Key Takeaways
+          </h3>
+          <ul className="space-y-3">
+            {takeaways.map((takeaway, idx) => (
+              <li key={idx} className="flex gap-3 text-[15px] font-medium text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-100 items-start">
+                <span className="text-[#16C784] font-black mt-0.5">•</span>
+                <span className="leading-snug">{takeaway}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      {/* SECTION 1.5: ADVANCED INSIGHTS (Phase 2) */}
+      {/* SECTION 1.5: ADVANCED INSIGHTS (Phase 2 & 3 extensions, optional for now, we'll keep them flowing naturally if they exist) */}
       {advanced_metrics && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Logic & Flow */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {advanced_metrics.coherence && (
-            <div className="h-[250px]">
+            <div className="h-[250px] bg-white rounded-[20px] border border-[#E8F0EC] shadow-sm overflow-hidden">
                <CoherenceGraph 
                   timeline={advanced_metrics.coherence.coherence_timeline} 
                   averageScore={advanced_metrics.coherence.flow_score}
                />
             </div>
           )}
-          
-          {/* Authenticity Check */}
           {advanced_metrics.fusion && (
-             <div className="h-[250px]">
+             <div className="h-[250px] bg-white rounded-[20px] border border-[#E8F0EC] shadow-sm overflow-hidden">
                 <AuthenticityStatus 
                   incongruenceIndex={advanced_metrics.fusion.incongruence_index}
                   hasWarning={advanced_metrics.fusion.authenticity_warning}
@@ -283,33 +288,23 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
                 />
              </div>
           )}
-
-          {/* Confidence Wave (Phase 3) */}
-          {(advanced_metrics.audio?.pitch_timeline || advanced_metrics.video?.gesture_timeline) && (
-             <div className="h-[250px] lg:col-span-2">
-                <ConfidenceWave 
-                   pitchTimeline={advanced_metrics.audio?.pitch_timeline}
-                   gestureTimeline={advanced_metrics.video?.gesture_timeline}
-                />
-             </div>
-          )}
         </div>
       )}
 
       {/* SECTION 2: CORE METRICS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <MetricCard
-          icon={<Mic className="w-5 h-5" />}
+          icon={<Mic className="w-5 h-5 text-[#7C6BFF]" />}
           title="Clarity"
           score={metrics.clarity.score}
           status={getMetricStatus(metrics.clarity.score)}
           details={[
-            { label: 'WPM', value: metrics.clarity.wpm, unit: 'words/min' },
+            { label: 'WPM', value: metrics.clarity.wpm, unit: 'wpm' },
             { label: 'Fillers', value: metrics.clarity.filler_word_count, good: metrics.clarity.filler_word_count < 5 }
           ]}
         />
         <MetricCard
-          icon={<Activity className="w-5 h-5" />}
+          icon={<Activity className="w-5 h-5 text-blue-500" />}
           title="Pacing"
           score={metrics.pacing?.score || 0}
           status={getMetricStatus(metrics.pacing?.score || 0)}
@@ -318,7 +313,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
           ]}
         />
         <MetricCard
-          icon={<User className="w-5 h-5" />}
+          icon={<User className="w-5 h-5 text-amber-500" />}
           title="Posture"
           score={metrics.posture?.score || 0}
           status={getMetricStatus(metrics.posture?.score || 0)}
@@ -328,57 +323,72 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis = DEFAULT_AN
         />
       </div>
 
-      {/* SECTION 3: SENTIMENT & STRUCTURE */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SentimentGraph 
-          data={mockSentimentData} 
-          dominantEmotion={metrics.sentiment?.score || 'Neutral'}
-          emotions={metrics.sentiment?.emotions || []}
-        />
+      {/* SECTION 3: SENTIMENT & TRANSCRIPT (45/55 split) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-5 flex flex-col h-[500px]">
+          {transcriptNode}
+        </div>
+        <div className="lg:col-span-7 bg-white rounded-[20px] border border-[#E8F0EC] shadow-sm h-[500px]">
+          <SentimentGraph 
+            data={mockSentimentData} 
+            dominantEmotion={metrics.sentiment?.score || 'Neutral'}
+            emotions={metrics.sentiment?.emotions || []}
+          />
+        </div>
+      </div>
+
+      {/* SECTION 4: THOUGHT STRUCTURE */}
+      <div className="w-full bg-white rounded-[20px] border border-[#E8F0EC] shadow-sm">
         <StructureAnalysis score={metrics.structure_score || 0} />
       </div>
 
-      {/* SECTION 4: ACTIONABLE FIXES (New) */}
-      <div className="bg-[#fef2f2] rounded-2xl border border-[rgba(239,68,68,0.15)] shadow-[0_4px_24px_rgba(0,0,0,0.05)] p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="font-bold text-gray-900 flex items-center gap-3 text-xl">
-            <div className="bg-[rgba(239,68,68,0.1)] p-2 rounded-lg">
-              <Zap className="w-6 h-6 text-red-600" />
+      {/* SECTION 5: ACTIONABLE FIXES */}
+      <div className="bg-[#FAFBFA] rounded-[20px] border border-[#E8F0EC] shadow-sm p-6 lg:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-gray-900 flex items-center gap-3 text-[22px]">
+            <div className="bg-[#FEF2F2] p-2 rounded-xl">
+              <Zap className="w-5 h-5 text-[#EF4444]" />
             </div>
             Actionable Fixes
           </h3>
-          <span className="text-sm text-red-700 font-bold bg-white px-4 py-1.5 rounded-full border border-red-100 shadow-sm">
-            {mockActionItems.filter(i => !i.completed).length} Priority Items
+          <span className="text-[13px] text-[#EF4444] font-bold bg-white px-3 py-1.5 rounded-full border border-red-100 shadow-sm transition-all duration-200 uppercase tracking-widest">
+            {mockActionItems.filter(i => !i.completed).length} Priority
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {mockActionItems.map((item) => (
             <div 
               key={item.id} 
-              className="group bg-white hover:bg-[#fff5f5] border border-[rgba(239,68,68,0.1)] hover:border-[rgba(239,68,68,0.3)] shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-5 flex flex-col justify-between"
+              className="group bg-white border border-[#E8F0EC] shadow-sm hover:shadow-md transition-all duration-200 rounded-[20px] p-5 lg:p-6 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between mb-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-red-400 bg-red-50 px-2 py-1 rounded">
+                  <span className={`text-[12px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${
+                    item.completed ? 'text-[#16C784] bg-[#EAF8F2]' : 'text-[#EF4444] bg-[#FEF2F2]'
+                  }`}>
                     Fix #{item.id}
                   </span>
                   {item.completed ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-[#16C784]" />
                   ) : (
-                    <AlertCircle className="w-5 h-5 text-red-500" />
+                    <AlertCircle className="w-5 h-5 text-[#EF4444]" />
                   )}
                 </div>
-                <p className="text-gray-900 font-medium text-base leading-relaxed mb-6">
-                  "{item.text}"
+                <p className="text-[#111827] font-medium text-[15px] leading-relaxed mb-6">
+                  {item.text}
                 </p>
               </div>
               
               <button
                 onClick={() => onSeek && onSeek(item.timestamp)}
-                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 py-3 rounded-lg transition-colors"
+                className={`w-full flex items-center justify-center gap-2 text-[14px] font-semibold py-3 rounded-xl transition-colors ${
+                  item.completed 
+                    ? 'text-[#16C784] bg-[#EAF8F2] hover:bg-[#D4F1E4]' 
+                    : 'text-white bg-[#EF4444] hover:bg-red-600 shadow-sm'
+                }`}
               >
-                <Play className="w-3 h-3 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
                 Jump to {Math.floor(item.timestamp / 60)}:{(item.timestamp % 60).toString().padStart(2, '0')}
               </button>
             </div>

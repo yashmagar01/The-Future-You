@@ -76,174 +76,141 @@ const StructureAnalysis: React.FC<StructureAnalysisProps> = ({
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="bg-[#f5f6ff] rounded-2xl border border-[rgba(99,102,241,0.12)] shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-[#6366f1]"></div>
+    <div className="bg-white rounded-[20px] p-6 lg:p-8 relative overflow-hidden font-sans tracking-tight">
+      <div className="absolute top-0 left-0 w-full h-[3px] bg-[#16C784]"></div>
 
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start mb-10">
         <div>
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Brain className="w-5 h-5 text-[#6366f1]" />
+          <h3 className="text-[22px] font-bold text-gray-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#EAF8F2] flex items-center justify-center">
+              <Brain className="w-5 h-5 text-[#16C784]" />
+            </div>
             Thought Structure
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Coherence & Logic Flow</p>
-        </div>
-        <div className="text-right">
-          <div className="relative inline-flex items-center justify-center">
-            {icon}
-          </div>
+          <p className="text-[15px] font-medium text-gray-500 mt-2">Coherence & Logic Flow</p>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
-        <div className="relative w-48 h-48 flex-shrink-0">
+      <div className="flex flex-col md:flex-row items-center gap-10 mb-8">
+        <div className="relative w-48 h-48 flex-shrink-0 mx-auto md:mx-0">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
             <circle
               cx="80"
               cy="80"
               r={radius}
-              stroke="#e5e7eb"
-              strokeWidth="12"
+              stroke="#FAFBFA"
+              strokeWidth="10"
               fill="transparent"
             />
-            
-            <defs>
-              <linearGradient id={`gradient-${score}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" className={colorClasses.bg.replace('bg-', 'stop-')} />
-                <stop offset="100%" className={colorClasses.bg.replace('bg-', 'stop-')} style={{stopOpacity: 0.7}} />
-              </linearGradient>
-            </defs>
             
             <circle
               cx="80"
               cy="80"
               r={radius}
-              stroke={score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444'}
-              strokeWidth="12"
+              stroke={score >= 80 ? '#16C784' : score >= 60 ? '#F59E0B' : '#EF4444'}
+              strokeWidth="10"
               fill="transparent"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
               strokeLinecap="round"
               className="transition-all duration-2000 ease-out"
-              style={{
-                filter: score >= 80 ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))' : '',
-                transitionDuration: '2s'
-              }}
             />
           </svg>
           
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-5xl font-bold ${colorClasses.text}`}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pb-2">
+            <span className={`text-[46px] font-black tracking-tighter ${colorClasses.text}`}>
               {score}
-            </span>
-            <span className="text-sm text-gray-400 font-semibold uppercase tracking-wider mt-1">
-              / 100
             </span>
           </div>
         </div>
 
         <div className="flex-1 text-center md:text-left">
-          <div className={`inline-flex items-center px-4 py-2 rounded-xl ${colorClasses.bgLight} ${colorClasses.border} border mb-4`}>
-            <span className={`text-2xl font-bold ${colorClasses.text}`}>{zone}</span>
+          <div className={`inline-flex flex-col md:flex-row md:items-center gap-3 mb-5`}>
+            <span className={`text-[24px] font-black ${colorClasses.text}`}>{zone}</span>
+            <span className={`px-3 py-1 text-[13px] font-bold rounded-lg ${colorClasses.bgLight} ${colorClasses.text}`}>
+              {icon} 
+              <span className="ml-2 uppercase tracking-wide">Status Update</span>
+            </span>
           </div>
           
-          <div className={`p-4 ${colorClasses.bgLight} rounded-lg border ${colorClasses.border}`}>
-            <p className="text-sm text-gray-600 italic leading-relaxed">
+          <div className="p-5 bg-[#FAFBFA] rounded-2xl border border-[#E8F0EC]">
+            <p className="text-[16px] text-gray-700 font-medium leading-relaxed">
               "{feedback}"
             </p>
           </div>
-
-          {previousScore && (
-            <div className="mt-4 flex items-center gap-2 text-sm">
-              {change >= 0 ? (
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
-              )}
-              <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {change >= 0 ? '+' : ''}{change} points ({change >= 0 ? '+' : ''}{changePercent}%)
-              </span>
-              <span className="text-gray-400">vs last session</span>
-            </div>
-          )}
         </div>
       </div>
 
-      <div className="border-t border-gray-100 pt-4">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <Brain className="w-4 h-4" />
-            Detailed Analysis
-          </span>
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-
-        {expanded && (
-          <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="bg-[#fafafe] rounded-lg p-4 border border-[rgba(99,102,241,0.05)] border-l-4 border-l-[rgba(139,92,246,0.2)]">
-              <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm uppercase tracking-wide">
-                <Sparkles className="w-4 h-4 text-[#6366f1]" />
-                Detailed Analysis
-              </h4>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Avg Sentence Length</span>
-                  <span className="font-semibold text-gray-900">
-                    {details.sentenceLength || 18} words {details.sentenceLength && details.sentenceLength <= 15 ? '✓' : ''}
-                  </span>
-                </div>
-                
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full bg-gradient-to-r ${colorClasses.gradient} transition-all duration-1000`}
-                    style={{ width: `${Math.min(100, ((details.sentenceLength || 18) / 25) * 100)}%` }}
-                  />
+      <div className="border-t border-[#E8F0EC] pt-8">
+         <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2 text-[18px]">
+           <Sparkles className="w-5 h-5 text-[#6366f1]" />
+           Detailed Analysis
+         </h4>
+         
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Column: Metrics */}
+            <div className="space-y-6">
+              <div className="bg-[#FAFBFA] border border-[#E8F0EC] p-5 rounded-2xl space-y-5">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[15px]">
+                    <span className="text-gray-600 font-medium">Avg Sentence Length</span>
+                    <span className="font-bold text-gray-900">
+                      {details.sentenceLength || 18} words {details.sentenceLength && details.sentenceLength <= 15 ? '✓' : ''}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full bg-gradient-to-r ${colorClasses.gradient} transition-all duration-1000`}
+                      style={{ width: `${Math.min(100, ((details.sentenceLength || 18) / 25) * 100)}%` }}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Transition Words</span>
-                  <span className="font-semibold text-gray-900">
-                    {details.transitions || 8} used {details.transitions && details.transitions >= 15 ? '✓' : ''}
-                  </span>
-                </div>
-                
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full bg-gradient-to-r ${colorClasses.gradient} transition-all duration-1000`}
-                    style={{ width: `${Math.min(100, ((details.transitions || 8) / 20) * 100)}%` }}
-                  />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[15px]">
+                    <span className="text-gray-600 font-medium">Transition Words</span>
+                    <span className="font-bold text-gray-900">
+                      {details.transitions || 8} used {details.transitions && details.transitions >= 15 ? '✓' : ''}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full bg-gradient-to-r ${colorClasses.gradient} transition-all duration-1000`}
+                      style={{ width: `${Math.min(100, ((details.transitions || 8) / 20) * 100)}%` }}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Filler Phrases</span>
-                  <span className="font-semibold text-gray-900">
-                    {details.fillerPhrases || 23} detected {details.fillerPhrases && details.fillerPhrases < 10 ? '✓' : ''}
-                  </span>
-                </div>
-                
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-red-400 to-red-600 transition-all duration-1000"
-                    style={{ width: `${Math.min(100, ((details.fillerPhrases || 23) / 50) * 100)}%` }}
-                  />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[15px]">
+                    <span className="text-gray-600 font-medium">Filler Phrases</span>
+                    <span className="font-bold text-gray-900">
+                      {details.fillerPhrases || 23} detected {details.fillerPhrases && details.fillerPhrases < 10 ? '✓' : ''}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#EF4444] transition-all duration-1000"
+                      style={{ width: `${Math.min(100, ((details.fillerPhrases || 23) / 50) * 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 mt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">💡 Quick Tips to Improve</h4>
+            {/* Right Column: Tips */}
+            <div className="bg-[#EAF8F2] border border-[#2BCB8A]/30 rounded-2xl p-6 h-full">
+              <h4 className="text-[15px] font-bold text-[#16C784] mb-4 uppercase tracking-widest">💡 Quick Tips</h4>
+              <div className="space-y-4">
                 {tips.map((tip, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                    <span className={`mt-0.5 w-1.5 h-1.5 rounded-full ${colorClasses.bg} flex-shrink-0`} />
+                  <div key={idx} className="flex items-start gap-3 text-[15px] font-medium text-gray-800">
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#16C784] flex-shrink-0" />
                     <span>{tip}</span>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+         </div>
       </div>
     </div>
   );

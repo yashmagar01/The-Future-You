@@ -64,20 +64,22 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
   };
 
   return (
-    <div className="bg-[#fafbfc] rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px] overflow-hidden">
-      <div className="p-4 border-b border-gray-100 bg-[#f5f7fa] flex justify-between items-center">
-        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-gray-500" />
+    <div className="bg-white rounded-[20px] border border-[#E8F0EC] shadow-sm flex flex-col h-[500px] overflow-hidden font-sans tracking-tight">
+      <div className="p-5 lg:p-6 border-b border-[#E8F0EC] flex justify-between items-center">
+        <h3 className="text-[22px] font-bold text-gray-900 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#F4F4F5] flex items-center justify-center">
+            <Clock className="w-5 h-5 text-gray-700" />
+          </div>
           Transcript
         </h3>
-        <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 px-2 py-1 rounded-full shadow-sm">
-          Auto-scroll enabled
+        <span className="text-[12px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
+          Auto-scroll
         </span>
       </div>
       
       <div 
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-0 space-y-0 scroll-smooth"
+        className="flex-1 overflow-y-auto p-0 scroll-smooth"
       >
         {transcript.map((segment, idx) => {
           // Determine if this segment is active based on time
@@ -88,21 +90,21 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
             <div 
               key={idx}
               ref={isActive ? activeRef : null}
-              className={`group transition-all duration-300 p-4 border-b border-gray-50 ${
+              className={`group transition-all duration-300 p-5 border-b border-[#E8F0EC]/50 ${
                 isActive 
-                  ? 'bg-white shadow-sm z-10 relative' 
-                  : 'hover:bg-white/50'
+                  ? 'bg-[#EAF8F2]/30 shadow-sm z-10 relative border-l-4 border-l-[#16C784]' 
+                  : 'hover:bg-gray-50 border-l-4 border-l-transparent'
               }`}
             >
-              <div className="flex gap-4 items-start">
+              <div className="flex gap-4 items-start ml-[-4px]">
                 {/* Timestamp Column */}
-                <div className="flex-shrink-0 w-14 pt-1 bg-[#f5f7fa] rounded px-1 py-0.5 text-center border border-gray-100">
+                <div className="flex-shrink-0 w-16 pt-0.5">
                   <button
                     onClick={() => onSeek(segment.time)}
-                    className={`text-xs font-mono transition-colors w-full text-center ${
+                    className={`text-[13px] font-semibold transition-colors px-2 py-1 rounded bg-gray-100 ${
                       isActive 
-                        ? 'text-blue-700 font-bold' 
-                        : 'text-gray-400 group-hover:text-gray-600'
+                        ? 'text-[#16C784] bg-[#16C784]/10' 
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200'
                     }`}
                   >
                     {Math.floor(segment.time / 60)}:{(segment.time % 60).toString().padStart(2, '0')}
@@ -110,7 +112,7 @@ const TranscriptViewer: React.FC<TranscriptViewerProps> = ({ transcript, current
                 </div>
 
                 {/* Text Content */}
-                <p className={`text-base leading-relaxed flex-1 ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
+                <p className={`text-[16px] leading-[1.7] flex-1 font-medium ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
                   {renderTextWithHighlights(segment.text)}
                 </p>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,14 @@ import {
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import AnalysisResults, { AnalysisData, AnalysisMetrics, AdvancedMetrics } from "@/components/AnalysisResults";
 
+// ponytail: stable ref outside render so 10s quote tick doesn't recreate data
+const QUOTES = [
+  { text: "Practice makes progress, not perfection.", author: "Anonymous" },
+  { text: "Your voice matters. Keep practicing!", author: "Future You Team" },
+  { text: "Every recording is a step toward mastery.", author: "Anonymous" },
+  { text: "Confidence is built one session at a time.", author: "Future You Team" }
+];
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile();
@@ -46,36 +54,30 @@ const Dashboard = () => {
   // --- Latest Analysis Logic ---
   const latestRecording = recordings?.[0];
   const latestFeedback = latestRecording?.feedback;
-  
-  const analysisData: AnalysisData | null = latestFeedback ? {
+
+  // ponytail: memo derived objects so cards/charts skip rerender unless own data changes
+  const analysisData: AnalysisData | null = useMemo(() => latestFeedback ? {
     overall_score: latestFeedback.overall_score,
     metrics: latestFeedback.key_insights as unknown as AnalysisMetrics,
     advanced_metrics: latestFeedback.advanced_metrics as unknown as AdvancedMetrics,
     transcript_summary: (latestFeedback.key_insights as any)?.transcript || "No transcript available."
-  } : null;
+  } : null, [latestFeedback]);
 
   // Gamification: Streak calculation (mock for now)
   const currentStreak = Math.min((stats?.thisWeekRecordings || 0), 7);
   const longestStreak = Math.max(currentStreak, 7); // Mock: would come from backend
 
-  // Gamification: Motivational quotes
-  const quotes = [
-    { text: "Practice makes progress, not perfection.", author: "Anonymous" },
-    { text: "Your voice matters. Keep practicing!", author: "Future You Team" },
-    { text: "Every recording is a step toward mastery.", author: "Anonymous" },
-    { text: "Confidence is built one session at a time.", author: "Future You Team" }
-  ];
-  const [currentQuote, setCurrentQuote] = useState(quotes[0]);
+  const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+      setCurrentQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
     }, 10000); // Change every 10 seconds
     return () => clearInterval(interval);
   }, []);
 
   // Gamification: Achievement badges
-  const achievements = [
+  const achievements = useMemo(() => [
     { 
       id: 1, 
       name: "First Steps", 
@@ -108,9 +110,9 @@ const Dashboard = () => {
       unlocked: (stats?.averageScore || 0) >= 70,
       color: "text-blue-500"
     }
-  ];
+  ], [stats?.totalRecordings, stats?.thisWeekRecordings, stats?.averageScore]);
 
-  const statsCards = [
+  const statsCards = useMemo(() => [
     {
       title: "Total Recordings",
       value: stats?.totalRecordings?.toString() || "0",
@@ -143,16 +145,16 @@ const Dashboard = () => {
       icon: Award,
       color: "text-warning"
     }
-  ];
+  ], [stats?.totalRecordings, stats?.averageScore, stats?.totalHours, stats?.thisWeekRecordings]);
 
-  const progressData = [
+  const progressData = useMemo(() => [
     { name: "Communication Skills", value: stats?.averageScore || 0, target: 100 },
     { name: "Weekly Practice", value: Math.min(((stats?.thisWeekRecordings || 0) / 5) * 100, 100), target: 100 },
     { name: "Consistency", value: Math.min(((stats?.totalRecordings || 0) / 30) * 100, 100), target: 100 },
     { name: "Total Progress", value: Math.min((stats?.totalHours || 0), 100), target: 100 }
-  ];
+  ], [stats?.averageScore, stats?.thisWeekRecordings, stats?.totalRecordings, stats?.totalHours]);
 
-  const recentActivity = (recordings || []).slice(0, 4).map(recording => {
+  const recentActivity = useMemo(() => (recordings || []).slice(0, 4).map(recording => {
     const isPending = recording.status === 'processing';
     const isCompleted = recording.status === 'completed';
     
@@ -167,15 +169,15 @@ const Dashboard = () => {
       color: isPending ? "text-accent" : isCompleted ? "text-success" : "text-muted-foreground",
       animated: isPending
     };
-  });
+  }), [recordings]);
 
   // Journey milestones
-  const journeyMilestones = [
+  const journeyMilestones = useMemo(() => [
     { level: "Beginner", minRecordings: 0, icon: "🌱", unlocked: true },
     { level: "Improving", minRecordings: 5, icon: "🚀", unlocked: (stats?.totalRecordings || 0) >= 5 },
     { level: "Confident", minRecordings: 15, icon: "💪", unlocked: (stats?.totalRecordings || 0) >= 15 },
     { level: "Expert", minRecordings: 30, icon: "🏆", unlocked: (stats?.totalRecordings || 0) >= 30 }
-  ];
+  ], [stats?.totalRecordings]);
 
   const currentMilestone = journeyMilestones.filter(m => m.unlocked).pop() || journeyMilestones[0];
 

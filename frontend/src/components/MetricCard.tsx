@@ -94,36 +94,36 @@ const MetricCard: React.FC<MetricCardProps> = ({
     switch (status) {
       case 'excellent':
         return {
-          bg: 'bg-[#f0fdf4]',
-          border: 'border-[rgba(16,185,129,0.12)]',
-          accent: 'bg-[#10b981]',
-          text: 'text-green-700'
+          bg: 'bg-white',
+          border: 'border-[#E8F0EC]',
+          accent: 'bg-[#16C784]',
+          text: 'text-[#16C784]'
         };
       case 'good':
         return {
-          bg: 'bg-[#f0fdf4]',
-          border: 'border-[rgba(16,185,129,0.12)]',
-          accent: 'bg-[#10b981]',
-          text: 'text-green-700'
+          bg: 'bg-white',
+          border: 'border-[#E8F0EC]',
+          accent: 'bg-[#16C784]',
+          text: 'text-[#16C784]'
         };
       case 'average':
         return {
-          bg: 'bg-[#fffbeb]',
-          border: 'border-[rgba(245,158,11,0.12)]',
-          accent: 'bg-[#f59e0b]',
-          text: 'text-amber-700'
+          bg: 'bg-white',
+          border: 'border-[#E8F0EC]',
+          accent: 'bg-amber-500',
+          text: 'text-amber-600'
         };
       case 'needs-work':
         return {
-          bg: 'bg-[#fef8f7]',
-          border: 'border-[rgba(239,68,68,0.12)]',
-          accent: 'bg-[#ef4444]',
-          text: 'text-red-700'
+          bg: 'bg-white',
+          border: 'border-[#E8F0EC]',
+          accent: 'bg-[#EF4444]',
+          text: 'text-[#EF4444]'
         };
       default:
         return {
           bg: 'bg-white',
-          border: 'border-gray-100',
+          border: 'border-[#E8F0EC]',
           accent: 'bg-gray-400',
           text: 'text-gray-700'
         };
@@ -134,56 +134,53 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <Tooltip.Provider>
-      <div className={`rounded-2xl border ${styles.border} shadow-[0_2px_12px_rgba(0,0,0,0.04)] ${styles.bg} p-6 relative overflow-hidden transition-all duration-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]`}>
+      <div className={`rounded-[20px] border ${styles.border} shadow-sm ${styles.bg} p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md h-full flex flex-col justify-between`}>
         <div className={`absolute top-0 left-0 w-full h-[2px] ${styles.accent}`}></div>
 
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg bg-white shadow-sm border border-gray-100 ${styles.text}`}>
+            <div className={`w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50/50 border border-gray-100 ${styles.text}`}>
               {icon}
             </div>
             <div>
-              <h3 className="font-bold text-gray-800 text-lg">{title}</h3>
-              <span className={`text-xs font-bold uppercase tracking-wider ${styles.text} opacity-80`}>
+              <h3 className="font-bold text-gray-900 text-lg leading-tight">{title}</h3>
+              <span className={`text-[11px] font-bold uppercase tracking-widest ${styles.text}`}>
                 {status.replace('-', ' ')}
               </span>
             </div>
           </div>
           <div className="text-right">
-            <span className={`text-3xl font-black ${getScoreColor(score)}`}>
+            <span className={`text-[32px] leading-none font-black ${getScoreColor(score)}`}>
               {score}
             </span>
-            <span className="text-xs text-gray-400 font-medium block uppercase tracking-wide">Score</span>
           </div>
         </div>
 
-        <div className="w-full bg-gray-100 rounded-full h-3 mb-6 overflow-hidden">
+        <div className="w-full bg-[#FAFBFA] rounded-full h-[6px] mb-6 overflow-hidden border border-[#E8F0EC]">
           <div
-            className={`h-full bg-gradient-to-r ${colors.gradient} rounded-full transition-all duration-1500 ease-out-cubic relative`}
+            className={`h-full bg-gradient-to-r ${colors.gradient} rounded-full transition-all duration-1500 ease-out`}
             style={{ width: `${percentage}%` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-          </div>
+          />
         </div>
 
-        <div className="mt-auto space-y-3">
+        <div className="mt-auto space-y-2">
           {details.map((detail, idx) => (
             <Tooltip.Root key={idx} delayDuration={300}>
               <Tooltip.Trigger asChild>
-                <div className="flex justify-between items-center text-sm group/detail hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                <div className="flex justify-between items-center text-sm group/detail p-2.5 rounded-xl border border-transparent hover:border-gray-100 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-600">{detail.label}</span>
+                    <span className="text-gray-600 font-medium text-[15px]">{detail.label}</span>
                     {detail.tooltip && (
-                      <Info className="w-3 h-3 text-gray-400 opacity-0 group-hover/detail:opacity-100 transition-opacity" />
+                      <Info className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover/detail:opacity-100 transition-opacity" />
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-gray-900 text-[15px]">
                       {detail.value}
-                      {detail.unit && <span className="text-gray-500 ml-1 font-normal">{detail.unit}</span>}
+                      {detail.unit && <span className="text-gray-500 ml-1 font-normal text-[13px]">{detail.unit}</span>}
                     </span>
                     {detail.good && (
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-[#16C784]" strokeWidth={3} />
                     )}
                   </div>
                 </div>

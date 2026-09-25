@@ -2,7 +2,10 @@
 
 **Version**: v2.0 Design  
 **Status**: 📋 Planned — not yet started (target Q4 2026)  
-**Doc updated**: September 2026
+**Doc updated**: September 2026  
+**Verified**: September 2026 against repo — only §1 (Level 1) exists in code.
+`memories_vectors`, `match_memories`, and `memory_engine.js` do not exist yet;
+everything from §2 onward is design, not documentation of shipped code.
 
 ---
 
@@ -13,15 +16,16 @@
 ```mermaid
 graph LR
     A[User chats\nor records video] --> B[reflections_memories\ntable in Supabase]
-    B --> C[AI Companion reads\nlast 5 entries by date]
-    C --> D[Gemini gets\n5 random recent notes]
+    B --> C[AI Companion reads\n5 newest entries by date]
+    C --> D[Gemini gets\n5 newest notes\n(no relevance ranking)]
 ```
 
 **The honest problem:**
 - Memories are stored as plain text rows
 - AI reads the 5 newest entries **regardless of relevance**
 - If you ask "what was going wrong with my confidence last month?", the AI searches by *date*, not by *meaning*
-- No cross-session learning — each chat is mostly stateless
+- No semantic recall — chat history does persist (`companion_messages`, keyed by `session_id`), and each chat also receives goals/anchors/habits plus the latest `feedback` scores, but memories are never ranked by relevance to the question
+- No auto-ingestion — video analyses, chat messages, and habit logs are never written to memory automatically; only manual saves (memory-bank UI, companion "save" button, `POST /api/memories`) create rows
 - No auto-summarization — your reflections pile up but are never synthesized
 
 ---
@@ -42,7 +46,14 @@ Supermemory (supermemoryai/supermemory) is an open-source memory layer for AI ap
 
 ### 2.2 Our Self-Owned Version
 
-We build the **same behaviour** without depending on any external memory API:
+We build the **same behaviour** without depending on any external memory API.
+
+> Model note (verified): the same *model family* is already in the repo, but no
+> memory embedder is wired up. `all-MiniLM-L6-v2` runs in Python for coherence
+> scoring only (`backend/ai_engine/text_analysis.py` via `sentence-transformers`);
+> Node has `@xenova/transformers` installed but only the emotion model is wired
+> (`backend/local-processor/download-model.js`). The memory build needs a new
+> embedding path (Node Xenova MiniLM pipeline or a call into the Python side).
 
 ```mermaid
 graph TB
@@ -91,10 +102,11 @@ Run in Supabase SQL Editor:
 -- Enable vector extension
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Main memory table
+-- Main memory table (user_id target matches the existing
+-- reflections_memories migration: auth.users(id))
 CREATE TABLE memories_vectors (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   source_type  TEXT NOT NULL CHECK (source_type IN ('video', 'chat', 'habit', 'note')),
   source_id    UUID,                    -- FK to recording_id or message_id
   content      TEXT NOT NULL,           -- The text chunk
@@ -113,6 +125,16 @@ CREATE INDEX memories_ivfflat_idx
 
 -- User + date filtering index
 CREATE INDEX memories_user_idx ON memories_vectors (user_id, created_at DESC);
+
+-- RLS (mirror reflections_memories: owner-only SELECT/INSERT/DELETE;
+-- writes from the worker use the service role, which bypasses RLS)
+ALTER TABLE memories_vectors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view their own semantic memories"
+  ON memories_vectors FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own semantic memories"
+  ON memories_vectors FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own semantic memories"
+  ON memories_vectors FOR DELETE USING (auth.uid() = user_id);
 ```
 
 ### Step 2 — Semantic Search Function
@@ -133,7 +155,7 @@ RETURNS TABLE (
   metadata   JSONB,
   created_at TIMESTAMPTZ
 )
-LANGUAGE SQL STABLE AS $$
+LANGUAGE SQL STABLE SECURITY DEFINER AS $$
   SELECT
     id, content, summary,
     1 - (embedding <=> query_embedding) AS similarity,
@@ -173,6 +195,11 @@ async function embedText(text) {
 
 /**
  * Store a memory from a video analysis session.
+ * Field map (must match backend/local-processor/server.js feedbackData):
+ * top-level overall_score / clarity_score / pace_score / tone_score /
+ * confidence_score / energy_score / filler_words_count / strengths /
+ * improvements; emotion label at key_insights.sentiment.score;
+ * structure score at key_insights.sentiment.structure_score.
  */
 async function storeVideoMemory(supabase, userId, recordingId, feedbackData) {
   const content = [
@@ -256,17 +283,19 @@ module.exports = { storeVideoMemory, storeChatMemory, findRelevantMemories };
 
 ### Step 4 — Hook Into Processing Pipeline
 
-In `server.js`, after the Supabase `INSERT` for feedback:
+In `backend/local-processor/server.js`, right after the feedback `INSERT`
+in the analysis worker callback (currently `server.js:381`):
 
 ```javascript
-// After: await supabase.from('feedback').insert([feedbackData])
+// After: const { error: insertError } = await supabase.from('feedback').insert([feedbackData]);
 // ADD:
 const { storeVideoMemory } = require('./memory_engine');
 await storeVideoMemory(supabase, userId, recording_id, feedbackData);
 console.log('[Memory] Video session embedded & stored.');
 ```
 
-In the `/api/chat` endpoint, replace the memories fetch:
+In `POST /api/chat` (`server.js:608`, context assembled at `:617` via
+`assembleUserContext`, memories lookup at `:542-547`), replace the fetch:
 
 ```javascript
 // BEFORE (current):
@@ -299,23 +328,24 @@ graph TB
     style L4 fill:#2E86AB,color:white
 ```
 
-### Level 2 (v2.0) — What We're Building Now
+### Level 2 (v2.0) — What We're Building Next (none of this exists yet)
 
-- ✅ pgvector table + IVFFlat index
-- ✅ Auto-embed every video analysis session
-- ✅ Semantic search at chat time (replace last-5 lookup)
-- ✅ Chat messages > 80 chars auto-embedded
+- 🔲 pgvector table + IVFFlat index
+- 🔲 Auto-embed every video analysis session
+- 🔲 Semantic search at chat time (replace last-5 lookup)
+- 🔲 Chat messages > 80 chars auto-embedded
 
 ### Level 3 (v2.1) — Memory Consolidation
 
 ```javascript
 // Weekly cron: merge memories that are > 90% similar
 async function consolidateMemories(supabase, userId) {
+  const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
   const { data: memories } = await supabase
     .from('memories_vectors')
     .select('id, content, embedding')
     .eq('user_id', userId)
-    .lt('created_at', '30 days ago');
+    .lt('created_at', cutoff);
 
   // Find pairs with cosine sim > 0.90
   // Merge content → re-embed → delete originals
@@ -409,4 +439,5 @@ const q3 = "When do I feel most anxious?";
 
 ---
 
-*This document is the authoritative design spec for the v2.0 memory system build.*
+*This document is the authoritative design spec for the v2.0 memory system build.
+Verified September 2026: Level 1 only exists in code; Levels 2–4 are unbuilt.*

@@ -1,7 +1,11 @@
-# 🧠 Supermemory Context Update: "The Future You" Project
+# 🧠 Memory Status Update: "The Future You" Project
 
-**Date:** January 26, 2026 **Project:** yash-reflections-mvp **Codename:**
+**Date:** January 26, 2026 (memory §6 re-verified September 2026) **Project:** yash-reflections-mvp **Codename:**
 Beyond Words (v2.0 Transition)
+
+> Note: "Supermemory" below refers to the *architecture pattern* (embeddings +
+> semantic search), not a vendor integration. Decision: self-owned pgvector,
+> no external memory API. Design spec: `docs/MEMORY_SYSTEM.md`.
 
 ## 1. Project Identity
 
@@ -72,14 +76,16 @@ The project has successfully transitioned from **v1.5.0** (Heuristic Scoring) to
 - **Workspace**: `yash-reflections-mvp`
 - **User Goal**: Building a world-class self-owned memory system using pgvector + all-MiniLM-L6-v2. No external API dependency.
 
-## 6. Memory System — Current Status (Updated Sep 2026)
+## 6. Memory System — Current Status (re-verified Sep 2026)
 
-| Layer | Status |
-|-------|--------|
-| Basic `reflections_memories` table | ✅ Exists |
-| pgvector semantic memory | 🚧 Designed — see `docs/MEMORY_SYSTEM.md` |
-| Auto-embed on video analysis | 🚧 Planned for v2.0 |
-| Semantic search at chat time | 🚧 Planned for v2.0 |
+| Layer | Status | Code pointer |
+|-------|--------|--------------|
+| Basic `reflections_memories` table (manual saves only) | ✅ Exists | `supabase-organized/supabase/migrations/20260405000001_add_companion_and_habits.sql:63` |
+| Chat context = 5 newest memories by date (+ latest `feedback` scores, goals/anchors/habits) | ✅ Exists | `backend/local-processor/server.js:542-547`, `frontend/src/lib/companion/contextAssembler.ts:82-87` |
+| `POST /api/chat` (Gemini 2.0 Flash + `companion_messages` history) | ✅ Exists | `backend/local-processor/server.js:608` |
+| pgvector semantic memory (`memories_vectors`, `match_memories`, `memory_engine.js`) | 🚧 Designed, not in code | `docs/MEMORY_SYSTEM.md` |
+| Auto-embed on video analysis | 🔲 Planned for v2.0 | Hook point: `server.js:381` feedback INSERT |
+| Semantic search at chat time | 🔲 Planned for v2.0 | Hook point: `server.js:617` context assembly |
 
 **Full design spec**: [`docs/MEMORY_SYSTEM.md`](./MEMORY_SYSTEM.md)
 

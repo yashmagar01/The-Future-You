@@ -898,16 +898,21 @@ CREATE POLICY "own feedback" ON feedback
 Right now, "memory" is a **basic database table** (`reflections_memories`):
 
 ```
-reflections_memories table:
+reflections_memories table (migration 20260405000001):
 ├── id, user_id, title, content, category, tags, created_at
-├── Stored as plain text
-├── No semantic search
+├── Stored as plain text (no embedding / summary / source columns)
+├── No semantic search (no pgvector extension, no match_memories RPC)
+├── No auto-ingestion (video, chat, habit data never written automatically)
 ├── No auto-summarization
-├── No cross-session learning
-└── AI Companion reads the last 5 entries by date
+└── Chat context = 5 newest entries by date (server assembleUserContext
+    + client contextAssembler); memory-bank UI lists all entries, newest first
 ```
 
-**Problem**: This is just a note-taking app, not real memory. The AI companion has no way to *find relevant context* — it just prepends the 5 newest entries to every chat prompt, regardless of relevance.
+**Problem**: This is just a note-taking app, not real memory. The AI companion has no way to *find relevant context* — it just prepends the 5 newest entries to every chat prompt, regardless of relevance. (Chat history itself does persist in `companion_messages` per `session_id`; what's missing is relevance-ranked recall.)
+
+> Verified September 2026: `memories_vectors`, `match_memories`, and
+> `memory_engine.js` exist only in docs — not in code. Canonical build spec:
+> `docs/MEMORY_SYSTEM.md`.
 
 ### 11.2 What World-Class Memory Looks Like (Planned — Supermemory Architecture)
 
@@ -966,9 +971,11 @@ graph TB
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 
+-- (user_id target matches migration 20260405000001: auth.users(id);
+-- full DDL with RLS: docs/MEMORY_SYSTEM.md Step 1)
 CREATE TABLE memories_vectors (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   source_type TEXT NOT NULL,    -- 'video', 'chat', 'habit', 'note'
   source_id   UUID,             -- recording_id or message_id
   content     TEXT NOT NULL,    -- the actual text chunk
@@ -1038,15 +1045,17 @@ async function findRelevantMemories(userId, userMessage) {
 ```
 
 ```sql
--- Supabase function for semantic search:
+-- Supabase function for semantic search
+-- (canonical signature: docs/MEMORY_SYSTEM.md Step 2 — includes summary,
+-- source_type, created_at and SECURITY DEFINER for RLS):
 CREATE OR REPLACE FUNCTION match_memories(
   query_embedding VECTOR(384),
   match_user_id UUID,
-  match_threshold FLOAT DEFAULT 0.7,
+  match_threshold FLOAT DEFAULT 0.70,
   match_count INT DEFAULT 8
 )
 RETURNS TABLE (id UUID, content TEXT, similarity FLOAT, metadata JSONB)
-LANGUAGE SQL AS $$
+LANGUAGE SQL STABLE SECURITY DEFINER AS $$
   SELECT id, content,
     1 - (embedding <=> query_embedding) AS similarity,
     metadata
@@ -1069,7 +1078,7 @@ $$;
 | Privacy (data stays yours)| ✅                   | ❌ (3rd party)  | ✅                    |
 | Cost                     | Free                  | Paid API        | Free (pgvector)       |
 | Auto-consolidation       | ❌                    | ✅              | Build in v2.1         |
-| Sources: video+chat+habit| Chat only via table   | Any API input   | All 4 sources         |
+| Sources ingested today   | Manual notes only     | Any API input   | All 4 sources (planned)|
 
 ### 11.5 Memory System Roadmap
 
@@ -1317,7 +1326,7 @@ The platform does depend on cloud services — here is the real pricing at each 
 | --------- | ----------- | --------- |
 | **Beta Users** | Scores + metadata + opt-in session data | Used to improve models; retained until withdrawn |
 | **Normal Users** | Scores + anonymized metadata only | Raw video deleted on analysis complete; all personal data deleted within **7 days max** from server |
-| **AI Companion chat** | Session memory summaries | Deleted on request or account deletion |
+| **AI Companion chat** | Full chat messages (`companion_messages`) + saved reflection notes (`reflections_memories`) | Deleted on request or account deletion |
 
 > ⚠️ **Note on emotion/confidence metrics**: These are composite scores derived from acoustic, kinematic, and NLP signals — not standardized clinical measurements. Scores are most meaningful as personal trend data across sessions, not as absolute values.
 
@@ -1340,7 +1349,7 @@ gantt
     AI Companion (Gemini)       :done, 2026-03, 2026-06
     Habit tracking system       :done, 2026-06, 2026-09
     section v2.0 🚧
-    pgvector memory system      :active, 2026-09, 2026-11
+    pgvector memory system      :2026-09, 2026-11
     Weekly/monthly reports      :2026-10, 2026-12
     Mobile PWA optimization     :2026-11, 2027-01
     section v2.1 📋

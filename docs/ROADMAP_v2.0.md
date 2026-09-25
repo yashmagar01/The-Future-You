@@ -11,7 +11,8 @@
 | Phase 2 AI engine (Parselmouth + kinematic) | ✅ Done | v1.7 |
 | AI Companion (Gemini 2.0 Flash + streaming) | ✅ Done | v1.7 |
 | Habit tracking system (streaks + logs)       | ✅ Done | v1.7 |
-| Reflection memories (basic table)            | ✅ Done | v1.7 |
+| Reflection memories (basic table, manual saves + last-5 chat context) | ✅ Done | v1.7 |
+| pgvector semantic memory (`memories_vectors` + `match_memories` + auto-embed) | 🔲 Not started — spec: `docs/MEMORY_SYSTEM.md` | v2.0 |
 | Authenticity / incongruence detection        | ✅ Done | v1.7 |
 | Semantic coherence (all-MiniLM-L6-v2)        | ✅ Done | v1.7 |
 

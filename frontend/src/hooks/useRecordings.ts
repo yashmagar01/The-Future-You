@@ -143,7 +143,10 @@ export const useCreateRecording = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase recordings insert error:', error);
+        throw new Error(error.message || `DB error ${error.code}: ${error.details || 'RLS or schema violation'}`);
+      }
       return data as Recording;
     },
     onSuccess: () => {

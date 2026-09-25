@@ -212,6 +212,9 @@ const Record = () => {
       console.log('Upload successful, creating database record...');
       setStatusMessage("Finalizing upload...");
 
+      // Ensure the Supabase JS client has a fresh JWT before the DB insert
+      await supabase.auth.getSession();
+
       // 2. Use Hook to Insert Metadata
       const recordingData = await createRecording({
         video_url: fileName,
@@ -229,7 +232,9 @@ const Record = () => {
 
     } catch (error) {
       console.error('Upload failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.message || (error as any)?.error_description || JSON.stringify(error) || 'Unknown error occurred';
       toast({
         title: "Upload Failed",
         description: errorMessage,
@@ -302,6 +307,9 @@ const Record = () => {
       console.log('Upload successful, creating database record...');
       setStatusMessage("Finalizing upload...");
 
+      // Ensure the Supabase JS client has a fresh JWT before the DB insert
+      await supabase.auth.getSession();
+
       // 2. Use Hook to Insert Metadata
       const recordingData = await createRecording({
         video_url: fileName,
@@ -319,7 +327,9 @@ const Record = () => {
 
     } catch (error) {
       console.error('Upload error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.message || (error as any)?.error_description || JSON.stringify(error) || 'Unknown error occurred';
       toast({
         title: "Upload Failed",
         description: errorMessage,

@@ -2,7 +2,7 @@
 
 ## AI-Powered Communication & Self-Growth Platform
 
-**Project Classification**: Zero-Cost Local AI Communication Coaching System  
+**Project Classification**: Minimal-Cost Local AI Communication Coaching System  
 **Version**: v1.7.0 (Computational Paralinguistics + AI Companion)  
 **Last Updated**: September 2026  
 **Author**: Yash Magar
@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-**The Future You** is a daily video-reflection and communication coaching platform that helps users build confidence, improve speaking skills, and understand their emotional presence — all using **fully offline, zero-cost AI models**.
+**The Future You** is a daily video-reflection and communication coaching platform that helps users build confidence, improve speaking skills, and understand their emotional presence — all using **fully offline, minimal-cost AI models**.
 
 ### Project Health Scorecard
 
@@ -22,6 +22,7 @@
 │  Overall Technical Health:           █████████░░░  82/100          │
 │  Code Quality:                       ████████░░░░  78/100          │
 │  Security Posture:                   ██████░░░░░░  65/100          │
+│  ↳ (RLS + OAuth ✅; ngrok unauth, no rate-limit, no CSRF docs ⚠️) │
 │  Performance:                        ████████░░░░  75/100          │
 │  Frontend Design:                    █████████░░░  85/100          │
 │  Documentation:                      ██████████░░  92/100          │
@@ -42,7 +43,7 @@
 | **Memory System**      | ⚠️ Basic MVP        | Simple table storage — world-class system planned  |
 
 > [!NOTE]
-> **Zero-Cost AI**: All video analysis runs locally using open-source models — **₹0/month AI costs**.
+> **Minimal-Cost AI**: All video analysis runs locally using open-source models. Cloud services (Supabase, Vercel, Gemini API) use free tiers at MVP scale — see [Cost Analysis](#15-cost-analysis) for full pricing breakdown.
 
 ---
 
@@ -243,7 +244,7 @@ graph LR
         A[User Browser]
     end
 
-    subgraph "Vercel CDN — Free Tier"
+    subgraph "Vercel CDN — Hobby/Free Tier"
         B[React SPA\nStatic Assets\nEdge Delivery]
     end
 
@@ -294,9 +295,9 @@ graph LR
 | **AI Vision**     | MediaPipe                 | Latest    | Pose + 33 body landmarks       |
 | **AI NLP**        | Transformers.js (@xenova) | Latest    | BERT coherence + emotion ONNX  |
 | **AI Emotion**    | MicahB emotion classifier | ONNX      | 11-emotion text classification |
-| **AI Companion**  | Gemini 2.0 Flash          | Latest    | Contextual coaching chat       |
+| **AI Companion**  | Gemini 2.0 Flash          | Latest    | Contextual coaching chat (cloud API, free tier)  |
 | **Text Embed**    | all-MiniLM-L6-v2          | 22M param | Semantic coherence             |
-| **Script Gen**    | Ollama (llama3.2)         | Local     | Teleprompter script writer     |
+| **Script Gen**    | Ollama (llama3.2)         | Local     | Teleprompter script writer *(planned Q4 2026)*   |
 | **Database**      | Supabase (PostgreSQL 15)  | Latest    | All data persistence           |
 | **Auth**          | Supabase Auth             | 2.81.1    | Email + Google OAuth           |
 | **Storage**       | Supabase Storage          | —         | Video + thumbnail files        |
@@ -890,7 +891,7 @@ graph TB
 
 ### 11.3 How to Build It Without Relying on Supermemory
 
-**Stack: 100% self-owned, free, no 3rd party memory service**
+**Stack: 100% self-owned, minimal-cost, no 3rd party memory service**
 
 **Step 1 — Enable pgvector in Supabase** (1 SQL command):
 
@@ -1153,7 +1154,7 @@ graph LR
 
 | Scale Level    | Setup                      | User Capacity | Cost      |
 | -------------- | -------------------------- | ------------- | --------- |
-| **Current MVP**| 1 local Node.js worker     | 5–15 users    | ₹0        |
+| **Current MVP**| 1 local Node.js worker     | 5–15 users    | Minimal  |
 | **Small Scale**| 3–4 Render.com instances   | 50–100 users  | ~₹2,000/mo|
 | **Medium**     | BullMQ + Redis + 10 workers| 500+ users    | ~₹8,000/mo|
 | **Large**      | GPU cloud + async queue    | Unlimited     | Per usage |
@@ -1162,17 +1163,68 @@ graph LR
 
 ## 15. Cost Analysis
 
-### 15.1 Monthly Cost Comparison
+### 15.1 AI Processing — Local vs Cloud API Comparison
 
-| Service            | Cloud API Cost      | Our Solution    | Savings     |
-| ------------------ | ------------------- | --------------- | ----------- |
-| Speech-to-Text     | $24 (Google/AWS)    | ₹0 (Whisper)   | $24         |
-| Sentiment Analysis | $15 (AWS Comprehend)| ₹0 (ONNX local)| $15         |
-| Video Analysis     | $40 (Azure/GCP)     | ₹0 (MediaPipe) | $40         |
-| Processing compute | $20 (Lambda)        | ₹0 (Local)     | $20         |
-| **Total**          | **$99/month**       | **₹0/month**   | **$99/mo**  |
+The core video analysis (speech-to-text, body language, emotion, coherence) runs **entirely on local hardware** using open-source models, avoiding the following cloud API costs:
 
-> **Annual savings vs cloud APIs: ₹1,00,000+**
+| Service            | Cloud API Cost      | Our Approach        | Monthly Saving |
+| ------------------ | ------------------- | ------------------- | -------------- |
+| Speech-to-Text     | $24 (Google/AWS)    | faster-whisper local| $24            |
+| Sentiment Analysis | $15 (AWS Comprehend)| MicahB ONNX local   | $15            |
+| Video Analysis     | $40 (Azure/GCP)     | MediaPipe local     | $40            |
+| Processing compute | $20 (Lambda)        | Local CPU worker    | $20            |
+| **Total savings**  | **$99/month**       | **Local models**    | **$99/mo**     |
+
+> **Annual savings vs cloud AI APIs: ~₹1,00,000+** by running models locally instead of paying per-API-call.
+
+---
+
+### 15.2 Actual Infrastructure Costs (Honest Breakdown)
+
+The platform does depend on cloud services — here is the real pricing at each tier:
+
+| Service | Free Tier | Paid Tier | What it provides |
+| ------- | --------- | --------- | ---------------- |
+| **Vercel** | Hobby — free (personal projects, 100GB bandwidth) | Pro — $20/month | Frontend hosting, CDN, custom domain, team access |
+| **Supabase** | Free — 500MB DB, 1GB storage, 50MB file uploads | Pro — $25/month | 8GB DB, 250GB bandwidth, daily backups, no pause |
+| **Render** | Free (cold starts, 512MB RAM) | Starter — $7/month per service | Always-on AI worker, no cold start |
+| **Gemini 2.0 Flash API** | Free — 1,500 requests/day, 1M tokens/min | Pay-as-you-go — $0.075/1M input tokens | AI Companion chat (cloud API — not fully offline) |
+| **Local AI models** | Free (open-source, runs on your own hardware) | — | faster-whisper, MediaPipe, Parselmouth, BERT, ONNX |
+| **Domain** | — | ~₹900/year | Custom domain (optional) |
+
+#### MVP (Current Deployment)
+
+| Tier | Monthly Cost | Notes |
+| ---- | ------------ | ----- |
+| Vercel Hobby | ₹0 | Within free limits for MVP |
+| Supabase Free | ₹0 | 500MB DB sufficient for beta |
+| Gemini API | ₹0 | Within 1,500 req/day free tier |
+| AI Worker | Runs on Yash's machine | ngrok tunnel for public access |
+| **Total** | **Minimal (~₹0 for MVP)** | Local machine must stay on |
+
+#### Production (500+ Users)
+
+| Service | Cost/Month |
+| ------- | ---------- |
+| Vercel Pro | ~₹1,700 ($20) |
+| Supabase Pro | ~₹2,100 ($25) |
+| Render Starter (worker) | ~₹600 ($7) |
+| Gemini API (est. 50K req/mo) | ~₹300 ($3.75) |
+| **Total** | **~₹4,700/month** |
+
+> 💡 **Key insight**: The AI analysis cost stays near-zero indefinitely because it runs on local/cloud hardware using free open-source models. Platform infrastructure (DB, hosting, auth) is the primary cost at scale.
+
+---
+
+### 15.3 Data Privacy & Retention Policy
+
+| User Type | Data Stored | Retention |
+| --------- | ----------- | --------- |
+| **Beta Users** | Scores + metadata + opt-in session data | Used to improve models; retained until withdrawn |
+| **Normal Users** | Scores + anonymized metadata only | Raw video deleted on analysis complete; all personal data deleted within **7 days max** from server |
+| **AI Companion chat** | Session memory summaries | Deleted on request or account deletion |
+
+> ⚠️ **Note on emotion/confidence metrics**: These are composite scores derived from acoustic, kinematic, and NLP signals — not standardized clinical measurements. Scores are most meaningful as personal trend data across sessions, not as absolute values.
 
 ---
 
@@ -1205,14 +1257,16 @@ gantt
 
 ### 16.2 Next Milestones
 
-| Priority | Feature                         | Why It Matters                             |
-| -------- | ------------------------------- | ------------------------------------------ |
-| 🔴 P0   | pgvector semantic memory         | AI companion becomes truly smart           |
-| 🔴 P0   | Weekly + monthly report page     | Users need long-term trend visibility      |
-| 🟠 P1   | Auto-embed all sessions          | Every analysis builds the memory graph     |
-| 🟠 P1   | Multi-worker processing          | Handle more than 15 concurrent users       |
-| 🟡 P2   | Mobile PWA                       | Record from phone directly                 |
-| 🟡 P2   | Interview mode                   | Structured Q&A practice with scoring       |
+| Priority | Feature                         | Status | Why It Matters                             |
+| -------- | ------------------------------- | ------ | ------------------------------------------ |
+| 🔴 P0   | pgvector semantic memory         | 🔲 Not started | AI companion becomes truly smart  |
+| 🔴 P0   | Weekly + monthly report page     | 🔲 Not started | Users need long-term trend visibility |
+| 🟠 P1   | Auto-embed all sessions          | 🔲 Planned | Every analysis builds the memory graph |
+| 🟠 P1   | Multi-worker processing          | 🔲 Planned | Handle more than 15 concurrent users |
+| 🟡 P2   | Mobile PWA / App                 | 📋 Early 2027 | Record from phone directly         |
+| 🟡 P2   | Interview mode                   | 📋 Planned | Structured Q&A practice with scoring |
+| 🟢 P3   | Multi-language support           | 📋 Planned | Expand reach beyond English speakers |
+| 🟢 P3   | Duolingo-style gamification      | 📋 Planned | Streaks, XP, badges for habit building |
 
 ---
 
@@ -1239,7 +1293,7 @@ Educational and personal use.
 
 **Built with ❤️ and jugaad engineering**
 
-_Zero-cost AI · Full privacy · Unlimited growth_
+_Minimal-cost AI · Full privacy · Unlimited growth_
 
 `Record → Analyze → Improve → Remember → Repeat`
 

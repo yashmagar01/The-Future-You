@@ -5,7 +5,7 @@ Beyond Words (v2.0 Transition)
 
 ## 1. Project Identity
 
-**The Future You** (Reflections MVP) is a zero-cost, local AI communication
+**The Future You** (Reflections MVP) is a minimal-cost, local AI communication
 coaching platform. It uses a hybrid architecture with Supabase (Cloud) for
 persistence and auth, and a Local Processor (Node.js + Python) for
 privacy-preserving AI analysis.

@@ -1,7 +1,7 @@
 # 🧠 Memory System — Design & Implementation Guide
 
 **Version**: v2.0 Design  
-**Status**: 🚧 In Development  
+**Status**: 📋 Planned — not yet started (target Q4 2026)  
 **Doc updated**: September 2026
 
 ---
@@ -381,7 +381,7 @@ Semantic search finds TOP 8 matches:
 | Integration      | Extra HTTP calls         | Direct DB calls      |
 | Offline support  | No                       | Yes (local models)   |
 
-Supermemory is a great product for apps that want to plug-in memory quickly. But for **The Future You** — where privacy and zero-cost are core values — building it ourselves with pgvector + the embedder we already have makes more sense.
+Supermemory is a great product for apps that want to plug-in memory quickly. But for **The Future You** — where privacy and minimal cost are core values — building it ourselves with pgvector + the embedder we already have makes more sense.
 
 ---
 

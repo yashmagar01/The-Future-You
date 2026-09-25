@@ -2,7 +2,7 @@
 
 > **Target Release:** Q4 2026\
 > **Codename:** "Beyond Words"\
-> **Status:** 🚧 Active Development — Phase 2 AI engine SHIPPED (v1.7.0)
+> **Status:** 🚧 Development — Phase 2 AI engine SHIPPED (v1.7.0); pgvector memory not yet started
 
 ## ✅ What's Already Done (v1.7.0)
 

@@ -477,6 +477,13 @@ network data confirms: Home fetches index + motion + shared UI + sections only
 (262KB total, down from ~370KB); charts/query/zod/report/vision all route-bound.
 No change warranted — the manualChunks revert had already fixed the coupling.
 
+Bugfix — Blank white PNG/PDF export: the export template wrapper sat at
+`left:-9999` off-viewport, and html2canvas measures + renders within viewport
+bounds, so every export captured an empty page. Fix: fixed-position 0×0
+`opacity:0` overlay at 0,0 (real layout, invisible, non-interactive) —
+`ExportReport.tsx`. Guarded by `ExportReport.test.tsx` (content present,
+6 PDF pages, no off-viewport offsets). Suite 25/25, build green.
+
 Still open: real Lighthouse run + field metrics; side-by-side pixel/PDF diff;
 AVIF/WebP pipeline (no local rasters exist);
 chart debounce/visible-only render; Gallery virtualization past ~100 rows; font-weight diet (pending audit);

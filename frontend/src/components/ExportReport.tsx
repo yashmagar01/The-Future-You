@@ -110,7 +110,11 @@ export default function ExportReport(props: ExportReportProps) {
   const h2: React.CSSProperties = { fontSize: 20, fontWeight: 600, color: '#111827', fontFamily: FONT, margin: '0 0 12px' };
 
   return (
-    <div style={{ position: 'absolute', left: -9999, top: -9999, visibility: 'hidden', pointerEvents: 'none' }}>
+    // ponytail: html2canvas measures the target in the LIVE page and renders
+    // inside viewport bounds — an off-viewport wrapper (e.g. left:-9999)
+    // captures as a blank page. Fixed overlay at 0,0 with opacity:0 keeps
+    // real layout + coordinates while staying invisible and non-interactive.
+    <div style={{ position: 'fixed', top: 0, left: 0, width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
       {/* PNG — 1080x1350 social card */}
       <div ref={pngRef} style={{ width: 1080, height: 1350, background: '#FAFBFA', padding: 24, fontFamily: FONT, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

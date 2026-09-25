@@ -75,7 +75,11 @@ graph LR
         I[📈 Progress Tracking]
     end
 
-    A & B & C & D & E --> F
+    A --> F
+    B --> F
+    C --> F
+    D --> F
+    E --> F
     F --> G --> H --> I
 
     style A fill:#dc3545,color:white
@@ -131,7 +135,7 @@ graph TB
     end
 
     subgraph "Cloud — Vercel"
-        B[React 18 + Vite\nTypeScript]
+        B[React 18 + Vite\nTypeScript\nCDN + cached assets]
     end
 
     subgraph "Cloud — Supabase"
@@ -160,9 +164,15 @@ graph TB
     B --> E
     B --> C
     B --> G
-    G --> C & D
-    G --> H --> K & L & M
-    G --> I --> M & N
+    G --> C
+    G --> D
+    G --> H
+    H --> K
+    H --> L
+    H --> M
+    G --> I
+    I --> M
+    I --> N
     G --> J
     O --> G
 
@@ -170,6 +180,11 @@ graph TB
     style C fill:#3ecf8e,color:white
     style K fill:#3776ab,color:white
 ```
+
+> In plain English: your browser talks to the website (Vercel) and your data
+> (Supabase). Heavy video analysis happens on a small server program running
+> on our own machine, which uses five free AI models and writes your scores
+> back to your database.
 
 ### 2.2 Two-Phase Processing Pipeline
 
@@ -179,8 +194,8 @@ sequenceDiagram
     participant Frontend
     participant Supabase
     participant NodeServer
-    participant Phase1 as Phase 1 (worker_whisper.py)
-    participant Phase2 as Phase 2 (main.py)
+    participant Phase1 as "Phase 1: worker_whisper.py"
+    participant Phase2 as "Phase 2: main.py"
 
     User->>Frontend: Upload video
     Frontend->>Supabase: Store in recordings bucket
@@ -220,6 +235,11 @@ sequenceDiagram
     Frontend-->>User: Show report
 ```
 
+> In plain English: you upload a video, it waits in a line, our program
+> downloads it, five AI models study your voice / body / words, your scores
+> are saved, and the app shows you a report. A 5-minute video takes a few
+> minutes — it is thorough, not instant.
+
 ### 2.3 Deployment Architecture
 
 ```mermaid
@@ -245,9 +265,12 @@ graph LR
     end
 
     A -->|HTTPS| B
-    B -->|Supabase SDK| E & C & D
+    B -->|Supabase SDK| E
+    B -->|Supabase SDK| C
+    B -->|Supabase SDK| D
     B -->|HTTP API| G
-    G -->|Service Role| C & D
+    G -->|Service Role| C
+    G -->|Service Role| D
     G --> H
 
     style B fill:#000,color:white
@@ -317,7 +340,7 @@ When you submit a video, it is broken into **4 parallel information streams**:
 
 ```mermaid
 graph TB
-    V[📹 Input Video<br/>5–10 minutes]
+    V[📹 Input Video<br/>your recording]
 
     V --> A[🎵 Audio Stream<br/>ffmpeg → WAV 16kHz mono]
     V --> B[🖼️ Frame Stream<br/>1 frame/second<br/>MediaPipe landmarks]
@@ -327,7 +350,7 @@ graph TB
     A --> A1[Pitch F0 variance<br/>HNR quality<br/>Pause ratio]
     B --> B1[Posture score<br/>Shoulder alignment<br/>Centering offset]
     C --> C1[Filler count<br/>Stutter detection<br/>Emotion labels]
-    D --> D1[Energy level (dB)<br/>WPM per bucket<br/>Silence gating]
+    D --> D1["Energy level (dB)<br/>WPM per bucket<br/>Silence gating"]
 
     style V fill:#2E86AB,color:white
     style A1 fill:#A23B72,color:white
@@ -413,10 +436,14 @@ graph LR
     C[Text Sentiment\n0-1] --> D
     E[Body Openness\n0-1] --> D
 
-    D --> F{variance > 0.1?}
+    D --> F["variance > 0.1?"]
     F -->|Yes| G[⚠️ Authenticity Warning\nSignals misaligned]
     F -->|No| H[✅ Congruent\nBody matches words]
 ```
+
+> In plain English: if your words sound happy but your voice and body tell a
+> different story, the system gently flags the mismatch instead of scoring
+> you on words alone.
 
 **Example**: Happy words (text_sentiment=0.9) + closed body (body_openness=0.1) + flat voice (pitch_stability=0.9) → high variance → **Authenticity Warning**.
 
@@ -447,6 +474,10 @@ stateDiagram-v2
         Video downloaded locally to /tmp/
     end note
 ```
+
+> In plain English: uploads form a single-file line, oldest first. One video
+> is analyzed at a time; if anything fails, that video is marked failed and
+> the line keeps moving.
 
 ### 5.2 Queue Polling Logic
 
@@ -551,6 +582,9 @@ pie title Overall Score Weights
     "Energy (Volume) — 20%" : 20
 ```
 
+> In plain English: clear speech counts most (35%), confident posture next
+> (25%), then emotional tone and vocal energy (20% each).
+
 ---
 
 ## 7. Frontend Implementation
@@ -560,34 +594,50 @@ pie title Overall Score Weights
 ```mermaid
 graph TB
     subgraph "App Root"
-        A[App.tsx] --> B[ErrorBoundary]
-        B --> C[QueryClientProvider]
-        C --> D[AuthProvider]
-        D --> E[BrowserRouter]
+        A["App.tsx"] --> B["ErrorBoundary"]
+        B --> C["QueryClientProvider"]
+        C --> D["AuthProvider"]
+        D --> T["TooltipProvider"]
+        T --> E["BrowserRouter"]
     end
 
     subgraph "Public Routes"
-        F[/ Home]
-        G[/login · /signup · /register]
-        H[/onboarding]
-        I[/waitlist · /waitlist/confirm]
-        P1[/about · /contact · /privacy-policy · /terms]
+        F["Home (landing)"]
+        G["/login · /signup · /register"]
+        H["/onboarding"]
+        I["/waitlist · /waitlist/confirm"]
+        P1["/about · /contact · /privacy-policy · /terms"]
     end
 
-    subgraph "Protected Routes"
-        J[/dashboard]
-        K[/record]
-        L[/gallery]
-        M[/analysis/:id]
-        N[/companion — AI Chat]
-        O[/profile]
-        P[/settings]
-        Q[/admin/waitlist · /admin/users]
+    subgraph "Protected Routes (login required)"
+        J["/dashboard"]
+        K["/record"]
+        L["/gallery"]
+        M["/analysis/:id"]
+        N["/companion — AI Chat"]
+        O["/profile"]
+        P["/settings"]
+        Q["/admin/waitlist · /admin/users"]
     end
 
-    E --> F & G & H & I & P1
-    E --> J & K & L & M & N & O & P & Q
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> P1
+    E --> J
+    E --> K
+    E --> L
+    E --> M
+    E --> N
+    E --> O
+    E --> P
+    E --> Q
 ```
+
+> In plain English: everyone lands on Home; everything personal lives behind
+> login. The Home page loads first for speed, and each of the other 18 pages
+> loads only when you visit it.
 
 ### 7.2 Page Breakdown
 
@@ -612,6 +662,7 @@ graph LR
         B[useProfile] --> Q
         C[useStats] --> Q
         D[useWeeklyActivity] --> Q
+        R[usePerformanceTrend] --> Q
     end
 
     subgraph "Client State — Context"
@@ -780,6 +831,11 @@ transcripts, FK → recordings), `prompts` (generated practice prompts),
 `track-event` edge function), `worker_runs` (processor run bookkeeping),
 `waitlist_entries` + `promotions` (waitlist flow).
 
+> In plain English: everything belongs to someone — every recording belongs
+> to a user, every score report belongs to a recording, and you can only ever
+> see your own rows. That rule is enforced by the database itself, not just
+> the app.
+
 ### 9.2 Row-Level Security
 
 All tables have RLS enabled. Users only access their own data:
@@ -853,7 +909,7 @@ reflections_memories table:
 
 **Problem**: This is just a note-taking app, not real memory. The AI companion has no way to *find relevant context* — it just prepends the 5 newest entries to every chat prompt, regardless of relevance.
 
-### 11.2 What World-Class Memory Looks Like (Supermemory Architecture)
+### 11.2 What World-Class Memory Looks Like (Planned — Supermemory Architecture)
 
 ```mermaid
 graph TB
@@ -881,15 +937,25 @@ graph TB
         L[Gemini 2.0 Flash\nwith relevant context]
     end
 
-    A & B & C & D --> E
-    E --> F --> G
+    A --> E
+    B --> E
+    C --> E
+    D --> E
+    E --> F
+    F --> G
     G --> H
-    I --> J --> G
-    J --> K --> L
+    I --> J
+    J --> G
+    J --> K
+    K --> L
 
     style G fill:#3ecf8e,color:black
     style L fill:#4285F4,color:white
 ```
+
+> Proposed design (not built yet): instead of showing the AI your 5 newest
+> notes regardless of relevance, every memory would be turned into a smart
+> search index so the coach recalls what actually matters for your question.
 
 ### 11.3 How to Build It Without Relying on Supermemory
 

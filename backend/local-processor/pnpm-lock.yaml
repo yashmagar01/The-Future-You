@@ -35,6 +35,9 @@ importers:
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
+      sharp:
+        specifier: 0.32.6
+        version: 0.32.6
     devDependencies:
       nodemon:
         specifier: ^3.0.1

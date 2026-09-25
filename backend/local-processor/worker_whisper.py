@@ -45,7 +45,9 @@ def analyze_audio(audio_path, model_path_unused):
             audio_path, 
             beam_size=5, 
             initial_prompt=prompt_text,
-            word_timestamps=True
+            word_timestamps=True,
+            vad_filter=True,
+            vad_parameters=dict(min_silence_duration_ms=500)
         )
         
         # Collect results

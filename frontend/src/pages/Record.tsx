@@ -13,7 +13,6 @@ import { AlertCircle,  Loader2,
 import Layout from "@/components/Layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
-import { ScriptDisplay } from "@/components/ScriptDisplay";
 import { DebugOnboardingReset } from "@/components/DebugOnboardingReset";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -509,12 +508,6 @@ const Record = () => {
             maxDuration={600}
           />
         )}
-
-
-        {/* Script Display */}
-        <div className="animate-slide-up">
-          {user && <ScriptDisplay userId={user.id} />}
-        </div>
       </div>
       <DebugOnboardingReset />
     </Layout>

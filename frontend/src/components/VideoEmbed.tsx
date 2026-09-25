@@ -146,7 +146,7 @@ const VideoEmbed = ({
                   onKeyDown={handleKeyDown}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative group/btn focus:outline-none"
+                  className="relative group/btn focus:outline-none focus-visible:ring-4 focus-visible:ring-white/70 rounded-full"
                   aria-label={`Play video: ${title}`}
                 >
                   <div className="absolute inset-0 bg-brand-green/30 rounded-full blur-xl animate-pulse" />

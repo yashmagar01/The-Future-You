@@ -73,10 +73,11 @@ export function PromptDisplay() {
                         size="icon"
                         onClick={() => setIsTeleprompter(!isTeleprompter)}
                         title={isTeleprompter ? "Exit Teleprompter" : "Teleprompter Mode"}
+                        aria-label={isTeleprompter ? "Exit Teleprompter" : "Teleprompter Mode"}
                     >
                         {isTeleprompter ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={fetchPrompt} title="New Prompt">
+                    <Button variant="ghost" size="icon" onClick={fetchPrompt} title="New Prompt" aria-label="New Prompt">
                         <RefreshCw className="h-4 w-4" />
                     </Button>
                 </div>

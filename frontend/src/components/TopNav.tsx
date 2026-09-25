@@ -41,24 +41,24 @@ export function TopNav() {
         {/* Right Side Icons */}
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative before:absolute before:-inset-1 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500" aria-label="Notifications">
             <Bell className="h-5 w-5 text-gray-600" />
           </button>
 
           {/* Help */}
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative before:absolute before:-inset-1 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500" aria-label="Help">
             <HelpCircle className="h-5 w-5 text-gray-600" />
           </button>
 
           {/* Settings */}
-          <Link to="/settings" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <Link to="/settings" aria-label="Settings" className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative before:absolute before:-inset-1 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
             <Settings className="h-5 w-5 text-gray-600" />
           </Link>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="focus:outline-none">
+              <button className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2" aria-label="Account menu">
                 <Avatar>
                   <AvatarImage src={user?.user_metadata?.avatar_url} />
                   <AvatarFallback>

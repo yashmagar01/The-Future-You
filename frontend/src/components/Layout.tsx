@@ -371,7 +371,8 @@ const Layout = ({ children }: LayoutProps) => {
                             variant="ghost"
                             size="icon"
                             onClick={handleSignOut}
-                            className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full h-9 w-9"
+                            aria-label="Sign out"
+                            className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full h-9 w-9 relative before:absolute before:-inset-1 before:content-['']"
                           >
                             <LogOut className="h-4 w-4" />
                           </Button>
@@ -420,6 +421,7 @@ const Layout = ({ children }: LayoutProps) => {
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          aria-label="Close menu"
                           className="w-10 h-10 rounded-lg hover:bg-slate-100 transition-colors"
                         >
                           <X className="h-5 w-5 text-slate-600" />
@@ -516,12 +518,13 @@ const Layout = ({ children }: LayoutProps) => {
                               {user?.email}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleSignOut}
-                            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
-                          >
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             onClick={handleSignOut}
+                             aria-label="Sign out"
+                             className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                           >
                             <LogOut className="h-4 w-4 text-slate-600" />
                           </Button>
                         </div>

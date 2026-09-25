@@ -467,7 +467,8 @@ export function HabitTracker({ onHabitsUpdated }: HabitTrackerProps) {
                 <div className="flex items-center gap-3.5 flex-1 min-w-0">
                   <button
                     onClick={() => toggleHabitToday(habit.id)}
-                    className="focus:outline-none transition-transform active:scale-95"
+                    aria-label={isCompleted ? `Mark ${habit.name} not done` : `Mark ${habit.name} done`}
+                    className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-transform active:scale-95 relative before:absolute before:-inset-[10px] before:content-['']"
                   >
                     {isCompleted ? (
                       <CheckCircle2 className="h-6 w-6 text-emerald-600 fill-emerald-100" />

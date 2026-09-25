@@ -49,7 +49,8 @@ export const TourTooltip = ({ step, title, description, position = 'center' }: T
                 variant="ghost"
                 size="icon"
                 onClick={skipTour}
-                className="h-8 w-8 shrink-0"
+                aria-label="Skip tour"
+                className="h-8 w-8 shrink-0 relative before:absolute before:-inset-[6px] before:content-['']"
               >
                 <X className="h-4 w-4" />
               </Button>

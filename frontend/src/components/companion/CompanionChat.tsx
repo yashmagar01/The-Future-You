@@ -331,6 +331,7 @@ export function CompanionChat({ context, onRefreshContext }: CompanionChatProps)
             size="icon"
             disabled={!input.trim() || isStreaming}
             onClick={() => handleSend()}
+            aria-label="Send message"
             className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 w-10 flex-shrink-0 shadow-xs"
           >
             {isStreaming ? (

@@ -416,3 +416,68 @@ An optimization is considered successful only if:
 > Before finalizing any optimization, generate a visual diff checklist. If any optimization changes spacing by more than 2 px, alters typography metrics, reduces image sharpness, changes animation timing by more than 20 ms, or modifies report pagination, reject that optimization and choose a performance improvement that preserves the original appearance.
 
 This pushes the optimizer toward changes like code splitting, caching, memoization, and asset prioritization instead of shortcuts that make the app feel less polished.
+
+## Execution Log (2026-09-25, Stages 1-5)
+
+Stage 1 — `App.tsx` (Home eager, 18 routes lazy + Suspense null), `vite.config.ts`
+(function `manualChunks`: vendor-react/query/charts/motion/report/vision),
+`index.html` (dropped duplicate preload-as-style, kept display=swap). Build passes.
+
+Stage 2 — `Gallery.tsx` thumbnails `loading=lazy decoding=async`, `Home.tsx`
+below-fold sections lazy (unused `Roadmap` import removed),
+`index.html` preconnect `img.youtube.com`. Initial index 219→181kB. Build passes.
+
+Stage 3 — `Dashboard.tsx` (QUOTES hoisted, derived arrays in `useMemo`),
+`Analysis.tsx` (analysisData + transcript in `useMemo`, single `handleSeek`
+`useCallback`). Fixes per-frame regex rebuild on video timeupdate. Build passes.
+
+Stage 4 — `vercel.json` (immutable 1y for `/assets/*`, `/wasm/*`; must-revalidate
+`/sw.js`), `public/sw.js` (cache-first same-origin assets/wasm only; APIs bypass),
+`main.tsx` (prod-only non-blocking SW register). Build passes, `sw.js` in dist.
+
+Stage 5 — Export audit: PNG `scale: 3`, PDF A4 `scale: 2` PNG, no JPEG (pass);
+charts are recharts SVG (no canvas DPR risk in-app). No style/animation tokens
+touched in any stage (guardrail holds by construction).
+
+Post-Stage 5 — Font diet: audit 2026-09-25 found `font-extrabold`/800 with zero
+refs (500/400/600/700 all heavily used), so `;800` dropped from Inter URL.
+One less render-blocking woff2, zero visual change. Build passes.
+
+Post-Stage 5 — Touch/a11y audit: 14 icon buttons; default `icon` variant was
+40px with 8 unnamed. Fix is pixel-neutral: shared `icon` variant gained an
+invisible `::before` 44px hit area (covers 6 sites at once); 28/32/36px outliers
+(TourTooltip, sidebar trigger, sign-out, delete, eye toggles, TopNav icons) got
+sized `::before` insets; missing accessible names added (sign-out, close menu,
+skip tour, play/pause, send, view/delete, habit toggles, TopNav icons);
+killed focus outlines restored (VideoEmbed play, TopNav avatar, HabitTracker,
+eye toggles). Verified all 6 inset variants emit CSS. Zero mouse-visible change.
+
+Post-Stage 5 — Lighthouse (local preview, mobile lab): baseline perf 54 /
+a11y 96 / bp 96. Found my Stage-1 `manualChunks` backfired: the charts bucket
+absorbed shared helpers (tslib), forcing 104KB vendor-charts onto every page
+(33 JS requests on Home). Fix was deletion: reverted to Vite default chunking.
+Re-measured: perf 54→69, unused-JS 207→112KB, FCP 4.4→3.7s, LCP 5.4→4.5s,
+TBT 590→310ms, CLS 0.019 unchanged. Also added `/favicon.ico`→`/favicon.svg`
+rewrite (kills BP console error in prod; `/_vercel/insights` 404 is preview-only).
+Deliberately NOT done: 30-item color-contrast recolor (palette change = visual
+tradeoff the spec forbids; needs design sign-off), deferring AuthProvider/
+supabase off Home (flicker risk), chasing lab-95 with risky cuts. Next: field
+data + prod Lighthouse after deploy.
+
+Post-Stage 5 — Verification: vitest 23/23 green (fixed pre-existing
+`IntersectionObserver is not defined` env failure with a no-op mock in
+`setupTests.ts`; failure predated all stages). ESLint: 47 pre-existing errors
+repo-wide (`no-explicit-any` etc.); zero new issues introduced by any stage
+(verified per-file against diff). Production build green throughout.
+
+Post-Stage 5 — Chunk audit: a 56KB `types-*` chunk looked suspicious on the
+initial path, but static-import analysis proved its only importers are the lazy
+Login/Signup routes (zod lives there, correctly route-bound). Current-build
+network data confirms: Home fetches index + motion + shared UI + sections only
+(262KB total, down from ~370KB); charts/query/zod/report/vision all route-bound.
+No change warranted — the manualChunks revert had already fixed the coupling.
+
+Still open: real Lighthouse run + field metrics; side-by-side pixel/PDF diff;
+AVIF/WebP pipeline (no local rasters exist);
+chart debounce/visible-only render; Gallery virtualization past ~100 rows; font-weight diet (pending audit);
+report/AI-metadata caching; full offline SW; 44px touch-target + A11y-100 re-check.

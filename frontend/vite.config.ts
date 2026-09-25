@@ -27,27 +27,10 @@ export default defineConfig({
     host: "::",
     port: 8080,
   },
-  build: {
-    // ponytail: invisible split only, no visual change. Heavy libs load on demand.
-    cssCodeSplit: true,
-    chunkSizeWarningLimit: 600,
-    rollupOptions: {
-      output: {
-        // ponytail: function form for Vite 8/rolldown compat
-        manualChunks: (id: string) => {
-          if (id.includes("node_modules")) {
-            if (id.includes("recharts")) return "vendor-charts";
-            if (id.includes("framer-motion")) return "vendor-motion";
-            if (id.includes("jspdf") || id.includes("html2canvas") || id.includes("qrcode")) return "vendor-report";
-            if (id.includes("@mediapipe")) return "vendor-vision";
-            if (id.includes("@tanstack") || id.includes("@supabase")) return "vendor-query";
-            if (id.includes("react-router") || id.includes("/react/") || id.includes("/react-dom/")) return "vendor-react";
-          }
-          return undefined;
-        },
-      },
-    },
-  },
+  // ponytail: NO custom manualChunks. A function bucket for charts absorbed shared
+  // helpers (tslib) and forced vendor-charts onto every page (measured via
+  // Lighthouse: 104KB charts fetched on Home). Vite defaults keep route-only
+  // deps (recharts, jspdf, mediapipe) in async chunks with correct sharing.
   plugins: [
     react() as any,
     wasmPath ? (viteStaticCopy({

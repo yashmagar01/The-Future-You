@@ -116,6 +116,7 @@ export function TeleprompterOverlay({ script, onClose }: TeleprompterOverlayProp
                         variant="ghost"
                         className="text-white hover:bg-white/20 rounded-full h-10 w-10"
                         onClick={() => setIsPlaying(!isPlaying)}
+                        aria-label={isPlaying ? "Pause" : "Play"}
                     >
                         {isPlaying ? <Pause className="fill-current" /> : <Play className="fill-current ml-1" />}
                     </Button>
@@ -134,7 +135,7 @@ export function TeleprompterOverlay({ script, onClose }: TeleprompterOverlayProp
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 rounded-full h-10 w-10">
+                            <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 rounded-full h-10 w-10" aria-label="Text size settings">
                                 <Type />
                             </Button>
                         </PopoverTrigger>
@@ -159,6 +160,7 @@ export function TeleprompterOverlay({ script, onClose }: TeleprompterOverlayProp
                         variant="ghost"
                         className="text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-full h-10 w-10"
                         onClick={onClose}
+                        aria-label="Close teleprompter"
                     >
                         <X />
                     </Button>

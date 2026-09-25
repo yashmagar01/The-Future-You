@@ -20,7 +20,8 @@ const buttonVariants = cva(
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        // ponytail: invisible 44px hit area via ::before, zero pixel/layout change
+        icon: "h-10 w-10 relative before:absolute before:-inset-[2px] before:content-['']",
       },
     },
     defaultVariants: {

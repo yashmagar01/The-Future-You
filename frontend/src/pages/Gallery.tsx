@@ -176,7 +176,7 @@ const Gallery = () => {
                         className="h-12 w-12 rounded-full bg-white text-primary hover:bg-white/90 hover:scale-110 transition-all duration-300 shadow-xl"
                         asChild
                       >
-                        <Link to={`/analysis/${recording.id}`}>
+                        <Link to={`/analysis/${recording.id}`} aria-label={`View analysis of ${recording.title || 'recording'}`}>
                           <Play className="h-5 w-5 fill-current ml-0.5" />
                         </Link>
                       </Button>
@@ -267,9 +267,10 @@ const Gallery = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 relative before:absolute before:-inset-2 before:content-['']"
                       onClick={(e) => handleDelete(e, recording)}
                       title="Delete recording"
+                      aria-label={`Delete ${recording.title || 'recording'}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

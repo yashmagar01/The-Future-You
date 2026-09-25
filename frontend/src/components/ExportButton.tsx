@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, Download, FileText, Image as ImageIcon, LoaderCircle, Sparkles } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -55,5 +56,11 @@ export default function ExportButton({ analysisData, transcript, recording }: Pr
     </div>{error && <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
   </div>;
   const loading = <div className="space-y-4"><div className="flex items-center gap-3"><div className="rounded-2xl bg-[#EAF8F2] p-3 text-[#16C784]"><LoaderCircle className="h-6 w-6 animate-spin" /></div><div><h2 className="text-xl font-bold text-[#111827]">Preparing your report…</h2><p className="mt-1 text-sm text-slate-500">Usually takes less than 10 seconds.</p></div></div><progress className="h-2 w-full overflow-hidden rounded-full accent-[#16C784]" value={progress} max="100" /><p className="text-sm font-medium text-[#111827]">{EXPORT_STEPS[step ?? 0]}</p></div>;
-  return <><button onClick={() => { setError(''); setOpen(true); }} className="inline-flex items-center gap-2 rounded-xl bg-[#16C784] px-5 py-2.5 font-semibold text-white shadow-sm transition-colors hover:bg-[#12a86e]"><Download className="h-4 w-4" /> Export Report</button>{open && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" onClick={() => step === null && setOpen(false)}><section className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-7 shadow-2xl" onClick={(event) => event.stopPropagation()} aria-live="polite">{step === null ? selectingFormat : loading}</section></div>}<ExportReport analysis={analysisData} takeaways={takeaways} transcript={transcript} recordingTitle={recording?.title || 'Untitled Session'} recordingDate={recording?.created_at || new Date().toISOString()} recordingDuration={recording?.duration_seconds} actionItems={actionItems} sentimentData={sentimentData} pngRef={pngRef} pdfRef={pdfRef} /></>;
+  // ponytail: portalled to document.body. This button lives inside the
+  // Analysis footer bar, whose backdrop-blur creates a containing block that
+  // traps `fixed inset-0` overlays into the ~90px footer strip (modal rendered
+  // bottom-cut). Portal escapes it with zero visual change. overflow-y-auto +
+  // min-h-full keeps the dialog centered when short, scrollable when tall.
+  const dialog = open ? createPortal(<div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/45 backdrop-blur-sm" onClick={() => step === null && setOpen(false)}><div className="flex min-h-full items-center justify-center p-4"><section role="dialog" aria-modal="true" aria-label="Export report" className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-7 shadow-2xl" onClick={(event) => event.stopPropagation()} aria-live="polite">{step === null ? selectingFormat : loading}</section></div></div>, document.body) : null;
+  return <><button onClick={() => { setError(''); setOpen(true); }} className="inline-flex items-center gap-2 rounded-xl bg-[#16C784] px-5 py-2.5 font-semibold text-white shadow-sm transition-colors hover:bg-[#12a86e]"><Download className="h-4 w-4" /> Export Report</button>{dialog}<ExportReport analysis={analysisData} takeaways={takeaways} transcript={transcript} recordingTitle={recording?.title || 'Untitled Session'} recordingDate={recording?.created_at || new Date().toISOString()} recordingDuration={recording?.duration_seconds} actionItems={actionItems} sentimentData={sentimentData} pngRef={pngRef} pdfRef={pdfRef} /></>;
 }

@@ -43,7 +43,7 @@ export ACCESS_TOKEN="your-access-token-here"
 
 # Test promoting a user
 curl -X POST \
-  "https://wmhccazmbgruojkruyij.supabase.co/functions/v1/promote-user" \
+  "https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/promote-user" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

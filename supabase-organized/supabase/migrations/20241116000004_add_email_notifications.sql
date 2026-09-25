@@ -72,7 +72,7 @@ BEGIN
     
     -- Fallback to hardcoded values if not set (update these!)
     IF function_url IS NULL OR function_url = '/functions/v1/send-email' THEN
-      function_url := 'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/send-email';
+      function_url := 'https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/send-email';
     END IF;
     
     -- Make HTTP POST request to send-email Edge Function
@@ -160,7 +160,7 @@ BEGIN
   supabase_anon_key := current_setting('app.settings.supabase_anon_key', true);
   
   IF function_url IS NULL OR function_url = '/functions/v1/send-email' THEN
-    function_url := 'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/send-email';
+    function_url := 'https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/send-email';
   END IF;
   
   -- Loop through all completed but unnotified recordings

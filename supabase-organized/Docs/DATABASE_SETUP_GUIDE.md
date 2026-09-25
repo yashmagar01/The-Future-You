@@ -3,7 +3,7 @@
 ## **FASTEST METHOD: Manual SQL in Dashboard** (2 minutes)
 
 ### **Step 1: Open Supabase Dashboard**
-1. Go to: https://app.supabase.com/project/wmhccazmbgruojkruyij
+1. Go to: https://app.supabase.com/project/lgfrnuzuyammbqxcqgyo
 2. Log in with your Supabase account
 
 ### **Step 2: Open SQL Editor**
@@ -204,6 +204,6 @@ Both methods do the same thing!
 
 ---
 
-**Quick Link:** https://app.supabase.com/project/wmhccazmbgruojkruyij/editor
+**Quick Link:** https://app.supabase.com/project/lgfrnuzuyammbqxcqgyo/editor
 
 **Ready to test!** 🚀

@@ -32,7 +32,7 @@ BEGIN
   
   -- If secrets not set, use fallback (not recommended for production)
   IF function_url IS NULL OR function_url = '/functions/v1/process-recordings' THEN
-    function_url := 'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/process-recordings';
+    function_url := 'https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/process-recordings';
   END IF;
   
   -- Make HTTP POST request to Edge Function

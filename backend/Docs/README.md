@@ -2,7 +2,7 @@
 
 A high-performance, local-first AI processing server designed for the Yash
 Reflections MVP. This server handles heavy computation tasks—transcription,
-posture analysis, and personalized script generation—using a zero-cost,
+posture analysis, and personalized script generation—using a minimal-cost,
 offline-capable architecture.
 
 ## 🚀 Tech Stack (100% Free & Offline)

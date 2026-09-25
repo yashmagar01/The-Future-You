@@ -71,7 +71,7 @@ Navigate to: **`/admin/users`** (must be logged in as admin)
 ```bash
 # Promote user to tester
 curl -X POST \
-  "https://wmhccazmbgruojkruyij.supabase.co/functions/v1/promote-user" \
+  "https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/promote-user" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

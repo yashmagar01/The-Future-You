@@ -90,7 +90,7 @@ BEGIN
     END IF;
     
     -- Build Edge Function URL - UPDATE THIS with your Supabase project URL!
-    function_url := 'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/send-email';
+    function_url := 'https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/send-email';
     
     -- Make HTTP POST request to send-email Edge Function
     BEGIN
@@ -166,7 +166,7 @@ DECLARE
   function_url TEXT;
 BEGIN
   -- UPDATE THIS with your Supabase project URL!
-  function_url := 'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/send-email';
+  function_url := 'https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/send-email';
   
   -- Loop through all completed but unnotified recordings
   FOR rec IN 

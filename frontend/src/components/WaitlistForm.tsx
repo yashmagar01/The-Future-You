@@ -165,7 +165,7 @@ const WaitlistForm = ({ onSuccess, source = "homepage" }: WaitlistFormProps) => 
       // Send confirmation email via edge function
       try {
         const emailResponse = await fetch(
-          'https://wmhccazmbgruojkruyij.supabase.co/functions/v1/send-waitlist-email',
+          'https://lgfrnuzuyammbqxcqgyo.supabase.co/functions/v1/send-waitlist-email',
           {
             method: 'POST',
             headers: {

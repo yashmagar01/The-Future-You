@@ -337,7 +337,7 @@ See **JUGAAD_SETUP.md** for complete installation guide:
 4. **Local Processor** returns JSON result
 5. **Edge Function** saves to database
 
-### Zero-Cost Stack (₹0/month)
+### Minimal-Cost Local Stack
 
 - **Vosk** - Offline speech-to-text (no API costs)
 - **Transformers.js** - Sentiment analysis (runs in Node.js)
@@ -345,7 +345,7 @@ See **JUGAAD_SETUP.md** for complete installation guide:
 - **FFmpeg** - Video/audio processing (free tool)
 - **Node.js + Express** - Local API server (free)
 
-No external API calls, no cloud costs!
+Local AI models have no per-request costs. Cloud services (Supabase, Vercel) use free tiers at MVP scale.
 
 ## Troubleshooting
 

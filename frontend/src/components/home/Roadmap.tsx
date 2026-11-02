@@ -13,14 +13,14 @@ const Roadmap = () => {
   const milestones = [
     {
       id: "mvp",
-      quarter: "Q2 2025",
-      year: "2025",
+      quarter: "Q1 2027",
+      year: "2027",
       label: "MVP Launch",
       status: "upcoming",
       icon: Video,
       color: "bg-green-500",
       textColor: "text-green-600",
-      eta: "19 April 2025",
+      eta: "20 February 2027",
       summary: "Core video analysis, scoring, posture detection, and dashboard",
       details: {
         description: "Complete MVP with core features for daily video reflection practice and AI-powered feedback.",
@@ -37,14 +37,14 @@ const Roadmap = () => {
     },
     {
       id: "nvp",
-      quarter: "Q3 2025",
-      year: "2025",
+      quarter: "Q1 2027",
+      year: "2027",
       label: "NVP Release",
       status: "upcoming",
       icon: Users,
       color: "bg-blue-500",
       textColor: "text-blue-600",
-      eta: "20 July 2025",
+      eta: "23 March 2027",
       summary: "Live roleplay sessions, gamification, enhanced emotional intelligence",
       details: {
         description: "Next Version Product introducing live practice sessions, gamification systems, and enhanced emotional intelligence tracking.",
@@ -59,14 +59,14 @@ const Roadmap = () => {
     },
     {
       id: "dream",
-      quarter: "Q4 2026",
-      year: "2026",
+      quarter: "Q4 2027",
+      year: "2027",
       label: "Dream Project",
       status: "upcoming",
       icon: Sparkles,
       color: "bg-purple-500",
       textColor: "text-purple-500",
-      eta: "End of 2026",
+      eta: "End of 2027",
       summary: "AI avatar mentor, long-term emotional intelligence tracking, and VR practice environments",
       details: {
         description: "Revolutionary features including personalized AI avatar mentors and immersive VR practice scenarios.",

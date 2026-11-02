@@ -82,7 +82,8 @@ const HowItWorks = () => {
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white shadow-xl ring-4 ring-white transition-transform duration-300 group-hover:scale-110",
-                    "bg-gradient-to-br", step.gradient, step.shadow
+                    index === 0 ? "bg-gradient-to-br from-emerald-600 to-emerald-700" : `bg-gradient-to-br ${step.gradient}`,
+                    step.shadow
                   )}>
                     {step.step}
                   </div>

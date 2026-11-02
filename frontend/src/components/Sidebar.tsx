@@ -8,6 +8,7 @@ import {
   User, 
   Settings,
   Sparkles,
+  GraduationCap, // NEW: graduation-cap icon for the Learn item
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -21,6 +22,7 @@ interface SidebarProps {
 const navigationItems = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Record', href: '/record', icon: Video },
+  { name: 'Learn', href: '/learn', icon: GraduationCap }, // NEW: label, URL to open, icon to draw
   { name: 'Gallery', href: '/gallery', icon: FolderOpen },
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Companion', href: '/companion', icon: Sparkles },

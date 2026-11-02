@@ -31,6 +31,8 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Analysis = lazy(() => import("./pages/Analysis"));
+// Load the Learn page only when someone visits /learn (lazy = on demand)
+const Learn = lazy(() => import("./pages/Learn"));
 
 const queryClient = new QueryClient();
 
@@ -129,6 +131,8 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              {/* TODO: wrap in ProtectedRoute before the final version (public only while developing) */}
+              <Route path="/learn" element={<Learn />} /> {/* URL /learn shows the Learn page */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

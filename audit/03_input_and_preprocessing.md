@@ -1,3 +1,5 @@
+opencode
+
 # 03 Input and Preprocessing Audit — The Future You
 
 ## 3.1 Upload Flow

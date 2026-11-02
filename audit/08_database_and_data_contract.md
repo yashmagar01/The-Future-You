@@ -1,3 +1,5 @@
+opencode
+
 # 08 Database and Data Contract Audit — The Future You
 
 ## 8.1 Database Schema (from Migrations)

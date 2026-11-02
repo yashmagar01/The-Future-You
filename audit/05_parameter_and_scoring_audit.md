@@ -1,3 +1,5 @@
+opencode
+
 # 05 Parameter-by-Parameter Analysis Audit — The Future You
 
 ## Investigation Template Applied to Every Parameter

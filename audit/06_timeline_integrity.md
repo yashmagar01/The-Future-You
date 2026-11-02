@@ -1,3 +1,5 @@
+opencode
+
 # 06 Timeline and Timestamp Integrity Audit — The Future You
 
 ## 6.1 Timestamp Sources Inventory

@@ -1,3 +1,5 @@
+opencode
+
 # 07 Processing and Fusion Audit — The Future You
 
 ## 7.1 Phase 1 Processing (worker_whisper.py)

@@ -26,8 +26,8 @@ export const timelineData: Milestone[] = [
   {
     id: 'mvp',
     title: 'MVP Launch',
-    date: '19 April 2025',
-    status: 'completed',
+    date: '20 February 2027',
+    status: 'scheduled',
     color: {
       bg: 'bg-green-500/10',
       text: 'text-green-600',
@@ -48,8 +48,8 @@ export const timelineData: Milestone[] = [
   {
     id: 'nvp',
     title: 'NVP Release',
-    date: '20 July 2025',
-    status: 'completed',
+    date: '23 March 2027',
+    status: 'scheduled',
     color: {
       bg: 'bg-blue-500/10',
       text: 'text-blue-600',
@@ -70,7 +70,7 @@ export const timelineData: Milestone[] = [
   {
     id: 'dream',
     title: 'Dream Project',
-    date: 'End of 2026',
+    date: 'End of 2027',
     status: 'future',
     color: {
       bg: 'bg-purple-500/10',

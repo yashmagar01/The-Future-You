@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Users, Zap, Shield, TrendingUp, Rocket, Star, Clock } from "lucide-react";
+import { Sparkles, Users, Zap, Shield, TrendingUp, Rocket, Star /*, Clock */ } from "lucide-react";
 import Layout from "@/components/Layout";
 import WaitlistForm from "@/components/WaitlistForm";
 import WaitlistSuccessModal from "@/components/WaitlistSuccessModal";
@@ -12,47 +12,47 @@ import {
 import { logEvent, ANALYTICS_EVENTS } from "@/utils/analytics";
 import confetti from "canvas-confetti";
 
-// Countdown Component
-const Countdown = ({ targetDate }: { targetDate: Date }) => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
-
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const difference = targetDate.getTime() - new Date().getTime();
-      
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        });
-      }
-    };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  return (
-    <div className="flex justify-center gap-3 md:gap-6">
-      {Object.entries(timeLeft).map(([unit, value]) => (
-        <div key={unit} className="flex flex-col items-center">
-          <div className="relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center border-2 border-primary/30 shadow-lg backdrop-blur-sm">
-            <span className="text-2xl md:text-3xl font-bold text-foreground">{value.toString().padStart(2, '0')}</span>
-          </div>
-          <span className="text-xs md:text-sm text-muted-foreground mt-2 capitalize font-medium">{unit}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
+// Countdown Component — commented out
+// const Countdown = ({ targetDate }: { targetDate: Date }) => {
+//   const [timeLeft, setTimeLeft] = useState({
+//     days: 0,
+//     hours: 0,
+//     minutes: 0,
+//     seconds: 0
+//   });
+//
+//   useEffect(() => {
+//     const calculateTimeLeft = () => {
+//       const difference = targetDate.getTime() - new Date().getTime();
+//
+//       if (difference > 0) {
+//         setTimeLeft({
+//           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+//           hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+//           minutes: Math.floor((difference / 1000 / 60) % 60),
+//           seconds: Math.floor((difference / 1000) % 60)
+//         });
+//       }
+//     };
+//
+//     calculateTimeLeft();
+//     const timer = setInterval(calculateTimeLeft, 1000);
+//     return () => clearInterval(timer);
+//   }, [targetDate]);
+//
+//   return (
+//     <div className="flex justify-center gap-3 md:gap-6">
+//       {Object.entries(timeLeft).map(([unit, value]) => (
+//         <div key={unit} className="flex flex-col items-center">
+//           <div className="relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center border-2 border-primary/30 shadow-lg backdrop-blur-sm">
+//             <span className="text-2xl md:text-3xl font-bold text-foreground">{value.toString().padStart(2, '0')}</span>
+//           </div>
+//           <span className="text-xs md:text-sm text-muted-foreground mt-2 capitalize font-medium">{unit}</span>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// };
 
 const Waitlist = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -124,7 +124,7 @@ const Waitlist = () => {
   };
 
   // Beta signups close in 3 days (Dec 22, 2025 midnight IST)
-  const launchDate = new Date('2025-12-22T00:00:00');
+  // const launchDate = new Date('2025-12-22T00:00:00');
 
   return (
     <Layout>
@@ -166,14 +166,14 @@ const Waitlist = () => {
             job interviews, and everyday conversations through daily video practice.
           </p>
 
-          {/* Countdown */}
-          <div className="mb-8">
+          {/* Countdown — commented out */}
+          {/* <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Clock className="h-5 w-5 text-primary" />
               <p className="text-sm font-semibold text-red-600 uppercase tracking-wide">🔥 Beta Signups Close In</p>
             </div>
             <Countdown targetDate={launchDate} />
-          </div>
+          </div> */}
 
           {/* Social Proof */}
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-12">

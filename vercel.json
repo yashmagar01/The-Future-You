@@ -5,15 +5,31 @@
   "installCommand": "rm -rf node_modules frontend/node_modules package-lock.json frontend/package-lock.json && npm install && npm install --prefix frontend --legacy-peer-deps",
   "framework": null,
   "rewrites": [
-    {
-      "source": "/favicon.ico",
-      "destination": "/favicon.svg"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
+      {
+        "source": "/favicon.ico",
+        "destination": "/favicon.svg"
+      },
+      {
+        "source": "/assets/(.*)",
+        "destination": "/assets/$1"
+      },
+      {
+        "source": "/wasm/(.*)",
+        "destination": "/wasm/$1"
+      },
+      {
+        "source": "/sw.js",
+        "destination": "/sw.js"
+      },
+      {
+        "source": "/robots.txt",
+        "destination": "/robots.txt"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ],
   "headers": [
     {
       "source": "/assets/(.*)",

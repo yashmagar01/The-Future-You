@@ -3,11 +3,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { 
   TrendingUp, 
-  Users, 
   Activity, 
   Award,
   ArrowUpRight,
@@ -19,14 +17,14 @@ import {
   Loader2,
   Flame,
   Trophy,
-  Star,
-  Lock,
   Sparkles
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
+import { PLAY_LEVELS, hasBadge } from "@/data/playLevels";
+import { usePlay } from "@/contexts/PlayContext";
 import { useStats, useWeeklyActivity, usePerformanceTrend, useRecordings, useProfile } from "@/hooks/useRecordings";
-import { StatCardSkeleton, ChartSkeleton, ListItemSkeleton } from "@/components/LoadingSkeletons";
+import { StatCardSkeleton, ChartSkeleton } from "@/components/LoadingSkeletons";
 import {
   ChartContainer,
   ChartTooltip,
@@ -63,10 +61,6 @@ const Dashboard = () => {
     transcript_summary: (latestFeedback.key_insights as any)?.transcript || "No transcript available."
   } : null, [latestFeedback]);
 
-  // Gamification: Streak calculation (mock for now)
-  const currentStreak = Math.min((stats?.thisWeekRecordings || 0), 7);
-  const longestStreak = Math.max(currentStreak, 7); // Mock: would come from backend
-
   const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
 
   useEffect(() => {
@@ -75,42 +69,6 @@ const Dashboard = () => {
     }, 10000); // Change every 10 seconds
     return () => clearInterval(interval);
   }, []);
-
-  // Gamification: Achievement badges
-  const achievements = useMemo(() => [
-    { 
-      id: 1, 
-      name: "First Steps", 
-      description: "Record your first video", 
-      icon: Star,
-      unlocked: (stats?.totalRecordings || 0) >= 1,
-      color: "text-yellow-500"
-    },
-    { 
-      id: 2, 
-      name: "Consistent Practitioner", 
-      description: "Record 5 videos", 
-      icon: Flame,
-      unlocked: (stats?.totalRecordings || 0) >= 5,
-      color: "text-orange-500"
-    },
-    { 
-      id: 3, 
-      name: "Weekly Warrior", 
-      description: "Record 3+ videos this week", 
-      icon: Trophy,
-      unlocked: (stats?.thisWeekRecordings || 0) >= 3,
-      color: "text-purple-500"
-    },
-    { 
-      id: 4, 
-      name: "Rising Star", 
-      description: "Reach 70+ average score", 
-      icon: Sparkles,
-      unlocked: (stats?.averageScore || 0) >= 70,
-      color: "text-blue-500"
-    }
-  ], [stats?.totalRecordings, stats?.thisWeekRecordings, stats?.averageScore]);
 
   const statsCards = useMemo(() => [
     {
@@ -171,15 +129,12 @@ const Dashboard = () => {
     };
   }), [recordings]);
 
-  // Journey milestones
-  const journeyMilestones = useMemo(() => [
-    { level: "Beginner", minRecordings: 0, icon: "🌱", unlocked: true },
-    { level: "Improving", minRecordings: 5, icon: "🚀", unlocked: (stats?.totalRecordings || 0) >= 5 },
-    { level: "Confident", minRecordings: 15, icon: "💪", unlocked: (stats?.totalRecordings || 0) >= 15 },
-    { level: "Expert", minRecordings: 30, icon: "🏆", unlocked: (stats?.totalRecordings || 0) >= 30 }
-  ], [stats?.totalRecordings]);
-
-  const currentMilestone = journeyMilestones.filter(m => m.unlocked).pop() || journeyMilestones[0];
+  // 10-Level Gamification & Play Mode
+  const { xp, streak, longestStreak, badges, allBadges, playerLevel, getStatus, streakMultiplier } = usePlay();
+  const currentPlayLevel = PLAY_LEVELS.find((l) => {
+    const s = getStatus(l);
+    return s.status === 'available';
+  }) ?? PLAY_LEVELS[PLAY_LEVELS.length - 1];
 
   return (
     <Layout>
@@ -192,6 +147,61 @@ const Dashboard = () => {
           <p className="text-muted-foreground text-lg">
             Here's your performance overview and insights
           </p>
+        </div>
+
+        {/* 10-Level Gamification Journey Hub */}
+        <div className="mb-8 animate-fade-in">
+          <Card className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white border border-emerald-500/30 overflow-hidden relative shadow-lg">
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+            <CardContent className="p-6 relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-3 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <span>{playerLevel.currentRank.emoji}</span> Level {playerLevel.level}: {playerLevel.currentRank.title}
+                  </span>
+                  <span className="inline-flex items-center gap-1 bg-orange-500/20 text-orange-300 border border-orange-400/30 px-2.5 py-1 rounded-full text-xs font-bold">
+                    <Flame className="h-3.5 w-3.5 text-orange-400" /> {streak} Day Streak
+                  </span>
+                  <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2.5 py-1 rounded-full text-xs font-bold">
+                    <Zap className="h-3.5 w-3.5 text-amber-400" /> {xp} XP
+                  </span>
+                  <span className="inline-flex items-center gap-1 bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-2.5 py-1 rounded-full text-xs font-bold">
+                    <Trophy className="h-3.5 w-3.5 text-indigo-400" /> {badges.length} Badges
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="text-xl md:text-2xl font-extrabold text-white">
+                    Current Challenge: Level {currentPlayLevel.level} — {currentPlayLevel.title}
+                  </h2>
+                  <p className="text-emerald-100/80 text-sm mt-1 max-w-2xl">
+                    {currentPlayLevel.tagline} · Target: {currentPlayLevel.durationTargetSec}s · Clear at {currentPlayLevel.unlockAfterScore}+ score
+                  </p>
+                </div>
+
+                <div className="max-w-md space-y-1.5 pt-1">
+                  <div className="flex justify-between text-xs text-emerald-200">
+                    <span>Progress to Level {playerLevel.nextRank ? playerLevel.nextRank.level : 10}</span>
+                    <span className="font-bold">{playerLevel.progressPercent}%</span>
+                  </div>
+                  <Progress value={playerLevel.progressPercent} className="h-2 bg-black/40" />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 min-w-[240px]">
+                <Button asChild className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-md shadow-emerald-500/30 flex-1">
+                  <Link to={`/record?level=${currentPlayLevel.id}`}>
+                    Play Level {currentPlayLevel.level}
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="border-white/20 bg-white/10 hover:bg-white/20 text-white font-semibold">
+                  <Link to="/play">
+                    View 10 Levels
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Motivational Quote */}
@@ -296,9 +306,9 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Current Streak</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-4xl font-bold">{currentStreak}</span>
+                    <span className="text-4xl font-bold">{streak}</span>
                     <span className="text-muted-foreground">days</span>
-                    {currentStreak > 0 && <Flame className="h-6 w-6 text-orange-500 animate-pulse" />}
+                    {streak > 0 && <Flame className="h-6 w-6 text-orange-500 animate-pulse" />}
                   </div>
                 </div>
                 <div className="text-right">
@@ -309,7 +319,12 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-              <Progress value={(currentStreak / longestStreak) * 100} className="h-2" />
+              <Progress value={longestStreak > 0 ? (streak / longestStreak) * 100 : 0} className="h-2" />
+              <p className="text-xs font-medium text-muted-foreground">
+                {streakMultiplier > 1
+                  ? `🔥 Streak bonus active: +${Math.round((streakMultiplier - 1) * 100)}% XP on everything you earn.`
+                  : 'Reach a 3-day streak for +10% XP, and 7 days for +20% XP.'}
+              </p>
             </CardContent>
           </Card>
 
@@ -320,79 +335,85 @@ const Dashboard = () => {
               <CardDescription>Progress through skill levels</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between mb-4">
-                {journeyMilestones.map((milestone, idx) => (
-                  <div key={milestone.level} className="flex flex-col items-center relative flex-1">
-                    <div 
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${
-                        milestone.unlocked 
-                          ? 'bg-primary/10 border-2 border-primary scale-110' 
-                          : 'bg-muted border-2 border-border opacity-40'
-                      }`}
-                    >
-                      {milestone.unlocked ? milestone.icon : '🔒'}
+              <div className="flex items-center justify-between mb-4 overflow-x-auto pb-2">
+                {PLAY_LEVELS.map((level, idx) => {
+                  const status = getStatus(level);
+                  const isDone = status.status === 'completed';
+                  const isCurrent = status.status === 'available';
+                  const isLocked = status.status === 'locked';
+                  return (
+                    <div key={level.id} className="flex flex-col items-center relative flex-1 min-w-[90px]">
+                      <div 
+                        className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-300 ${
+                          isDone 
+                            ? 'bg-emerald-500/10 border-2 border-emerald-500 scale-110' 
+                            : isLocked 
+                              ? 'bg-muted border-2 border-border opacity-40'
+                              : 'bg-primary/10 border-2 border-primary scale-110'
+                        }`}
+                      >
+                        {isDone ? '✓' : isLocked ? '🔒' : level.emoji}
+                      </div>
+                      <p className={`text-xs mt-2 font-medium ${isDone || isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        L{level.level}
+                      </p>
+                      {idx < PLAY_LEVELS.length - 1 && (
+                        <div className={`absolute top-6 left-[60%] w-full h-0.5 ${
+                          getStatus(PLAY_LEVELS[idx + 1]).status !== 'locked' ? 'bg-emerald-500' : 'bg-border'
+                        }`} />
+                      )}
                     </div>
-                    <p className={`text-xs mt-2 font-medium ${milestone.unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {milestone.level}
-                    </p>
-                    {idx < journeyMilestones.length - 1 && (
-                      <div className={`absolute top-6 left-[60%] w-full h-0.5 ${
-                        journeyMilestones[idx + 1].unlocked ? 'bg-primary' : 'bg-border'
-                      }`} />
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <p className="text-sm text-center text-muted-foreground">
-                You're at <strong className="text-foreground">{currentMilestone.level}</strong> level! 
-                {stats?.totalRecordings && stats.totalRecordings < 30 && (
-                  <span> Keep going to unlock the next milestone.</span>
-                )}
+                You're on <strong className="text-foreground">Level {currentPlayLevel.level}</strong> of {PLAY_LEVELS.length} in Play Mode!
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Achievement Badges */}
+        {/* Trophy Case Preview */}
         <Card className="mb-8 animate-slide-up border-border/50" style={{ animationDelay: '0.2s' }}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              Achievements
-            </CardTitle>
-            <CardDescription>Earn badges by reaching milestones</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  Trophy Case
+                </CardTitle>
+                <CardDescription>Collect badges across quests, streaks, and mastery</CardDescription>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/play">View All Badges</Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {achievements.map((achievement) => {
-                const Icon = achievement.icon;
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-bold text-foreground">{badges.length}</span> / {allBadges.length} badges unlocked
+              </p>
+              <Badge variant="outline" className="border-amber-400/60 text-amber-600">
+                Level {playerLevel.level} · {playerLevel.currentRank.title}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2">
+              {allBadges.slice(0, 16).map((badge) => {
+                const earned = hasBadge(badges, badge);
                 return (
-                  <div 
-                    key={achievement.id}
-                    className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${
-                      achievement.unlocked 
-                        ? 'border-primary/20 bg-primary/5 hover:border-primary/40 hover-lift' 
-                        : 'border-border bg-muted/30 opacity-60'
+                  <div
+                    key={badge.id}
+                    className={`relative flex flex-col items-center justify-center rounded-xl border p-2 text-center transition-all ${
+                      earned
+                        ? 'bg-amber-500/5 border-amber-400/40'
+                        : 'bg-muted/30 border-border/60 opacity-40'
                     }`}
+                    title={earned ? badge.title : 'Locked'}
                   >
-                    <div className="flex flex-col items-center text-center gap-2">
-                      <div className={`p-3 rounded-full ${achievement.unlocked ? 'bg-background' : 'bg-muted'}`}>
-                        {achievement.unlocked ? (
-                          <Icon className={`h-6 w-6 ${achievement.color}`} />
-                        ) : (
-                          <Lock className="h-6 w-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{achievement.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{achievement.description}</p>
-                      </div>
-                      {achievement.unlocked && (
-                        <Badge variant="outline" className="mt-1 text-xs border-primary/50 text-primary">
-                          Unlocked
-                        </Badge>
-                      )}
-                    </div>
+                    <span className="text-xl">{badge.emoji}</span>
+                    <p className="mt-1 text-[9px] font-semibold leading-tight line-clamp-1">{badge.title}</p>
+                    {earned && <CheckCircle2 className="mt-1 h-3 w-3 text-emerald-600" />}
                   </div>
                 );
               })}

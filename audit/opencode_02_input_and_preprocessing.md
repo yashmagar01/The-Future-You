@@ -1,4 +1,6 @@
-# opencode — 02 Input and Preprocessing
+opencode
+
+# 02 Input and Preprocessing
 
 > Read-only audit. Evidence is source-level unless a runtime label is stated.
 
@@ -145,6 +147,8 @@ Consequences:
 - Posture labels are written into timeline entries using the compressed times (`worker_whisper.py:304-309`), so posture and audio are misaligned.
 - WPM buckets are indexed from word timestamps (correct seconds) but merged with the compressed RMS timeline, producing further misalignment.
 
+**Runtime confirmation:** an existing 1012.599 s sample produced 102 timeline buckets ending at `"505-510s"`, where 203 buckets were expected. See `opencode_10_runtime_reproduction.md` and `opencode_05_timeline_integrity.md`.
+
 Severity **P1** (incorrect timeline and misleading graphs). See `opencode_05_timeline_integrity.md` for the full reconstruction.
 
 ## 7. Silence gating
@@ -195,5 +199,5 @@ This is posture geometry, **not** eye contact, gaze, facial expression, or "micr
 ## 11. Verification
 
 - Source: VERIFIED for all code paths above.
-- Runtime: NOT VERIFIED for FFmpeg → Whisper → timeline on a real recording (no sample media / model download in this audit).
+- Runtime: **RUNTIME-VERIFIED WITH LIMITATIONS** for FFmpeg → Whisper → timeline on one existing sample (1012.599 s → 102 buckets instead of 203). Model download, MediaPipe posture, and Phase 2 were not exercised because dependencies are missing. See `opencode_10_runtime_reproduction.md`.
 - Independent arithmetic check: 4000 frames ÷ 16000 frames/s = 0.25 s; the code computes 0.125 s. VERIFIED.

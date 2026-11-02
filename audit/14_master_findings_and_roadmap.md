@@ -1,3 +1,5 @@
+opencode
+
 # 14 Master Findings Register and Prioritized Roadmap — The Future You
 
 ## 14.1 Master Discrepancy Register

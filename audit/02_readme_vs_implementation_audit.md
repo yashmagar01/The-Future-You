@@ -1,3 +1,5 @@
+opencode
+
 # 02 README vs Actual Implementation Audit — The Future You
 
 ## Traceability Table

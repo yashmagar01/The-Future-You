@@ -1,3 +1,5 @@
+opencode
+
 # 13 Scientific Validity and Limitations Audit — The Future You
 
 ## 13.1 Metric Classification Framework

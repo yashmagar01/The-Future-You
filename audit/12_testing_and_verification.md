@@ -1,3 +1,5 @@
+opencode
+
 # 12 Testing and Verification Strategy — The Future You
 
 ## 12.1 Unit Test Coverage (Current State)

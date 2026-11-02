@@ -1,3 +1,5 @@
+opencode
+
 # THE FUTURE YOU — COMPREHENSIVE TECHNICAL AUDIT REPORT
 
 **Version**: 1.0  

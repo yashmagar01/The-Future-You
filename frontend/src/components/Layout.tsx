@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Sparkles, LogOut, Home, Video, Image as ImageIcon, TrendingUp, Menu, X, User, Settings } from "lucide-react";
+import { Sparkles, LogOut, Home, Video, Image as ImageIcon, TrendingUp, Menu, X, User, Settings,GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,7 @@ const navLinks = [
   { name: "Record", path: "/record", icon: Video },
   { name: "Gallery", path: "/gallery", icon: ImageIcon },
   { name: "Dashboard", path: "/dashboard", icon: TrendingUp },
+  { name: "Learn", path: "/learn", icon: GraduationCap } 
 ];
 
 const userLinks = [

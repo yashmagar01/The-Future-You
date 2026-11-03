@@ -34,8 +34,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Analysis = lazy(() => import("./pages/Analysis"));
-// Load the Learn page only when someone visits /learn (lazy = on demand)
-const Learn = lazy(() => import("./pages/Learn"));
+
 const FillerWordsLesson = lazy(() => import("./pages/FillerWordsLesson")); // load the lesson page only when visited
 
 const queryClient = new QueryClient();

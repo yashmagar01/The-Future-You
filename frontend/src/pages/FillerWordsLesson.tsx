@@ -1,8 +1,32 @@
-// Lesson 1: Cutting filler words. Step 0 is the slider; Step 1 is a placeholder for "spot them".
+// Lesson 1: Cutting filler words. Step 0 is the slider; Step 1 is the "spot the fillers" game.
 import { useState } from 'react'; // useState lets a component remember a value, like remember { mutableStateOf() } in Compose
 import { AppLayout } from '@/components/AppLayout'; // the frame: top bar + sidebar
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // ready-made card pieces
 import { Button } from '@/components/ui/button'; // ready-made button
+import { cn } from '@/lib/utils'; // cn joins class names and lets us swap colours per token
+
+// The sentence broken into words; filler = true marks a real filler word
+const tokens: { text: string; filler: boolean }[] = [ // the list of words for the game
+  { text: 'So,', filler: false }, // not a filler
+  { text: 'um,', filler: true }, // filler
+  { text: 'I', filler: false }, // not a filler
+  { text: 'think', filler: false }, // not a filler
+  { text: 'our', filler: false }, // not a filler
+  { text: 'plan', filler: false }, // not a filler
+  { text: 'looks', filler: false }, // not a filler (the trap word)
+  { text: 'like', filler: false }, // NOT a filler: "looks like"
+  { text: 'a', filler: false }, // not a filler
+  { text: 'good', filler: false }, // not a filler
+  { text: 'one,', filler: false }, // not a filler
+  { text: 'you know,', filler: true }, // filler
+  { text: 'and', filler: false }, // not a filler
+  { text: "it's", filler: false }, // not a filler
+  { text: 'like,', filler: true }, // IS a filler here (no word before it that it describes)
+  { text: 'really', filler: false }, // not a filler
+  { text: 'useful', filler: false }, // not a filler
+  { text: 'uh,', filler: true }, // filler
+  { text: 'today.', filler: false }, // not a filler
+]; // end of the token list
 
 // The app's fluency formula, written as a small function
 const fluencyScore = (fillersPerMinute: number) => // takes fillers per minute, returns a score
@@ -11,7 +35,27 @@ const fluencyScore = (fillersPerMinute: number) => // takes fillers per minute, 
 const FillerWordsLesson = () => { // the page: a function that returns UI
   const [fillers, setFillers] = useState(0); // fillers = current slider value, setFillers changes it (starts at 0)
   const [step, setStep] = useState(0); // step = which part of the lesson we show, setStep changes it (starts at 0)
+  const [selected, setSelected] = useState<number[]>([]); // selected = indexes of words the learner tapped (starts empty)
+  const [checked, setChecked] = useState(false); // checked = true once the learner pressed Check (starts false)
   const score = fluencyScore(fillers); // recalculated every time the slider moves
+  const foundCount = tokens.filter((t, i) => t.filler && selected.includes(i)).length; // how many real fillers were tapped
+  const fillerTotal = tokens.filter((t) => t.filler).length; // how many real fillers exist in total
+  const fellForTrap = selected.includes(6) || selected.includes(7); // true if "looks" or the first "like" was tapped
+  const wrongCount = tokens.filter((t, i) => !t.filler && selected.includes(i)).length; // how many tapped words are NOT fillers
+
+  const toggleToken = (index: number) => { // called when a word button is clicked
+    setSelected((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index])); // remove it if already picked, otherwise add it
+  }; // end of toggleToken
+
+  const tokenClasses = (index: number) => { // picks the colour classes for a word
+    const isSelected = selected.includes(index); // did the learner tap this word?
+    const isFiller = tokens[index].filler; // is this word a real filler?
+    if (!checked) return isSelected ? 'border-primary bg-primary/10' : 'border-input bg-background'; // before checking: just a highlight for picked words
+    if (isSelected && isFiller) return 'border-green-600 bg-green-100 text-green-900'; // correct pick: green
+    if (isSelected && !isFiller) return 'border-red-600 bg-red-100 text-red-900'; // wrong pick: red
+    if (isFiller) return 'border-amber-500 border-dashed bg-amber-100 text-amber-900'; // missed filler: amber with a dashed border
+    return 'border-input bg-background'; // untouched non-filler: plain
+  }; // end of tokenClasses
 
   return ( // what to draw
     <AppLayout>
@@ -59,15 +103,65 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
             <CardHeader>
               <CardTitle>Tap every filler word</CardTitle>
               {/* the card heading */}
+              <p className="text-sm text-muted-foreground">Careful: not every like is a filler.</p>
+              {/* the subtitle warning */}
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Step 2 coming next</p>
-              {/* placeholder text for the next step */}
-              <Button className="mt-6 w-full" variant="outline" onClick={() => setStep(0)}>
-                {/* button that moves us back to step 0 */}
-                Back
-                {/* the button label */}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {/* the words wrap onto new lines like text */}
+                {tokens.map((token, index) => ( // one button per word
+                  <Button
+                    key={index} // React needs a stable key
+                    type="button" // plain button, no form submit
+                    variant="outline" // base look: bordered
+                    size="sm" // small size
+                    disabled={checked} // locked after checking
+                    onClick={() => toggleToken(index)} // tap toggles this word
+                    className={cn('rounded-full', tokenClasses(index))} // pill shape plus the per-state colours
+                  >
+                    {/* the label */}
+                    {token.text}
+                    {/* the word itself */}
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-6 flex gap-2">
+                {/* row holding Check and Back */}
+                <Button className="flex-1" onClick={() => setChecked(true)} disabled={checked}>
+                  {/* check the answers, then lock */}
+                  Check
+                  {/* the button label */}
+                </Button>
+                <Button
+                  className="flex-1" // shares the row
+                  variant="outline" // secondary look
+                  onClick={() => { setStep(0); setSelected([]); setChecked(false); }} // go back and reset the game
+                >
+                  {/* button that moves us back to step 0 */}
+                  Back
+                  {/* the button label */}
+                </Button>
+              </div>
+              {checked && ( // results only appear after checking
+                <div className="mt-4 space-y-1 text-sm">
+                  {/* results block */}
+                  <p className="font-medium">{foundCount}/{fillerTotal} fillers found.</p>
+                  {/* score line */}
+                  {wrongCount > 0 && ( // only show the warning when there were wrong taps
+                    <p className="text-red-600">
+                      {/* red warning line */}
+                      {wrongCount} wrong tap(s): those words are not fillers.
+                      {/* the warning text */}
+                    </p>
+                  )}
+                  <p className="text-muted-foreground">
+                    {/* hint line */}
+                    {fellForTrap
+                      ? 'After looks, feel or sounds, like is not a filler.' // trap explanation
+                      : 'Nice, you did not fall for the looks like trap!'} {/* praise */}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

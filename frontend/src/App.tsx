@@ -36,6 +36,9 @@ const Learn = lazy(() => import("./pages/Learn"));
 const FillerWordsLesson = lazy(() => import("./pages/FillerWordsLesson")); // load the lesson page only when visited
 const PaceLesson = lazy(() => import("./pages/PaceLesson")); // load lesson 2 only when visited
 const PostureLesson = lazy(() => import("./pages/PostureLesson")); // load lesson 3 only when visited
+const VoiceLesson = lazy(() => import("./pages/VoiceLesson")); // load lesson 4 only when visited
+const ToneLesson = lazy(() => import("./pages/ToneLesson")); // load lesson 5 only when visited
+const StructureLesson = lazy(() => import("./pages/StructureLesson")); // load lesson 6 only when visited
 
 const queryClient = new QueryClient();
 
@@ -139,6 +142,9 @@ const App = () => (
               <Route path="/learn/cutting-filler-words" element={<FillerWordsLesson />} /> {/* this URL shows lesson 1 */}
               <Route path="/learn/finding-your-pace" element={<PaceLesson />} /> {/* this URL shows lesson 2 */}
               <Route path="/learn/posture-and-body-language" element={<PostureLesson />} /> {/* this URL shows lesson 3 */}
+              <Route path="/learn/voice-energy-and-volume" element={<VoiceLesson />} /> {/* this URL shows lesson 4 */}
+              <Route path="/learn/tone-and-expression" element={<ToneLesson />} /> {/* this URL shows lesson 5 */}
+              <Route path="/learn/structuring-your-thoughts" element={<StructureLesson />} /> {/* this URL shows lesson 6 */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

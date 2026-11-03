@@ -163,7 +163,9 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
                   {wrongCount > 0 && ( // only show the warning when there were wrong taps
                     <p className="text-red-600">
                       {/* red warning line */}
-                      {wrongCount} wrong tap(s): those words are not fillers.
+                      {wrongCount === 1 // singular wording when only one tap was wrong
+                        ? '1 wrong tap: that word is not a filler.' // message for exactly one wrong tap
+                        : `${wrongCount} wrong taps: those words are not fillers.`} {/* message for two or more wrong taps */}
                       {/* the warning text */}
                     </p>
                   )}
@@ -226,7 +228,7 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
                   {/* green when B, amber when A */}
                   {answer === 'B'
                     ? 'Right: pauses beat fillers.' // praise for B
-                    : 'Look again: A has three fillers.'} {/* nudge for A */}
+                    : 'Look again: A has two fillers, um and like.'} {/* nudge for A */}
                 </p>
               )}
               <div className="mt-6 flex gap-2">

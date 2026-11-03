@@ -42,6 +42,7 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
   const fillerTotal = tokens.filter((t) => t.filler).length; // how many real fillers exist in total
   const fellForTrap = selected.includes(6) || selected.includes(7); // true if "looks" or the first "like" was tapped
   const wrongCount = tokens.filter((t, i) => !t.filler && selected.includes(i)).length; // how many tapped words are NOT fillers
+  const [answer, setAnswer] = useState<'A' | 'B' | null>(null); // answer = which option was picked on step 3 (starts none)
 
   const toggleToken = (index: number) => { // called when a word button is clicked
     setSelected((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index])); // remove it if already picked, otherwise add it
@@ -162,6 +163,86 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
                   </p>
                 </div>
               )}
+              {checked && ( // the next-step button only appears after checking
+                <Button className="mt-4 w-full" onClick={() => setStep(2)}>
+                  {/* button that moves us to step 2 (step 3 of the lesson) */}
+                  Next: learn the trick
+                  {/* the button label */}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        {step === 2 && ( // only show this block while we are on step 2
+          <Card>
+            {/* one white card */}
+            <CardHeader>
+              <CardTitle>The pause trick</CardTitle>
+              {/* the card heading */}
+              <p className="text-sm text-muted-foreground">
+                {/* the explanation */}
+                Instead of saying um, stay silent for one second. Silence feels longer to you than it does to your listener.
+                {/* the explanation text */}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <p className="font-medium">Which sounds more confident?</p>
+              {/* the mini-question */}
+              <div className="mt-3 space-y-2">
+                {/* the two options stacked */}
+                <Button
+                  className="w-full justify-start whitespace-normal text-left" // full width, left aligned so long text wraps
+                  variant={answer === 'A' ? 'secondary' : 'outline'} // highlight the picked option
+                  onClick={() => setAnswer('A')} // remember option A
+                >
+                  {/* option A */}
+                  So... um... I think we should... like... start.
+                  {/* option A text */}
+                </Button>
+                <Button
+                  className="w-full justify-start whitespace-normal text-left" // full width, left aligned so long text wraps
+                  variant={answer === 'B' ? 'secondary' : 'outline'} // highlight the picked option
+                  onClick={() => setAnswer('B')} // remember option B
+                >
+                  {/* option B */}
+                  So... [pause] I think we should [pause] start.
+                  {/* option B text */}
+                </Button>
+              </div>
+              {answer !== null && ( // feedback only after an option is picked
+                <p className={answer === 'B' ? 'mt-3 text-green-600' : 'mt-3 text-amber-600'}>
+                  {/* green when B, amber when A */}
+                  {answer === 'B'
+                    ? 'Right: pauses beat fillers.' // praise for B
+                    : 'Look again: A has three fillers.'} {/* nudge for A */}
+                </p>
+              )}
+              <div className="mt-6 flex gap-2">
+                {/* row holding Next and Back */}
+                <Button className="flex-1" disabled={answer === null} onClick={() => { setStep(3); setAnswer(null); }}>
+                  {/* finish step 3; disabled until an option is picked, and resets the question */}
+                  Next: finish
+                  {/* the button label */}
+                </Button>
+                <Button className="flex-1" variant="outline" onClick={() => setStep(1)}>
+                  {/* button that moves us back to step 1 */}
+                  Back
+                  {/* the button label */}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {step === 3 && ( // only show this block while we are on step 3
+          <Card>
+            {/* one white card */}
+            <CardHeader>
+              <CardTitle>Step 4 coming next</CardTitle>
+              {/* placeholder heading for the future step 4 */}
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Step 4 coming next</p>
+              {/* placeholder text for the future step 4 */}
             </CardContent>
           </Card>
         )}

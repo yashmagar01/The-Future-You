@@ -1,5 +1,6 @@
-// Lesson 2: finding your pace. Step 0 is the Hook slider, step 1 is the "Tap the pauses" game.
-import { useState } from 'react'; // useState lets a component remember a value, like remember { mutableStateOf() } in Compose
+// Lesson 2: finding your pace. Step 0 is the Hook slider, step 1 is the pauses game, and steps 2-3 complete it.
+import { useEffect, useState } from 'react'; // useState remembers values; useEffect runs code after render
+import { Link } from 'react-router-dom'; // Link changes pages inside the app without a full reload
 import { AppLayout } from '@/components/AppLayout'; // the frame: top bar + sidebar
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // ready-made card pieces
 import { Button } from '@/components/ui/button'; // ready-made button
@@ -40,12 +41,26 @@ const PaceLesson = () => { // the page: a function that returns UI
   const [wpm, setWpm] = useState(150); // wpm = current slider value (words per minute), starts at a comfortable 150
   const [step, setStep] = useState(0); // step = which part of the lesson we show, setStep changes it (starts at 0)
   const [tappedGaps, setTappedGaps] = useState<number[]>([]); // indexes of the gaps the learner has tapped (starts empty)
+  const [choice, setChoice] = useState<'A' | 'B' | null>(null); // choice = which option was picked on the final question (starts none)
   const isTooSlow = wpm < 110; // below the comfortable band
   const isTooFast = wpm > 160; // above the comfortable band
   const paceLabel = isTooSlow ? 'Too slow' : isTooFast ? 'Too fast' : 'Good pace'; // 110 to 160 is the good band
   const goodFound = tokens.filter((t, i) => t.type === 'gap' && t.good && tappedGaps.includes(i)).length; // correct pauses tapped
   const goodTotal = tokens.filter((t) => t.type === 'gap' && t.good).length; // how many correct pauses exist (3)
   const wrongTaps = tokens.filter((t, i) => t.type === 'gap' && !t.good && tappedGaps.includes(i)).length; // bad gaps tapped
+  const earnedThree = wrongTaps === 0 && choice === 'B'; // both conditions met
+  const earnedTwo = (wrongTaps === 0) !== (choice === 'B'); // exactly one condition met
+  const stars = earnedThree ? 3 : earnedTwo ? 2 : 1; // 3 for both, 2 for one, otherwise 1
+  const xp = 10 + 5 * stars; // base 10 XP plus 5 per star
+
+  useEffect(() => { // runs after render whenever step changes
+    if (step !== 3) return; // only save when the lesson is finished
+    try { // storage can throw (private mode, quota), so guard it
+      localStorage.setItem('learn:finding-your-pace', JSON.stringify({ done: true, stars, xp })); // save the result
+    } catch { // ignore storage errors so the page never crashes
+      // nothing to do: the lesson still works without saved progress
+    } // end of try/catch
+  }, [step, stars, xp]); // re-run if the step or the result changes
 
   const toggleGap = (index: number) => { // called when a gap is clicked
     setTappedGaps((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index])); // remove it if already tapped, otherwise add it
@@ -172,17 +187,103 @@ const PaceLesson = () => { // the page: a function that returns UI
           <Card>
             {/* one white card */}
             <CardHeader>
-              <CardTitle>Step 3 coming next</CardTitle>
-              {/* placeholder heading for the future step 3 */}
+              <CardTitle>Which opening sounds calmer?</CardTitle>
+              {/* the card heading */}
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Step 3 coming next</p>
-              {/* placeholder text for the future step 3 */}
-              <Button className="mt-6 w-full" variant="outline" onClick={() => setStep(1)}>
-                {/* button that moves us back to step 1 */}
-                Back
-                {/* the button label */}
-              </Button>
+              <p className="text-muted-foreground">Pick the opening you would rather hear.</p>
+              {/* the question prompt */}
+              <div className="mt-3 space-y-2">
+                {/* the two options stacked */}
+                <button
+                  type="button" // plain button, no form submit
+                  onClick={() => setChoice('A')} // remember option A
+                  aria-pressed={choice === 'A'} // announces whether A is picked
+                  className={cn(
+                    'w-full rounded-lg border p-3 text-left text-sm leading-6 transition-colors', // small card, left aligned
+                    choice === 'A' ? 'border-primary bg-primary/10' : 'border-input bg-background' // highlight the picked one
+                  )}
+                >
+                  {/* option A card */}
+                  Hello everyone today I want to talk about our project and how it helps students practise speaking and get instant feedback
+                  {/* option A text */}
+                </button>
+                <button
+                  type="button" // plain button, no form submit
+                  onClick={() => setChoice('B')} // remember option B
+                  aria-pressed={choice === 'B'} // announces whether B is picked
+                  className={cn(
+                    'w-full rounded-lg border p-3 text-left text-sm leading-6 transition-colors', // small card, left aligned
+                    choice === 'B' ? 'border-primary bg-primary/10' : 'border-input bg-background' // highlight the picked one
+                  )}
+                >
+                  {/* option B card */}
+                  Hello everyone. Today I will talk about our project. It helps students practise speaking.
+                  {/* option B text */}
+                </button>
+              </div>
+              {choice !== null && ( // feedback only after a choice is made
+                <p className={choice === 'B' ? 'mt-3 text-sm text-green-600' : 'mt-3 text-sm text-amber-600'}>
+                  {/* green for B, amber for A */}
+                  {choice === 'B'
+                    ? 'Correct: short chunks with pauses give listeners time to follow you.' // praise for B
+                    : 'Look again: A has no pauses, so listeners have no time to follow.'} {/* nudge for A */}
+                </p>
+              )}
+              <div className="mt-6 flex gap-2">
+                {/* row holding Next and Back */}
+                <Button className="flex-1" disabled={choice === null} onClick={() => setStep(3)}>
+                  {/* next step; disabled until a choice is made */}
+                  Next
+                  {/* the button label */}
+                </Button>
+                <Button className="flex-1" variant="outline" onClick={() => setStep(1)}>
+                  {/* button that moves us back to step 1 */}
+                  Back
+                  {/* the button label */}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {step === 3 && ( // only show this block while we are on step 3
+          <Card>
+            {/* one white card */}
+            <CardHeader>
+              <CardTitle>Lesson complete!</CardTitle>
+              {/* the card heading */}
+            </CardHeader>
+            <CardContent>
+              <div className="text-center text-4xl" aria-label={`${stars} of 3 stars`}>
+                {/* stars row: filled for earned, empty otherwise */}
+                {[1, 2, 3].map((n) => (
+                  <span key={n}>{n <= stars ? '★' : '☆'}</span> // one star per slot
+                ))}
+              </div>
+              <div className="mt-2 text-center text-3xl font-bold">+{xp} XP</div>
+              {/* total XP earned */}
+              <div className="mt-6 space-y-2">
+                {/* the three action buttons stacked */}
+                <Button asChild className="w-full">
+                  {/* styled as a button, renders a router link */}
+                  <Link to="/record">Try it now</Link>
+                  {/* goes to the recording page */}
+                </Button>
+                <Button asChild variant="outline" className="w-full">
+                  {/* secondary styled link */}
+                  <Link to="/learn">Back to lessons</Link>
+                  {/* goes to the lessons list */}
+                </Button>
+                <Button
+                  variant="ghost" // quiet look for replay
+                  className="w-full" // full width
+                  onClick={() => { setStep(0); setWpm(150); setTappedGaps([]); setChoice(null); }} // restart the whole lesson
+                >
+                  {/* resets step, slider, taps and choice */}
+                  Replay
+                  {/* the button label */}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

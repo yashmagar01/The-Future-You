@@ -6,11 +6,11 @@ import {
   FolderOpen, 
   BarChart3, 
   Gamepad2,
-  BookOpen,
   User, 
   Settings,
   Sparkles,
-  ChevronLeft, 
+  GraduationCap, // NEW: graduation-cap icon for the Learn item
+  ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,8 +23,8 @@ interface SidebarProps {
 const navigationItems = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Play', href: '/play', icon: Gamepad2 },
-  { name: 'Learn', href: '/learn', icon: BookOpen },
   { name: 'Record', href: '/record', icon: Video },
+  { name: 'Learn', href: '/learn', icon: GraduationCap }, // NEW: label, URL to open, icon to draw
   { name: 'Gallery', href: '/gallery', icon: FolderOpen },
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Companion', href: '/companion', icon: Sparkles },

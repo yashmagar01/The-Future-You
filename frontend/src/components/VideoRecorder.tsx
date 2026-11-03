@@ -19,6 +19,8 @@ interface VideoRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
   onUploadFile: (file: File) => void;
   maxDuration?: number; // in seconds
+  /** Play Mode target length. Shown as a countdown/pacing guide while recording. */
+  targetDuration?: number;
   children?: React.ReactNode;
 }
 
@@ -26,6 +28,7 @@ export const VideoRecorder = ({
   onRecordingComplete,
   onUploadFile,
   maxDuration = 600, // 10 minutes default
+  targetDuration,
   children
 }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -465,6 +468,11 @@ export const VideoRecorder = ({
               <div className="absolute top-4 left-4 flex items-center gap-3 bg-red-500/90 text-white px-4 py-2 rounded-full backdrop-blur-md z-20 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className={`h-3 w-3 rounded-full ${isPaused ? 'bg-yellow-300' : 'bg-white animate-pulse'}`} />
                 <span className="font-mono font-bold text-base tracking-wider">{formatTime(recordingTime)}</span>
+                {targetDuration ? (
+                  <span className="font-mono text-xs font-semibold text-white/80">
+                    / {formatTime(targetDuration)} target
+                  </span>
+                ) : null}
               </div>
             )}
 
@@ -502,9 +510,18 @@ export const VideoRecorder = ({
             {isRecording && (
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-20">
                 <div 
-                  className="h-full bg-red-500 transition-all duration-1000 ease-linear"
-                  style={{ width: `${(recordingTime / maxDuration) * 100}%` }}
+                  className={`h-full transition-all duration-1000 ease-linear ${
+                    targetDuration && recordingTime >= targetDuration ? 'bg-emerald-400' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${Math.min(100, (recordingTime / maxDuration) * 100)}%` }}
                 />
+                {targetDuration && targetDuration < maxDuration && (
+                  <div
+                    className="absolute top-0 h-full w-0.5 bg-amber-300"
+                    style={{ left: `${(targetDuration / maxDuration) * 100}%` }}
+                    title={`Target: ${formatTime(targetDuration)}`}
+                  />
+                )}
               </div>
             )}
             
@@ -533,7 +550,7 @@ export const VideoRecorder = ({
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Begin your 5-minute reflection</p>
+                        <p>{targetDuration ? `Begin your ${targetDuration}-second level` : 'Begin your 5-minute reflection'}</p>
                       </TooltipContent>
                     </Tooltip>
                   ) : (
@@ -638,17 +655,24 @@ export const VideoRecorder = ({
               <div className="text-center animate-fade-in">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground mb-2">
                   <Info className="h-4 w-4" />
-                  <span className="text-sm font-medium">Recording time: {formatTime(recordingTime)} / {formatMaxTime(maxDuration)}</span>
+                  <span className="text-sm font-medium">
+                    Recording time: {formatTime(recordingTime)}{' '}
+                    {targetDuration ? `/ ${formatTime(targetDuration)} target` : `/ ${formatMaxTime(maxDuration)}`}
+                  </span>
                 </div>
                 <Slider 
-                  value={[recordingTime]} 
+                  value={[Math.min(recordingTime, maxDuration)]} 
                   max={maxDuration} 
                   step={1} 
                   disabled 
                   className="w-full max-w-md mx-auto"
                 />
                 <p className="text-sm text-muted-foreground mt-3 font-medium">
-                  {recordingTime < 300
+                  {targetDuration ? (
+                    recordingTime < targetDuration
+                      ? `🎯 Keep going — ${targetDuration - recordingTime}s left to hit the target.`
+                      : '✅ Target reached! Stop when you feel ready — your analysis is waiting.'
+                  ) : recordingTime < 300
                     ? '💡 Tip: Record at least 5 minutes for better feedback'
                     : '✨ Great! You\'re doing well'}
                 </p>

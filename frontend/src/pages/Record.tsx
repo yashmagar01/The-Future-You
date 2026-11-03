@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { AlertCircle,  Loader2, 
   Upload, 
@@ -11,6 +11,7 @@ import { AlertCircle,  Loader2,
   Info 
 } from 'lucide-react';
 import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VideoRecorder } from "@/components/VideoRecorder";
 import { DebugOnboardingReset } from "@/components/DebugOnboardingReset";
@@ -20,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { supabase, supabaseUrl } from "@/integrations/supabase/client";
 import { useCreateRecording } from "@/hooks/useRecordings";
+import { getLevelById } from "@/data/playLevels";
+import { usePlay } from "@/contexts/PlayContext";
 import { ProcessingTips } from "@/components/ProcessingTips";
 
 import { cn } from "@/lib/utils";
@@ -37,7 +40,23 @@ const Record = () => {
   const { mutateAsync: createRecording } = useCreateRecording();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const levelIdFromParams = searchParams.get('level');
+  const activeLevel = levelIdFromParams ? getLevelById(levelIdFromParams) : undefined;
+  const { isUnlocked } = usePlay();
   const { toast } = useToast();
+
+  // Direct links can't skip the quest ladder.
+  useEffect(() => {
+    if (activeLevel && !isUnlocked(activeLevel.level)) {
+      toast({
+        title: 'Level Locked 🔒',
+        description: `Clear Level ${activeLevel.level - 1} to unlock "${activeLevel.title}".`,
+        variant: 'destructive',
+      });
+      navigate('/play', { replace: true });
+    }
+  }, [activeLevel, isUnlocked, navigate, toast]);
 
   // Fetch user role from profiles table
   useEffect(() => {
@@ -220,7 +239,11 @@ const Record = () => {
         duration_seconds: duration,
         file_size_bytes: blob.size,
         status: 'uploaded', // Set to 'uploaded' for the backend worker
-        title: `Recording ${new Date().toLocaleDateString()}`,
+        title: activeLevel ? `Level ${activeLevel.level}: ${activeLevel.title}` : `Recording ${new Date().toLocaleDateString()}`,
+        metadata: {
+          level_id: activeLevel?.id ?? null,
+          level_number: activeLevel?.level ?? null,
+        },
       });
 
       console.log('Database record created:', recordingData.id);
@@ -315,7 +338,13 @@ const Record = () => {
         duration_seconds: duration,
         file_size_bytes: file.size,
         status: 'uploaded',
-        title: file.name || `Uploaded ${new Date().toLocaleDateString()}`,
+        title: activeLevel
+          ? `Level ${activeLevel.level}: ${activeLevel.title}`
+          : file.name || `Uploaded ${new Date().toLocaleDateString()}`,
+        metadata: {
+          level_id: activeLevel?.id ?? null,
+          level_number: activeLevel?.level ?? null,
+        },
       });
 
       console.log('Database record created:', recordingData.id);
@@ -403,6 +432,55 @@ const Record = () => {
               </Alert>
             </div>
           </>
+        )}
+
+        {/* Play Mode Level Banner */}
+        {!isUploading && activeLevel && (
+          <div className="mb-6 rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 p-5 md:p-6 animate-fade-in shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-3xl flex-shrink-0">
+                  {activeLevel.emoji}
+                </div>
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-white uppercase tracking-wider">
+                      Level {activeLevel.level} Quest
+                    </span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      Target: ~{activeLevel.durationTargetSec}s
+                    </span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-mono">
+                      Pass: {activeLevel.unlockAfterScore}+ score
+                    </span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                      +{activeLevel.xpReward} XP
+                    </span>
+                  </div>
+                  <h2 className="font-bold text-xl text-foreground">
+                    {activeLevel.title} — <span className="font-normal text-muted-foreground text-sm">{activeLevel.tagline}</span>
+                  </h2>
+                  <p className="text-sm text-foreground/90 leading-relaxed pt-1">
+                    "{activeLevel.prompt}"
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-xs font-semibold text-muted-foreground mr-1">Focus Areas:</span>
+                    {activeLevel.focusMetrics.map((m) => (
+                      <span key={m} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 capitalize">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 self-start md:self-center">
+                <Button variant="outline" size="sm" onClick={() => navigate('/play')} className="text-xs">
+                  Change Level
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {isUploading ? (
@@ -505,7 +583,8 @@ const Record = () => {
           <VideoRecorder
             onRecordingComplete={handleRecordingComplete}
             onUploadFile={handleFileUpload}
-            maxDuration={600}
+            maxDuration={activeLevel ? Math.max(activeLevel.durationTargetSec * 2, 60) : 600}
+            targetDuration={activeLevel?.durationTargetSec}
           />
         )}
       </div>

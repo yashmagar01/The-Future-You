@@ -423,6 +423,7 @@ export type Database = {
           duration_seconds: number | null
           file_size_bytes: number | null
           id: string
+          metadata: Json | null
           notified: boolean
           status: string | null
           thumbnail_url: string | null
@@ -437,6 +438,7 @@ export type Database = {
           duration_seconds?: number | null
           file_size_bytes?: number | null
           id?: string
+          metadata?: Json | null
           notified?: boolean
           status?: string | null
           thumbnail_url?: string | null
@@ -451,6 +453,7 @@ export type Database = {
           duration_seconds?: number | null
           file_size_bytes?: number | null
           id?: string
+          metadata?: Json | null
           notified?: boolean
           status?: string | null
           thumbnail_url?: string | null

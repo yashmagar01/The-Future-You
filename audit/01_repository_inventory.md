@@ -1,3 +1,7 @@
+opencode
+
+# opencode
+
 # 01 Repository Inventory — The Future You
 
 ## 1. Current Architecture Overview

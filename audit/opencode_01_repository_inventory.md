@@ -1,4 +1,6 @@
-# opencode — 01 Repository Inventory
+opencode
+
+# 01 Repository Inventory
 
 > Read-only audit artifact. No production code was modified. All paths are relative to `C:\Users\Yash\OneDrive\Desktop\yash-reflections-mvp`.
 
@@ -24,9 +26,9 @@ Verification labels used throughout the audit:
 | `backend/local-processor/` | Node/Express worker, Phase 1 orchestration, scoring, DB writes, companion APIs | `server.js`, `worker_whisper.py`, `package.json` |
 | `backend/ai_engine/` | Phase 2 Python engine (Parselmouth, librosa, MediaPipe, MiniLM, fusion) | `main.py`, `audio_analysis.py`, `video_analysis.py`, `text_analysis.py`, `fusion.py` |
 | `frontend/` | React 18 + Vite SPA | `frontend/package.json`, `frontend/src/` |
-| `supabase-organized/supabase/migrations/` | Main migration chain | 14 `.sql` files |
-| `supabase-organized/migrations/` | Out-of-chain migration(s) | `20251220_add_advanced_metrics.sql` |
-| `supabase-organized/supabase/functions/` | 14 Edge Function folders | directory listing |
+| `supabase-organized/supabase/migrations/` | Main migration chain | 10 `.sql` files |
+| `supabase-organized/migrations/` | Out-of-chain migrations | 5 `.sql` files |
+| `supabase-organized/supabase/functions/` | 14 functions plus `_shared` | directory listing |
 | `docs/` | Historical and current documentation | `docs/archive_v1.5/`, `docs/MEMORY_SYSTEM.md`, etc. |
 | `scripts/` | Backup scripts only | `backup_v1.5.ps1`, `backup_v1.5.sh` |
 | `audit/` | This audit output | created by this audit |
@@ -94,7 +96,6 @@ This is **not** a fully local browser app: Supabase (cloud Postgres, Auth, Stora
 - `frontend/src/hooks/useRecordings.ts` — query/storage ranges.
 - `frontend/src/hooks/usePoseDetection.ts` — full read.
 - `frontend/src/utils/poseAnalysis.ts` — full read.
-- `frontend/src/pages/timelineData.ts` (or equivalent timeline helper).
 - `frontend/src/integrations/supabase/types.ts` — table/column evidence.
 - `frontend/src/lib/api.ts`.
 - Frontend tests: `ExportReport.test.tsx`, `VideoEmbed.test.tsx`, `tests/waitlist.test.ts`.
@@ -125,7 +126,7 @@ This is **not** a fully local browser app: Supabase (cloud Postgres, Auth, Stora
 | Every frontend component (e.g. `Gallery.tsx`, `Companion*`, onboarding wizard) | Only components reaching the scoring/analysis/report path were audited. UI outside that path is out of scope. |
 | `supabase-organized/supabase/functions/*` beyond queue status/endpoint | Only the processing path and record lifecycle were traced. Auth/email/waitlist functions were not audited line-by-line. |
 | Deployment environment (Vercel/Supabase project) | No credentials or project access. |
-| Real recordings / model inference | No sample media, no Supabase session, no model downloads. See `opencode_10_runtime_reproduction.md`. |
+| Real recordings / Phase 2 model inference | Phase 1 was run on an existing sample, but no Supabase session, no MediaPipe posture, and no Phase 2 models were available. See `opencode_10_runtime_reproduction.md`. |
 | `node_modules` internals except Transformers.js pipeline default | Only inspected to confirm `topk=1`. |
 
 ## 6. Repository hygiene anomalies
@@ -145,8 +146,8 @@ This is **not** a fully local browser app: Supabase (cloud Postgres, Auth, Stora
 | Frontend builds | RUNTIME-VERIFIED — `npm run build` succeeded (Vite 8.3.0). |
 | Frontend tests pass | RUNTIME-VERIFIED — 3 files / 25 tests passed. |
 | Backend smoke test passes | RUNTIME-VERIFIED — 1 trivial test passed. |
-| Node worker end-to-end | NOT VERIFIED — requires Supabase, media, Python models. |
-| Phase 2 end-to-end | NOT VERIFIED — model downloads and media unavailable. |
+| Node worker end-to-end | NOT VERIFIED — requires live Supabase; Phase 1 alone was RUNTIME-VERIFIED on one sample. |
+| Phase 2 end-to-end | FAILED here — `mediapipe`, `parselmouth`, `librosa`, `sentence_transformers` missing. |
 | Database matches generated types | VERIFIED WITH LIMITATIONS — source-only comparison; no live DB introspection. |
 
 ## 8. Bottom line

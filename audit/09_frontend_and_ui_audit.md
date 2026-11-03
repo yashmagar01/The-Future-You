@@ -1,3 +1,5 @@
+opencode
+
 # 09 Frontend and UI Audit — The Future You
 
 ## 9.1 Analysis Page Component Architecture

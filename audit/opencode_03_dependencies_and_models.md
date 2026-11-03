@@ -1,4 +1,6 @@
-# opencode — 03 Dependencies and Models
+opencode
+
+# 03 Dependencies and Models
 
 > Read-only audit. Model sizes/latencies are **not measured** here; they are either taken from code/config or labelled NOT VERIFIED.
 

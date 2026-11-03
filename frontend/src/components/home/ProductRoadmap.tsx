@@ -63,9 +63,7 @@ const ProductRoadmap = ({ userRole = 'user' }: ProductRoadmapProps) => {
         {/* Desktop: Horizontal Timeline */}
         <div className="hidden lg:block">
           <div className="relative">
-            {/* Timeline Line */}
-            <div className="absolute top-24 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-orange-500 to-blue-500 rounded-full" 
-                 aria-hidden="true" />
+            {/* Timeline Line — removed */}
 
             <div className="grid grid-cols-3 gap-8">
               {timelineData.map((milestone, index) => (
@@ -210,19 +208,19 @@ const ProductRoadmap = ({ userRole = 'user' }: ProductRoadmapProps) => {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-green-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-green-600">Coming Soon</span> - Q2 2025
+              <span className="font-semibold text-green-600">Coming Soon</span> - Q1 2027
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-blue-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-blue-600">Planned</span> - Q3 2025 & Beyond
+              <span className="font-semibold text-blue-600">Planned</span> - Q1 2027 & Beyond
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-purple-500" aria-hidden="true" />
             <span className="text-muted-foreground">
-              <span className="font-semibold text-purple-600">Dream</span> - 2026
+              <span className="font-semibold text-purple-600">Dream</span> - 2027
             </span>
           </div>
           <div className="flex items-center gap-2">

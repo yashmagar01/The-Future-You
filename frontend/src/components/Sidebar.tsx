@@ -5,6 +5,7 @@ import {
   Video, 
   FolderOpen, 
   BarChart3, 
+  Gamepad2,
   User, 
   Settings,
   Sparkles,
@@ -21,6 +22,7 @@ interface SidebarProps {
 
 const navigationItems = [
   { name: 'Home', href: '/', icon: Home },
+  { name: 'Play', href: '/play', icon: Gamepad2 },
   { name: 'Record', href: '/record', icon: Video },
   { name: 'Learn', href: '/learn', icon: GraduationCap }, // NEW: label, URL to open, icon to draw
   { name: 'Gallery', href: '/gallery', icon: FolderOpen },

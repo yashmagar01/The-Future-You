@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
@@ -8,12 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Video, Clock, TrendingUp, Edit2, Save, X, Loader2, User } from 'lucide-react';
+import { Video, Clock, TrendingUp, Edit2, Save, X, Loader2, User, Trophy, Zap, Flame, Star, CheckCircle2, Shield, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { usePlay } from '@/contexts/PlayContext';
+import { PLAY_LEVELS, hasBadge } from '@/data/playLevels';
 
 export default function Profile() {
   const { user } = useAuth();
+  const { xp, streak, badges, badgeDates, playerLevel, allBadges, getStatus } = usePlay();
   const { toast } = useToast();
   
   const [profile, setProfile] = useState({
@@ -279,6 +284,119 @@ export default function Profile() {
             </CardContent>
           </Card>
         </div>
+
+        {/* 10-Level Speaker Mastery & Gamification */}
+        <Card className="border-border/60 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white overflow-hidden relative shadow-lg">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+          <CardContent className="p-6 md:p-8 relative z-10 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+                  <span>{playerLevel.currentRank.emoji}</span> Level {playerLevel.level} of 10
+                </div>
+                <h3 className="text-2xl font-extrabold text-white">
+                  {playerLevel.currentRank.title}
+                </h3>
+                <p className="text-emerald-100/80 text-sm mt-1 max-w-xl">
+                  {playerLevel.currentRank.description}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white border border-white/10">
+                  <Zap className="h-3.5 w-3.5 text-amber-400" /> {xp} XP
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white border border-white/10">
+                  <Flame className="h-3.5 w-3.5 text-orange-400" /> {streak}d Streak
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white border border-white/10">
+                  <Trophy className="h-3.5 w-3.5 text-indigo-400" /> {badges.length} Badges
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white border border-white/10">
+                  <Star className="h-3.5 w-3.5 text-amber-400" /> {PLAY_LEVELS.reduce((acc, l) => acc + (getStatus(l).stars || 0), 0)} Stars
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 max-w-2xl bg-white/5 p-4 rounded-2xl border border-white/10">
+              <div className="flex items-center justify-between text-xs text-emerald-200">
+                <span className="font-semibold">
+                  Progress to Level {playerLevel.nextRank ? playerLevel.nextRank.level : 10}: {playerLevel.nextRank ? playerLevel.nextRank.title : 'Mastery Achieved'}
+                </span>
+                <span className="font-bold">{playerLevel.progressPercent}%</span>
+              </div>
+              <Progress value={playerLevel.progressPercent} className="h-2.5 bg-black/40" />
+              <div className="flex items-center justify-between text-[11px] text-emerald-100/60 pt-1">
+                <span>Active Perk: {playerLevel.currentRank.perk}</span>
+                <span>{playerLevel.nextRank ? `${playerLevel.xpNeededForNextLevel} XP needed` : 'Max Rank'}</span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between border-t border-white/10">
+              <p className="text-xs text-emerald-100/70">
+                10-Level Practice Quest: <strong>{PLAY_LEVELS.filter((l) => getStatus(l).status === 'completed').length} / {PLAY_LEVELS.length} Cleared</strong>
+              </p>
+              <Button asChild size="sm" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold">
+                <Link to="/play">Open Play Mode</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Badges & Achievements Showcase */}
+        <Card className="border-border/60">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  Trophy Case & Badges ({badges.length}/{allBadges.length})
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Achievements unlocked through speaking challenges, streaks, and speech mastery.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {allBadges.map((badge) => {
+                const isEarned = hasBadge(badges, badge);
+                const unlockedAt = badgeDates[badge.id];
+                return (
+                  <div
+                    key={badge.id}
+                    className={`rounded-2xl border p-3 flex flex-col items-center text-center transition-all ${
+                      isEarned
+                        ? 'bg-amber-500/5 border-amber-500/30 shadow-xs'
+                        : 'bg-muted/30 border-border/60 opacity-40'
+                    }`}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-muted/80 flex items-center justify-center text-2xl mb-2">
+                      {badge.emoji}
+                    </div>
+                    <p className="text-xs font-bold leading-tight line-clamp-1">{badge.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{badge.description}</p>
+                    {isEarned ? (
+                      <span className="mt-2 flex flex-col items-center gap-0.5 text-[10px] font-bold text-emerald-600">
+                        <span className="flex items-center gap-0.5">
+                          <CheckCircle2 className="h-3 w-3" /> Unlocked
+                        </span>
+                        {unlockedAt && (
+                          <span className="font-medium text-muted-foreground">
+                            {new Date(unlockedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="mt-2 text-[10px] text-muted-foreground font-medium">Locked</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Getting Started Card - Only show if profile incomplete */}
         {(!profile.full_name || !profile.bio) && !isEditing && (

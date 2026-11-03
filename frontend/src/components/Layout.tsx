@@ -1,9 +1,10 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Sparkles, LogOut, Home, Video, Image as ImageIcon, TrendingUp, Menu, X, User, Settings,GraduationCap } from "lucide-react";
+import { Sparkles, LogOut, Home, Video, Image as ImageIcon, TrendingUp, Menu, X, User, Settings, Gamepad2, BookOpen, Flame, Zap,GraduationCap} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlay } from "@/contexts/PlayContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -29,6 +30,8 @@ interface LayoutProps {
 
 const navLinks = [
   { name: "Home", path: "/", icon: Home },
+  { name: "Play", path: "/play", icon: Gamepad2 },
+  { name: "Learn", path: "/learn", icon: BookOpen },
   { name: "Record", path: "/record", icon: Video },
   { name: "Gallery", path: "/gallery", icon: ImageIcon },
   { name: "Dashboard", path: "/dashboard", icon: TrendingUp },
@@ -68,6 +71,7 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { streak, playerLevel, xp } = usePlay();
   const { toast } = useToast();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -152,6 +156,21 @@ const Layout = ({ children }: LayoutProps) => {
                 <Link to="/waitlist">Join Waitlist</Link>
               </Button>
             </motion.div>
+
+            {/* Gamification Level & Streak Pill */}
+            <Link
+              to="/play"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-xs font-semibold transition-all hover:scale-105"
+              title={`Level ${playerLevel.level}: ${playerLevel.currentRank.title} (${xp} XP)`}
+            >
+              <span className="text-sm">{playerLevel.currentRank.emoji}</span>
+              <span>Lv. {playerLevel.level}</span>
+              <span className="text-emerald-300">·</span>
+              <span className="flex items-center gap-0.5 text-orange-600 font-bold">
+                <Flame className="h-3.5 w-3.5" />
+                {streak}d
+              </span>
+            </Link>
             
             {user ? (
               <DropdownMenu>

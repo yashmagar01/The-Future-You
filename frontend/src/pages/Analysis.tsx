@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useRecording } from '@/hooks/useRecordings';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,11 +6,15 @@ import Layout from '@/components/Layout';
 import ExportButton from '@/components/ExportButton';
 import AnalysisResults, { AnalysisData, AnalysisMetrics } from '@/components/AnalysisResults';
 import TranscriptViewer from '@/components/TranscriptViewer';
+import { LevelCompleteModal } from '@/components/play/LevelCompleteModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { usePlay } from '@/contexts/PlayContext';
+import { PLAY_LEVELS } from '@/data/playLevels';
+import { useToast } from '@/hooks/use-toast';
 
 
 
@@ -18,6 +22,10 @@ const Analysis = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: recording, isLoading, error } = useRecording(id || '');
+  const { recordLevelResult, awardReflectionXp, lastResult, clearLastResult, isUnlocked } = usePlay();
+  const { toast } = useToast();
+  const [showComplete, setShowComplete] = useState(false);
+  const handledKeyRef = useRef<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -48,6 +56,37 @@ const Analysis = () => {
     created_at: recording.created_at
   } : null, [recording]);
 
+  // Play Mode level context (attached when recording started from a play level)
+  const levelId = useMemo(() => {
+    const meta = (recording?.metadata ?? null) as { level_id?: string | null; level_number?: number | null } | null;
+    return typeof meta?.level_id === 'string' ? meta.level_id : null;
+  }, [recording]);
+  // When a play session recording gets analyzed, submit the score and open the completion modal
+  useEffect(() => {
+    if (!analysisData) return;
+    const score = analysisData.overall_score;
+    if (score == null) return;
+    const key = `${recording?.id}-${score}`;
+    if (handledKeyRef.current === key) return;
+    handledKeyRef.current = key;
+
+    if (levelId) {
+      // The recording id makes this idempotent across refreshes/re-renders.
+      const result = recordLevelResult(levelId, score, recording?.id);
+      if (!result.alreadyClaimed) {
+        setShowComplete(true);
+      }
+    } else {
+      const { xpEarned, newBadge } = awardReflectionXp(score, recording?.id);
+      if (xpEarned > 0) {
+        toast({
+          title: 'Reflection Analyzed! ⚡',
+          description: `+${xpEarned} XP added to your Speaker Rank!${newBadge ? ` 🏆 Unlocked badge: ${newBadge}` : ''}`,
+        });
+      }
+    }
+  }, [analysisData, levelId, recording?.id, recordLevelResult, awardReflectionXp, toast]);
+
   // Build real transcript from database
   const displayTranscript: { time: number; text: string }[] = useMemo(() => {
     const insights = recording?.feedback?.key_insights as any;
@@ -74,6 +113,38 @@ const Analysis = () => {
       videoRef.current.play();
     }
   }, []);
+
+  const handlePlayAgain = () => {
+    const levelId = lastResult?.level.id;
+    setShowComplete(false);
+    clearLastResult();
+    if (levelId) {
+      navigate(`/record?level=${levelId}`);
+    }
+  };
+
+  const handleNextLevel = () => {
+    const next = lastResult ? PLAY_LEVELS.find((l) => l.level === lastResult.level.level + 1) ?? null : null;
+    const clearedLevel = lastResult?.level.level;
+    setShowComplete(false);
+    clearLastResult();
+    if (next) {
+      if (isUnlocked(next.level)) {
+        navigate(`/record?level=${next.id}`);
+      } else {
+        toast({
+          title: 'Level Locked 🔒',
+          description: `Clear Level ${clearedLevel} to unlock Level ${next.level}.`,
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleCompleteClose = () => {
+    setShowComplete(false);
+    clearLastResult();
+  };
 
   return (
     <Layout>
@@ -252,6 +323,15 @@ const Analysis = () => {
           )}
         </div>
       </div>
+
+      {/* Play Mode Level Completion Celebration */}
+      <LevelCompleteModal
+        open={showComplete}
+        result={lastResult}
+        onClose={handleCompleteClose}
+        onPlayAgain={handlePlayAgain}
+        onNextLevel={handleNextLevel}
+      />
     </Layout>
   );
 };

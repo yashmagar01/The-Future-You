@@ -36,6 +36,11 @@ export enum AnalyticsEvent {
     PAGE_VIEW = 'page_view',
     SESSION_START = 'session_start',
     SESSION_END = 'session_end',
+
+    // Play Mode Events
+    PLAY_STARTED = 'play_started',
+    PLAY_COMPLETED = 'play_completed',
+    LEVEL_UNLOCKED = 'level_unlocked',
 }
 
 interface AnalyticsPayload {
@@ -175,6 +180,37 @@ class Analytics {
         await this.track(AnalyticsEvent.PAGE_VIEW, {
             page_name: pageName,
             path,
+        });
+    }
+
+    /**
+     * Helper: Track play level start
+     */
+    async trackPlayStarted(levelId: string, levelNumber: number) {
+        await this.track(AnalyticsEvent.PLAY_STARTED, {
+            level_id: levelId,
+            level_number: levelNumber,
+        });
+    }
+
+    /**
+     * Helper: Track play level completion
+     */
+    async trackPlayCompleted(levelId: string, levelNumber: number, score: number, stars: number) {
+        await this.track(AnalyticsEvent.PLAY_COMPLETED, {
+            level_id: levelId,
+            level_number: levelNumber,
+            score,
+            stars,
+        });
+    }
+
+    /**
+     * Helper: Track level unlock
+     */
+    async trackLevelUnlocked(levelNumber: number) {
+        await this.track(AnalyticsEvent.LEVEL_UNLOCKED, {
+            level_number: levelNumber,
         });
     }
 }

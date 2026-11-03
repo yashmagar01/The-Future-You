@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PlayProvider } from "@/contexts/PlayContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Analytics } from "@vercel/analytics/react";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -16,6 +17,8 @@ const Record = lazy(() => import("./pages/Record"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Companion = lazy(() => import("./pages/Companion"));
+const Play = lazy(() => import("./pages/Play"));
+const Learn = lazy(() => import("./pages/Learn"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
@@ -31,8 +34,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Analysis = lazy(() => import("./pages/Analysis"));
-// Load the Learn page only when someone visits /learn (lazy = on demand)
-const Learn = lazy(() => import("./pages/Learn"));
+
 const FillerWordsLesson = lazy(() => import("./pages/FillerWordsLesson")); // load the lesson page only when visited
 const PaceLesson = lazy(() => import("./pages/PaceLesson")); // load lesson 2 only when visited
 const PostureLesson = lazy(() => import("./pages/PostureLesson")); // load lesson 3 only when visited
@@ -44,7 +46,8 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
+    <PlayProvider>
+      <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
@@ -94,6 +97,10 @@ const App = () => (
                 } 
               />
               <Route 
+                path="/play" 
+                element={<Play />} 
+              />
+              <Route 
                 path="/profile" 
                 element={
                   <ProtectedRoute>
@@ -138,13 +145,20 @@ const App = () => (
                 } 
               />
               {/* TODO: wrap in ProtectedRoute before the final version (public only while developing) */}
-              <Route path="/learn" element={<Learn />} /> {/* URL /learn shows the Learn page */}
               <Route path="/learn/cutting-filler-words" element={<FillerWordsLesson />} /> {/* this URL shows lesson 1 */}
               <Route path="/learn/finding-your-pace" element={<PaceLesson />} /> {/* this URL shows lesson 2 */}
               <Route path="/learn/posture-and-body-language" element={<PostureLesson />} /> {/* this URL shows lesson 3 */}
               <Route path="/learn/voice-energy-and-volume" element={<VoiceLesson />} /> {/* this URL shows lesson 4 */}
               <Route path="/learn/tone-and-expression" element={<ToneLesson />} /> {/* this URL shows lesson 5 */}
               <Route path="/learn/structuring-your-thoughts" element={<StructureLesson />} /> {/* this URL shows lesson 6 */}
+             <Route 
+                path="/learn" 
+                element={
+                  <ProtectedRoute>
+                    <Learn />
+                  </ProtectedRoute>
+                } 
+              />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -153,7 +167,8 @@ const App = () => (
           <Analytics />
         </TooltipProvider>
       </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </PlayProvider>
   </ErrorBoundary>
 );
 

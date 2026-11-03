@@ -99,11 +99,6 @@ const PaceLesson = () => { // the page: a function that returns UI
                 Next: keep a steady beat
                 {/* the button label */}
               </Button>
-              <Button className="mt-2 w-full" variant="outline" onClick={() => setStep(0)}>
-                {/* button that stays on step 0 (placeholder for the next step's Back) */}
-                Back
-                {/* the button label */}
-              </Button>
             </CardContent>
           </Card>
         )}

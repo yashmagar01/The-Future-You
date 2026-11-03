@@ -1,5 +1,6 @@
 // Lesson 1: Cutting filler words. Step 0 is the slider; Step 1 is the "spot the fillers" game.
-import { useState } from 'react'; // useState lets a component remember a value, like remember { mutableStateOf() } in Compose
+import { useEffect, useState } from 'react'; // useState remembers values; useEffect runs code after render, like LaunchedEffect
+import { Link } from 'react-router-dom'; // Link changes pages inside the app without a full reload
 import { AppLayout } from '@/components/AppLayout'; // the frame: top bar + sidebar
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // ready-made card pieces
 import { Button } from '@/components/ui/button'; // ready-made button
@@ -43,6 +44,17 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
   const fellForTrap = selected.includes(6) || selected.includes(7); // true if "looks" or the first "like" was tapped
   const wrongCount = tokens.filter((t, i) => !t.filler && selected.includes(i)).length; // how many tapped words are NOT fillers
   const [answer, setAnswer] = useState<'A' | 'B' | null>(null); // answer = which option was picked on step 3 (starts none)
+  const stars = foundCount === fillerTotal && wrongCount === 0 ? 3 : foundCount >= 3 ? 2 : 1; // 3 perfect, 2 for three or more found, else 1
+  const xp = 10 + 5 * stars; // base 10 XP plus 5 per star
+
+  useEffect(() => { // runs after render whenever step changes
+    if (step !== 3) return; // only save when the lesson is finished
+    try { // storage can throw (private mode, quota), so guard it
+      localStorage.setItem('learn:cutting-filler-words', JSON.stringify({ done: true, stars, xp })); // save the result
+    } catch { // ignore storage errors so the page never crashes
+      // nothing to do: the lesson still works without saved progress
+    } // end of try/catch
+  }, [step, stars, xp]); // re-run if the step or the result changes
 
   const toggleToken = (index: number) => { // called when a word button is clicked
     setSelected((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index])); // remove it if already picked, otherwise add it
@@ -237,12 +249,40 @@ const FillerWordsLesson = () => { // the page: a function that returns UI
           <Card>
             {/* one white card */}
             <CardHeader>
-              <CardTitle>Step 4 coming next</CardTitle>
-              {/* placeholder heading for the future step 4 */}
+              <CardTitle>Lesson complete!</CardTitle>
+              {/* the card heading */}
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Step 4 coming next</p>
-              {/* placeholder text for the future step 4 */}
+              <div className="text-center text-4xl" aria-label={`${stars} of 3 stars`}>
+                {/* stars row: filled for earned, empty otherwise */}
+                {[1, 2, 3].map((n) => (
+                  <span key={n}>{n <= stars ? '★' : '☆'}</span> // one star per slot
+                ))}
+              </div>
+              <div className="mt-2 text-center text-3xl font-bold">+{xp} XP</div>
+              {/* total XP earned */}
+              <div className="mt-6 space-y-2">
+                {/* the three action buttons stacked */}
+                <Button asChild className="w-full">
+                  {/* styled as a button, renders a router link */}
+                  <Link to="/record">Try it now: record a real practice</Link>
+                  {/* goes to the recording page */}
+                </Button>
+                <Button asChild variant="outline" className="w-full">
+                  {/* secondary styled link */}
+                  <Link to="/learn">Back to lessons</Link>
+                  {/* goes to the lessons list */}
+                </Button>
+                <Button
+                  variant="ghost" // quiet look for replay
+                  className="w-full" // full width
+                  onClick={() => { setStep(0); setSelected([]); setChecked(false); setAnswer(null); }} // restart the whole lesson
+                >
+                  {/* resets every step back to the start */}
+                  Replay
+                  {/* the button label */}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

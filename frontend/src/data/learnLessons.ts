@@ -28,10 +28,10 @@ export interface LearnLesson {
 export const learnLessons: LearnLesson[] = [
   // Lesson 1: cutting filler words. Available now.
   { id: 'cutting-filler-words', title: 'Cutting Filler Words', topic: 'Cutting filler words', minutes: 5, available: true }, // Filler-word removal lesson.
-  // Lesson 2: finding your pace. Coming soon for now.
-  { id: 'finding-your-pace', title: 'Finding Your Pace', topic: 'Finding your pace', minutes: 7, available: false }, // Pacing lesson.
+  // Lesson 2: finding your pace. Available now.
+  { id: 'finding-your-pace', title: 'Finding Your Pace', topic: 'Finding your pace', minutes: 7, available: true }, // Pacing lesson.
   // Lesson 3: posture and body language. Coming soon for now.
-  { id: 'posture-and-body-language', title: 'Posture and Body Language', topic: 'Posture and body language', minutes: 6, available: false }, // Posture lesson.
+  { id: 'posture-and-body-language', title: 'Posture and Body Language', topic: 'Posture and body language', minutes: 6, available: true }, // Posture lesson.
   // Lesson 4: voice energy and volume. Coming soon.
   { id: 'voice-energy-and-volume', title: 'Voice Energy and Volume', topic: 'Voice energy and volume', minutes: 8, available: false }, // Coming soon lesson.
   // Lesson 5: tone and expression. Coming soon.

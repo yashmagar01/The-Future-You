@@ -35,6 +35,7 @@ const Analysis = lazy(() => import("./pages/Analysis"));
 const Learn = lazy(() => import("./pages/Learn"));
 const FillerWordsLesson = lazy(() => import("./pages/FillerWordsLesson")); // load the lesson page only when visited
 const PaceLesson = lazy(() => import("./pages/PaceLesson")); // load lesson 2 only when visited
+const PostureLesson = lazy(() => import("./pages/PostureLesson")); // load lesson 3 only when visited
 
 const queryClient = new QueryClient();
 
@@ -137,6 +138,7 @@ const App = () => (
               <Route path="/learn" element={<Learn />} /> {/* URL /learn shows the Learn page */}
               <Route path="/learn/cutting-filler-words" element={<FillerWordsLesson />} /> {/* this URL shows lesson 1 */}
               <Route path="/learn/finding-your-pace" element={<PaceLesson />} /> {/* this URL shows lesson 2 */}
+              <Route path="/learn/posture-and-body-language" element={<PostureLesson />} /> {/* this URL shows lesson 3 */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

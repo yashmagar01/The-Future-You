@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, UserContext } from './types';
 
 export function buildSystemPrompt(context: UserContext): string {
@@ -59,11 +60,15 @@ export async function* streamCompanionResponse(
 
   // Strategy 1: Try Local Processor Express SSE endpoint
   try {
+    // getSession() refreshes an expired access token before returning it.
+    const { data: { session } } = await supabase.auth.getSession();
+
     const response = await fetch(`${localProcessorUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
       },
       body: JSON.stringify({
         message,

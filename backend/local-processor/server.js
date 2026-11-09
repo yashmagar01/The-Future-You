@@ -2,15 +2,24 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-const {spawn } = require('child_process');
+const { spawn } = require('child_process');
 // const fetch = require('node-fetch'); // Native fetch is available in Node 18+
 const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
+
+// Always read this service's own .env, regardless of the directory it is started from.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Optional AI dependency: a missing package must not stop the base server from starting.
+let GoogleGenerativeAI = null;
+try {
+  ({ GoogleGenerativeAI } = require('@google/generative-ai'));
+} catch (err) {
+  console.warn('@google/generative-ai unavailable; /api/chat will use the local fallback:', err.message);
+}
 
 // Initialize Gemini client if API key is provided
 const geminiApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
+const genAI = geminiApiKey && GoogleGenerativeAI ? new GoogleGenerativeAI(geminiApiKey) : null;
 if (genAI) {
   console.log("Google Gemini AI Companion initialized.");
 } else {
@@ -21,12 +30,16 @@ if (genAI) {
 let emotionPipeline;
 async function getEmotionModel() {
   if (!emotionPipeline) {
-    console.log("Loading Emotion Model (MicahB/emotion_text_classifier)...");
-    const { pipeline } = await import('@xenova/transformers');
-    // MicahB model - explicitly converted for transformers.js (ONNX verified)
-    // Detects: joy, sadness, anger, fear, surprise, disgust, neutral
-    emotionPipeline = await pipeline('text-classification', 'MicahB/emotion_text_classifier');
-    console.log("Emotion Model Loaded.");
+    try {
+      console.log("Loading Emotion Model (MicahB/emotion_text_classifier)...");
+      const { pipeline } = await import('@xenova/transformers');
+      // MicahB model - explicitly converted for transformers.js (ONNX verified)
+      // Detects: joy, sadness, anger, fear, surprise, disgust, neutral
+      emotionPipeline = await pipeline('text-classification', 'MicahB/emotion_text_classifier');
+      console.log("Emotion Model Loaded.");
+    } catch (err) {
+      throw new Error(`Emotion model unavailable (@xenova/transformers): ${err.message}`);
+    }
   }
   return emotionPipeline;
 }
@@ -53,10 +66,16 @@ async function getCoherenceModel() {
 }
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = Number(process.env.PORT) || 3001;
+const host = process.env.HOST || '0.0.0.0';
+const enableQueue = String(process.env.ENABLE_QUEUE || '').toLowerCase() === 'true';
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
 
 // Middleware
-app.use(cors());
+app.use(corsOrigins.length > 0 ? cors({ origin: corsOrigins }) : cors());
 app.use(express.json());
 
 // Supabase configuration
@@ -68,12 +87,76 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// let (not const) so tests can inject a mock client without real credentials.
+let supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Ensure tmp directory exists
-const tmpDir = path.join(__dirname, 'tmp');
-if (!fs.existsSync(tmpDir)) {
-  fs.mkdirSync(tmpDir);
+// Verifies the Supabase access token and attaches the verified user to req.user.
+// Service-role queries bypass RLS, so every route below must still filter by req.user.id.
+async function requireAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data || !data.user) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    req.user = data.user;
+    next();
+  } catch (err) {
+    console.error('[AUTH ERROR]:', err);
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// Returns the verified user id, or null after rejecting a conflicting client-supplied id.
+function resolveUserId(req, res, suppliedUserId) {
+  if (suppliedUserId && suppliedUserId !== req.user.id) {
+    res.status(403).json({ error: 'userId does not match the authenticated user' });
+    return null;
+  }
+  return req.user.id;
+}
+
+app.use('/api', requireAuth);
+
+// Runtime directories: relative values resolve from this file, absolute values are used as-is.
+function resolveRuntimeDir(value, fallback) {
+  if (!value) return path.join(__dirname, fallback);
+  return path.isAbsolute(value) ? value : path.join(__dirname, value);
+}
+const tmpDir = resolveRuntimeDir(process.env.TMP_DIR, 'tmp');
+const uploadsDir = resolveRuntimeDir(process.env.UPLOADS_DIR, 'uploads');
+for (const dir of [tmpDir, uploadsDir]) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+// External process configuration (Python/FFmpeg are only needed by the background queue).
+const pythonCommand = process.env.PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
+const pythonTimeoutMs = Number(process.env.PYTHON_TIMEOUT_MS) || 15 * 60 * 1000;
+const activeChildren = new Set();
+
+function spawnPython(args) {
+  const child = spawn(pythonCommand, args, { cwd: __dirname });
+  activeChildren.add(child);
+  child.on('exit', () => activeChildren.delete(child));
+  child.on('error', (err) => console.error(`Failed to start ${pythonCommand}: ${err.message}`));
+
+  const timer = setTimeout(() => {
+    console.warn(`Python process exceeded ${pythonTimeoutMs}ms; terminating.`);
+    child.kill('SIGTERM');
+    setTimeout(() => child.kill('SIGKILL'), 5000).unref();
+  }, pythonTimeoutMs);
+  timer.unref();
+  child.on('exit', () => clearTimeout(timer));
+
+  return child;
 }
 
 // Health check endpoint
@@ -125,12 +208,9 @@ async function processRecording(recording_id, video_path) {
 
     // 2. Spawn Python worker
     console.log('Spawning Python worker...');
-    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
-    
+
     // UPDATED: Using worker_whisper.py
-    const pythonProcess = spawn(pythonCommand, ['worker_whisper.py', localVideoPath, recording_id], {
-        shell: true
-    });
+    const pythonProcess = spawnPython([path.join(__dirname, 'worker_whisper.py'), localVideoPath, String(recording_id)]);
 
     let pythonData = '';
     let pythonError = '';
@@ -308,12 +388,12 @@ async function processRecording(recording_id, video_path) {
                   fs.writeFileSync(transcriptPath, results.transcript || "");
                   
                   // 2. Spawn Advanced Python Engine
-                  const advancedProcess = spawn(pythonCommand, [
-                      '../ai_engine/main.py', 
+                  const advancedProcess = spawnPython([
+                      path.join(__dirname, '..', 'ai_engine', 'main.py'),
                       '--video', localVideoPath,
                       '--transcript-file', transcriptPath,
                       '--sentiment', String(toneScore)
-                  ], { shell: true, cwd: __dirname });
+                  ]);
 
                   let advancedData = '';
                   let advancedError = '';
@@ -457,9 +537,13 @@ async function processQueue() {
   }
 }
 
-// Start the worker
-console.log("Starting Background Worker...");
-processQueue();
+// Start the worker only when explicitly enabled (prevents duplicate processing).
+if (enableQueue) {
+  console.log("Starting Background Worker...");
+  processQueue();
+} else {
+  console.log("Background worker disabled (ENABLE_QUEUE is not true).");
+}
 
 
 // ==========================================
@@ -607,25 +691,26 @@ ${memoriesSection}
 // --- AI COMPANION CHAT ENDPOINT ---
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, conversationHistory = [], userId, sessionId = 'default', stream = true } = req.body;
+    const { message, conversationHistory = [], userId: suppliedUserId, sessionId = 'default', stream = true } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
+
+    const userId = resolveUserId(req, res, suppliedUserId);
+    if (!userId) return;
 
     // Assemble rich context
     const context = await assembleUserContext(userId);
     const systemInstruction = buildCompanionPrompt(context);
 
     // Save user message to Supabase
-    if (userId) {
-      supabase.from('companion_messages').insert({
-        user_id: userId,
-        session_id: sessionId,
-        role: 'user',
-        content: message
-      }).catch(err => console.error('Error saving user message:', err));
-    }
+    supabase.from('companion_messages').insert({
+      user_id: userId,
+      session_id: sessionId,
+      role: 'user',
+      content: message
+    }).catch(err => console.error('Error saving user message:', err));
 
     if (genAI) {
       try {
@@ -724,10 +809,8 @@ app.post('/api/chat', async (req, res) => {
 // --- HABITS API ENDPOINTS ---
 app.get('/api/habits', async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId query parameter is required' });
-    }
+    const userId = resolveUserId(req, res, req.query.userId);
+    if (!userId) return;
 
     const { data: habits, error: habitsError } = await supabase
       .from('habits')
@@ -802,11 +885,14 @@ app.get('/api/habits', async (req, res) => {
 
 app.post('/api/habits', async (req, res) => {
   try {
-    const { userId, name, description = '', category = 'growth', frequency = 'daily', target_days = 7, color = '#10B981', icon = 'CheckCircle' } = req.body;
+    const { userId: suppliedUserId, name, description = '', category = 'growth', frequency = 'daily', target_days = 7, color = '#10B981', icon = 'CheckCircle' } = req.body;
 
-    if (!userId || !name) {
-      return res.status(400).json({ error: 'userId and name are required' });
+    if (!name) {
+      return res.status(400).json({ error: 'name is required' });
     }
+
+    const userId = resolveUserId(req, res, suppliedUserId);
+    if (!userId) return;
 
     const { data, error } = await supabase
       .from('habits')
@@ -849,10 +935,16 @@ app.put('/api/habits/:id', async (req, res) => {
       .from('habits')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', req.user.id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Habit not found' });
+      }
+      throw error;
+    }
     res.json(data);
   } catch (error) {
     console.error('[API/HABITS PUT ERROR]:', error);
@@ -862,10 +954,26 @@ app.put('/api/habits/:id', async (req, res) => {
 
 app.post('/api/habits/log', async (req, res) => {
   try {
-    const { userId, habitId, completed = true, note = '', loggedDate } = req.body;
+    const { userId: suppliedUserId, habitId, completed = true, note = '', loggedDate } = req.body;
 
-    if (!userId || !habitId) {
-      return res.status(400).json({ error: 'userId and habitId are required' });
+    if (!habitId) {
+      return res.status(400).json({ error: 'habitId is required' });
+    }
+
+    const userId = resolveUserId(req, res, suppliedUserId);
+    if (!userId) return;
+
+    // Confirm the habit belongs to the authenticated user before writing a log row.
+    const { data: habit, error: habitError } = await supabase
+      .from('habits')
+      .select('id')
+      .eq('id', habitId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (habitError) throw habitError;
+    if (!habit) {
+      return res.status(404).json({ error: 'Habit not found' });
     }
 
     const targetDate = loggedDate || new Date().toISOString().split('T')[0];
@@ -895,10 +1003,8 @@ app.post('/api/habits/log', async (req, res) => {
 // --- INSIGHTS API ENDPOINT ---
 app.get('/api/insights', async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
+    const userId = resolveUserId(req, res, req.query.userId);
+    if (!userId) return;
 
     const context = await assembleUserContext(userId);
 
@@ -924,10 +1030,8 @@ app.get('/api/insights', async (req, res) => {
 // --- PROFILE CONTEXT API ENDPOINTS ---
 app.get('/api/profile/context', async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
+    const userId = resolveUserId(req, res, req.query.userId);
+    if (!userId) return;
 
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -945,10 +1049,9 @@ app.get('/api/profile/context', async (req, res) => {
 
 app.post('/api/profile/context', async (req, res) => {
   try {
-    const { userId, goals, anchors, bio, full_name } = req.body;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
+    const { userId: suppliedUserId, goals, anchors, bio, full_name } = req.body;
+    const userId = resolveUserId(req, res, suppliedUserId);
+    if (!userId) return;
 
     const updates = { updated_at: new Date().toISOString() };
     if (goals !== undefined) updates.goals = goals;
@@ -974,10 +1077,8 @@ app.post('/api/profile/context', async (req, res) => {
 // --- REFLECTION MEMORIES API ENDPOINTS ---
 app.get('/api/memories', async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
+    const userId = resolveUserId(req, res, req.query.userId);
+    if (!userId) return;
 
     const { data, error } = await supabase
       .from('reflections_memories')
@@ -995,10 +1096,13 @@ app.get('/api/memories', async (req, res) => {
 
 app.post('/api/memories', async (req, res) => {
   try {
-    const { userId, title, content, category = 'reflection', tags = [] } = req.body;
-    if (!userId || !title || !content) {
-      return res.status(400).json({ error: 'userId, title, and content are required' });
+    const { userId: suppliedUserId, title, content, category = 'reflection', tags = [] } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ error: 'title and content are required' });
     }
+
+    const userId = resolveUserId(req, res, suppliedUserId);
+    if (!userId) return;
 
     const { data, error } = await supabase
       .from('reflections_memories')
@@ -1023,12 +1127,17 @@ app.post('/api/memories', async (req, res) => {
 app.delete('/api/memories/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('reflections_memories')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .select('id');
 
     if (error) throw error;
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'Memory not found' });
+    }
     res.json({ success: true, message: 'Memory deleted' });
   } catch (error) {
     console.error('[API/MEMORIES DELETE ERROR]:', error);
@@ -1036,7 +1145,37 @@ app.delete('/api/memories/:id', async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Local processor listening at http://0.0.0.0:${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+let server = null;
+
+if (require.main === module) {
+  server = app.listen(port, host, () => {
+    console.log(`Local processor listening at http://${host}:${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Background queue: ${enableQueue ? 'enabled' : 'disabled'}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Set PORT to a free port.`);
+    } else {
+      console.error('Server failed to start:', err);
+    }
+    process.exit(1);
+  });
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+}
+
+function shutdown(signal) {
+  console.log(`${signal} received, shutting down.`);
+  for (const child of activeChildren) {
+    try { child.kill('SIGTERM'); } catch (e) {}
+  }
+  if (!server) return;
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 10000).unref();
+}
+
+// Exported for tests; the server only listens when this file is run directly.
+module.exports = { app, setSupabaseClient: (client) => { supabase = client; } };
